@@ -1,0 +1,35 @@
+*::-webkit-scrollbar {
+  @apply h-2 w-2;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-gradient-to-b from-zinc-300 via-indigo-200 to-slate-400;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  @apply bg-gradient-to-b from-zinc-400 via-indigo-300 to-slate-500;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  @apply bg-gradient-to-b from-zinc-500 via-indigo-400 to-slate-600;
+}
+
+*::-webkit-scrollbar-track {
+  @apply border-x border-y-0 border-solid border-zinc-200 bg-white;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  @apply bg-gradient-to-b from-zinc-900 via-indigo-950 to-slate-900;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  @apply bg-gradient-to-b from-zinc-800 via-indigo-900 to-slate-800;
+}
+
+.dark *::-webkit-scrollbar-thumb:active {
+  @apply bg-gradient-to-b from-zinc-700 via-indigo-800 to-slate-700;
+}
+
+.dark *::-webkit-scrollbar-track {
+  @apply border-zinc-300 bg-zinc-300;
+}
