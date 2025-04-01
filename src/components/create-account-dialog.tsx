@@ -1,114 +1,189 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { X } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { CalendarIcon } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-import CreatePasswordDialog from "./create-password-dialog"
-import { useAuth } from "@/hooks/use-auth"
-import { cn } from "@/utils/cn.utils"
+import { cn } from "@/utils/cn.utils";
+import { BaseUserData } from "./create-account";
+import { getUser } from "@/actions/common.actions";
 
-const formSchema = z
-  .object({
-    name: z.string().min(1, "What's your name?"),
-    email: z.string().email("Please enter a valid email.").optional(),
-    phone: z
-      .string()
-      .regex(/^\d{10}$/, "Please enter a valid phone number.")
-      .optional(),
-    dob: z.date({
-      required_error: "Please select a date of birth.",
-    }),
-  })
-  .refine((data) => data.email || data.phone, {
-    message: "Either email or phone is required",
-    path: ["email"],
-  })
+const formSchema = z.object({
+  name: z.string().min(1, "What's your name?"),
+  email: z.string().email("Please enter a valid email.").optional(),
+  // phone: z
+  //   .string()
+  //   .transform((val) => val.replace(/\s+/g, ""))
+  //   .refine((val) => /^\d{11}$/.test(val), {
+  //     message: "Please enter a valid 11-digit phone number.",
+  //   })
+  //   .optional(),
+  dob: z.date({
+    required_error: "Please select a date of birth.",
+  }),
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 interface CreateAccountDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onNext: (data: BaseUserData) => void;
+  onClose: () => void;
 }
 
-const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenChange }) => {
-  const [isPhone, setIsPhone] = useState(true)
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
-  const [userData, setUserData] = useState<any>(null)
-  const [errorMessage, setErrorMessage] = useState("")
-  const { getUser } = useAuth()
+const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenChange, onNext, onClose }) => {
+  // const [isPhone, setIsPhone] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
+      // phone: "",
+      dob: undefined,
     },
-  })
-  // here needs to be used useEffect()
-  const onSubmit = async (data: FormValues) => {
-    try {
-      setErrorMessage("")
+    mode: "onChange",
+    criteriaMode: "all",
+  });
 
-      // Check if user exists
-      let existingUser
-      if (data.email) {
-        existingUser = await getUser("username", data.email)
-      } else if (data.phone) {
-        existingUser = await getUser("username", data.phone)
+  useEffect(() => {
+    // form.unregister("phone");
+
+    const subscription = form.watch(async (values, { name }) => {
+      const touched = form.formState.touchedFields;
+      const emailTouched = !!touched.email;
+      // const phoneTouched = !!touched.phone;
+
+      const hasEmail = !!values.email?.trim();
+      // const hasPhone = !!values.phone?.trim();
+
+      // form.clearErrors(["email", "phone"]);
+      form.clearErrors(["email"]);
+
+      // if ((emailTouched || phoneTouched) && !hasEmail && !hasPhone) {
+      //   if (emailTouched) {
+      //     form.setError("email", {
+      //       type: "manual",
+      //       message: "Either email or phone is required.",
+      //     });
+      //   }
+      //   if (phoneTouched) {
+      //     form.setError("phone", {
+      //       type: "manual",
+      //       message: "Either phone or email is required.",
+      //     });
+      //   }
+      // }
+
+      if (emailTouched && !hasEmail) {
+        if (emailTouched) {
+          form.setError("email", {
+            type: "manual",
+            message: "Email is required.",
+          });
+        }
       }
 
+      if (name && values.dob && values.email) {
+        const isValidName = !!name.trim();
+        const isValidDob = !!values.dob;
+        const isValidContact = !!values.email?.trim();
+
+        const isReadyNow = isValidName && isValidDob && isValidContact;
+
+        setIsReady(isReadyNow);
+        setErrorMessage("");
+      }
+
+      const identifier = values.email;
+      if (identifier) {
+        const existingUser = await getUser(identifier);
+        if (existingUser) {
+          setErrorMessage(`User with this email already exists!`);
+          setIsReady(false);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  const handleNext = async () => {
+    const values = form.getValues();
+    console.log("**********values:  ", values);
+    const identifier = values.email;
+    setErrorMessage("");
+
+    if (identifier) {
+      const existingUser = await getUser( identifier);
       if (existingUser) {
-        setErrorMessage("User with this email or phone number already exists!")
-        return
+        setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
+        return;
       }
-
-      // Store user data and open password dialog
-      setUserData(data)
-      onOpenChange(false)
-      setIsPasswordDialogOpen(true)
-    } catch (error) {
-      console.error("Error during account creation:", error)
-      setErrorMessage("An error occurred during account creation.")
     }
-  }
 
-  const toggleInputType = () => {
-    setIsPhone(!isPhone)
-    form.setValue("email", "")
-    form.setValue("phone", "")
-  }
+    onOpenChange(false);
+    if (values.email) {
+      onNext({
+        name: values.name,
+        email: values.email,
+      });
+    }
+  };
+
+  // const toggleInputType = () => {
+  //   setIsPhone((prev) => {
+  //     const next = !prev;
+  //     if (next) {
+  //       form.unregister("email");
+  //     } else {
+  //       form.setValue("email", "");
+  //     }
+  //     return next;
+  //   });
+  // };
+
+  const testCheck = () => {
+    console.log("**********values:  ", form.getValues());
+    console.log("is The form valid: ", form.formState.isValid);
+  };
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black text-white border border-gray-600 max-w-md p-8 rounded-lg z-50">
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="fixed left-1/2 top-1/2 z-50 max-w-md -translate-x-1/2 -translate-y-1/2 transform rounded-lg border border-gray-600 bg-black p-8 text-white"
+        >
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-2 top-2 text-gray-400 hover:bg-gray-800 hover:text-white rounded-full"
-            onClick={() => onOpenChange(false)}
+            className="absolute left-2 top-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white"
+            onClick={() => {
+              onOpenChange(false);
+              onClose();
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
 
-          <DialogTitle className="text-center text-xl font-semibold mb-4">Create your account</DialogTitle>
+          <DialogTitle className="mb-4 text-center text-xl font-semibold">Create your account</DialogTitle>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -119,16 +194,16 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                       <Input
                         {...field}
                         maxLength={50}
-                        className="bg-transparent border-gray-600 focus:border-blue-500 text-white"
+                        className="border-gray-600 bg-transparent text-white focus:border-blue-500"
                       />
                     </FormControl>
-                    <div className="text-xs text-gray-500 text-right">{field.value.length}/50</div>
+                    <div className="text-right text-xs text-gray-500">{field.value.length}/50</div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {isPhone ? (
+              {/* {isPhone ? (
                 <FormField
                   control={form.control}
                   name="phone"
@@ -136,37 +211,36 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                     <FormItem>
                       <FormLabel className="text-gray-400">Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} className="bg-transparent border-gray-600 focus:border-blue-500 text-white" />
+                        <Input {...field} className="border-gray-600 bg-transparent text-white focus:border-blue-500" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              ) : (
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-400">Email</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="bg-transparent border-gray-600 focus:border-blue-500 text-white" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              ) : ( */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-400">Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="border-gray-600 bg-transparent text-white focus:border-blue-500" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="text-right">
-                <button type="button" onClick={toggleInputType} className="text-blue-500 hover:underline text-sm">
+              {/* <div className="text-right">
+                <button type="button" onClick={toggleInputType} className="text-sm text-blue-500 hover:underline">
                   {isPhone ? "Use email instead" : "Use phone instead"}
                 </button>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <h3 className="text-white">Date of birth</h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-sm text-gray-400">
                   This will not be shown publicly. Confirm your own age, even if this account is for a business, a pet,
                   or something else.
                 </p>
@@ -182,7 +256,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-full pl-3 text-left font-normal bg-transparent border-gray-600 text-white",
+                                "w-full border-gray-600 bg-transparent pl-3 text-left font-normal text-white",
                                 !field.value && "text-gray-400",
                               )}
                             >
@@ -191,7 +265,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-gray-900 border-gray-700" align="start">
+                        <PopoverContent className="w-auto border-gray-700 bg-gray-900 p-0" align="start">
                           <Calendar
                             mode="single"
                             selected={field.value}
@@ -208,26 +282,30 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                 />
               </div>
 
-              {errorMessage && <div className="text-red-500 text-center">{errorMessage}</div>}
+              {errorMessage && <div className="text-center text-red-500">{errorMessage}</div>}
 
               <Button
-                type="submit"
-                className="w-full rounded-full bg-white hover:bg-gray-200 text-black font-bold"
-                disabled={!form.formState.isValid}
+                type="button"
+                className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                disabled={!isReady}
+                onClick={handleNext}
               >
                 Next
+              </Button>
+
+              <Button
+                type="button"
+                className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                onClick={testCheck}
+              >
+                Test Check
               </Button>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
-      {userData && (
-        <CreatePasswordDialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} userData={userData} />
-      )}
     </>
-  )
-}
+  );
+};
 
-export default CreateAccountDialog
-
+export default CreateAccountDialog;

@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingExcludes: {
     "*": ["./.prisma/client/libquery_engine-debian*"],
-  },
+  }
 };
 
 export default nextConfig;
