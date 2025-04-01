@@ -1,26 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button"; // Use shadcn Button for consistent styling
-import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+// import { useAuth } from "@/hooks/use-auth";
+// import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
 import CreateAccountFlow from "./create-account";
+import GoogleSignIn from "./google-sign-in";
 
 const HomeButtons: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const router = useRouter();
-  const { googleSignIn } = useAuth();
 
-  const handleGoogleSignin = async () => {
-    try {
-      await googleSignIn();
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Google sign in failed:", error);
-    }
-  };
-
+  
   return (
     <div className="w-full max-w-md">
       <div className="mb-6 font-bold text-white">
@@ -29,7 +20,7 @@ const HomeButtons: React.FC = () => {
       </div>
 
       <section className="flex w-full flex-col gap-3">
-        <Button
+        {/* <Button
           variant="outline"
           className="mx-auto w-4/5 justify-center rounded-xl bg-white text-black hover:bg-gray-200"
           onClick={handleGoogleSignin}
@@ -53,7 +44,8 @@ const HomeButtons: React.FC = () => {
             />
           </svg>
           <span>Sign up with Google</span>
-        </Button>
+        </Button> */}
+        <GoogleSignIn />
 
         <Button
           variant="outline"

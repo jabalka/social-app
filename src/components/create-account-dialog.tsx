@@ -14,20 +14,20 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/utils/cn.utils";
-import { UserData } from "./create-account";
+import { BaseUserData } from "./create-account";
+import { getUser } from "@/actions/common.actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "What's your name?"),
   email: z.string().email("Please enter a valid email.").optional(),
-  phone: z
-    .string()
-    .transform((val) => val.replace(/\s+/g, ""))
-    .refine((val) => /^\d{11}$/.test(val), {
-      message: "Please enter a valid 11-digit phone number.",
-    })
-    .optional(),
+  // phone: z
+  //   .string()
+  //   .transform((val) => val.replace(/\s+/g, ""))
+  //   .refine((val) => /^\d{11}$/.test(val), {
+  //     message: "Please enter a valid 11-digit phone number.",
+  //   })
+  //   .optional(),
   dob: z.date({
     required_error: "Please select a date of birth.",
   }),
@@ -38,22 +38,21 @@ type FormValues = z.infer<typeof formSchema>;
 interface CreateAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onNext: (data: UserData) => void;
+  onNext: (data: BaseUserData) => void;
   onClose: () => void;
 }
 
 const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenChange, onNext, onClose }) => {
-  const [isPhone, setIsPhone] = useState(true);
+  // const [isPhone, setIsPhone] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const { getUser } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
+      // phone: "",
       dob: undefined,
     },
     mode: "onChange",
@@ -61,40 +60,47 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
   });
 
   useEffect(() => {
-    if (isPhone) {
-      form.unregister("email");
-    } else {
-      form.unregister("phone");
-    }
+    // form.unregister("phone");
+
     const subscription = form.watch(async (values, { name }) => {
       const touched = form.formState.touchedFields;
       const emailTouched = !!touched.email;
-      const phoneTouched = !!touched.phone;
+      // const phoneTouched = !!touched.phone;
 
       const hasEmail = !!values.email?.trim();
-      const hasPhone = !!values.phone?.trim();
+      // const hasPhone = !!values.phone?.trim();
 
-      form.clearErrors(["email", "phone"]);
+      // form.clearErrors(["email", "phone"]);
+      form.clearErrors(["email"]);
 
-      if ((emailTouched || phoneTouched) && !hasEmail && !hasPhone) {
+      // if ((emailTouched || phoneTouched) && !hasEmail && !hasPhone) {
+      //   if (emailTouched) {
+      //     form.setError("email", {
+      //       type: "manual",
+      //       message: "Either email or phone is required.",
+      //     });
+      //   }
+      //   if (phoneTouched) {
+      //     form.setError("phone", {
+      //       type: "manual",
+      //       message: "Either phone or email is required.",
+      //     });
+      //   }
+      // }
+
+      if (emailTouched && !hasEmail) {
         if (emailTouched) {
           form.setError("email", {
             type: "manual",
-            message: "Either email or phone is required.",
-          });
-        }
-        if (phoneTouched) {
-          form.setError("phone", {
-            type: "manual",
-            message: "Either phone or email is required.",
+            message: "Email is required.",
           });
         }
       }
 
-      if (name && values.dob && (values.email || values.phone)) {
+      if (name && values.dob && values.email) {
         const isValidName = !!name.trim();
         const isValidDob = !!values.dob;
-        const isValidContact = !!(values.email?.trim() || values.phone?.trim());
+        const isValidContact = !!values.email?.trim();
 
         const isReadyNow = isValidName && isValidDob && isValidContact;
 
@@ -102,27 +108,27 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
         setErrorMessage("");
       }
 
-      const identifier = values.email || values.phone;
+      const identifier = values.email;
       if (identifier) {
-        const existingUser = await getUser("username", identifier);
+        const existingUser = await getUser(identifier);
         if (existingUser) {
-          setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
+          setErrorMessage(`User with this email already exists!`);
           setIsReady(false);
         }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [form, getUser, isPhone]);
+  }, [form]);
 
   const handleNext = async () => {
     const values = form.getValues();
     console.log("**********values:  ", values);
-    const identifier = values.email || values.phone;
+    const identifier = values.email;
     setErrorMessage("");
 
     if (identifier) {
-      const existingUser = await getUser("username", identifier);
+      const existingUser = await getUser( identifier);
       if (existingUser) {
         setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
         return;
@@ -130,34 +136,25 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
     }
 
     onOpenChange(false);
-    if (values.phone) {
+    if (values.email) {
       onNext({
         name: values.name,
-        dob: values.dob,
-        phone: values.phone,
-      });
-    } else if (values.email) {
-      onNext({
-        name: values.name,
-        dob: values.dob,
         email: values.email,
       });
     }
   };
 
-  const toggleInputType = () => {
-    setIsPhone((prev) => {
-      const next = !prev;
-      if (next) {
-        form.unregister("email");
-        form.setValue("phone", "");
-      } else {
-        form.unregister("phone");
-        form.setValue("email", "");
-      }
-      return next;
-    });
-  };
+  // const toggleInputType = () => {
+  //   setIsPhone((prev) => {
+  //     const next = !prev;
+  //     if (next) {
+  //       form.unregister("email");
+  //     } else {
+  //       form.setValue("email", "");
+  //     }
+  //     return next;
+  //   });
+  // };
 
   const testCheck = () => {
     console.log("**********values:  ", form.getValues());
@@ -206,7 +203,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                 )}
               />
 
-              {isPhone ? (
+              {/* {isPhone ? (
                 <FormField
                   control={form.control}
                   name="phone"
@@ -220,27 +217,26 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                     </FormItem>
                   )}
                 />
-              ) : (
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-400">Email</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="border-gray-600 bg-transparent text-white focus:border-blue-500" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              ) : ( */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-400">Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="border-gray-600 bg-transparent text-white focus:border-blue-500" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="text-right">
+              {/* <div className="text-right">
                 <button type="button" onClick={toggleInputType} className="text-sm text-blue-500 hover:underline">
                   {isPhone ? "Use email instead" : "Use phone instead"}
                 </button>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <h3 className="text-white">Date of birth</h3>

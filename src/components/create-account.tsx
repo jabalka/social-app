@@ -11,34 +11,43 @@ interface CreateAccountFlowProps {
 
 export interface BaseUserData {
   name: string;
-  dob: Date;
+  email: string;
 }
 
-export type UserData =
-  | (BaseUserData & { phone: string; email?: never })
-  | (BaseUserData & { email: string; phone?: never });
-
-export type ServerUserData = UserData & {
-  password: string;
+export interface UserData extends BaseUserData {
   username: string;
-};
+  password: string;
+  // Ensure phone can't exist here
+}
+
+// export interface PhoneUser extends BaseUserData {
+//   type: "phone";
+//   phone: string;
+//   email?: never; // Ensure email can't exist here
+// }
+
+export interface ServerUserData extends BaseUserData {
+  password: string;
+  email: string;
+}
 
 const CreateAccountFlow: React.FC<CreateAccountFlowProps> = ({ onClose }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(true);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
-  const [userData, setUserData] = useState<UserData>();
+  const [userData, setUserData] = useState<BaseUserData>();
   const router = useRouter();
 
-  const handleCreateNext = (data: UserData) => {
+  const handleCreateNext = (data: BaseUserData) => {
     setUserData(data);
     setIsCreateOpen(false);
     setIsPasswordOpen(true);
   };
 
-  const handleSignupComplete = () => {
+  const handleSignupComplete = async () => {
     setIsPasswordOpen(false);
     // here it needs to send the data to the server niggus
     onClose();
+
     router.push("/dashboard");
   };
 

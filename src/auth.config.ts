@@ -1,88 +1,110 @@
-import type { NextAuthOptions } from "next-auth";
-import { randomBytes } from "crypto";
-import { bytesToHex } from "viem";
-
-import prisma from "./prisma";
+import type { NextAuthConfig } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { MESSAGES } from "./constants";
+import prisma from "./prisma";
 import { authSchema } from "./schemas/auth.schema";
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { verifyPassword } from "./lib/auth";
+import { verifyPassword } from "./utils/crypto.utils";
 
-const providers: NextAuthOptions["providers"] = [
-  GoogleProvider({
+const providers: NextAuthConfig["providers"] = [
+  Google({
     clientId: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     async profile({ sub: id, email, name, picture: image }) {
-      const referralCode = bytesToHex(randomBytes(16));
-      return { id, email, name, image, referralCode };
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+
+      if (!existingUser) {
+        return await prisma.user.create({
+          data: {
+            id,
+            email,
+            name,
+            image,
+
+            emailVerified: new Date(), // Mark Google users as verified
+          },
+        });
+      }
+      return { id, email, name, image };
     },
   }),
-  CredentialsProvider({
+  Credentials({
     credentials: {
       email: {},
       password: {},
+      name: { type: "text", optional: true },
     },
     authorize: async (credentials) => {
-      const { email, password, callbackUrl } = await authSchema.parseAsync(credentials);
+         try {
+        const { email, password } = await authSchema.parseAsync(credentials);
+   
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            hashedPassword: true,
+            emailVerified: true,
+          },
+        });
 
-      const user = await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
+        if (!user) {
+          throw new Error(MESSAGES.USER_NOT_FOUND);
+        }
+        if (!user.hashedPassword) {
+          throw new Error(MESSAGES.NO_HASHED_PASSWORD);
+        }
+        if (password) {
+          const passwordsMatch = await verifyPassword(password, user.hashedPassword);
+          
+          if (!passwordsMatch) {
+            throw new Error(MESSAGES.INVALID_CREDENTIALS);
+          }
+        }
 
-      if (!user) {
-        throw new Error(MESSAGES.USER_NOT_FOUND);
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      } catch (error) {
+        throw error;
       }
 
-      if (!user.hashedPassword) {
-        throw new Error(MESSAGES.NO_HASHED_PASSWORD);
-      }
+      // const emailVerification = callbackUrl && /\/auth\?slide=verify_email&token=[a-zA-Z0-9]+$/g.test(callbackUrl);
 
-      const emailVerification = callbackUrl && /\/auth\?slide=verify_email&token=[a-zA-Z0-9]+$/g.test(callbackUrl);
-
-      if (emailVerification) {
-        return user;
-      }
-
-      if (!user.emailVerified) {
-        throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
-      }
-
-      const passwordsMatch = await verifyPassword(user.hashedPassword, password!);
-
-      if (!passwordsMatch) {
-        throw new Error(MESSAGES.INVALID_CREDENTIALS);
-      }
-
-      if (!user.twoFactorEnabled) {
-        return user;
-      } 
-
-      return user;
+      // if (emailVerification) {
+      //   return user;
+      // }
     },
   }),
 ];
 
 const pages: NextAuthConfig["pages"] = {
   signIn: "/auth",
+  verifyRequest: "/auth?slide=verify_email", // For email verification
 };
 
 const callbacks: NextAuthConfig["callbacks"] = {
   async jwt({ token, user }) {
     if (user) {
       token.id = user.id;
-      token.roles = user.roles;
+      token.email = user.email;
+      token.name = user.name;
+      token.picture = user.image;
     }
-
     return token;
   },
 
   async session({ session, token }) {
     if (session.user) {
       session.user.id = token.id as string;
-      session.user.roles = token.roles;
+      session.user.email = token.email as string;
+      session.user.image = token.picture as string;
+      session.user.name = token.name as string;
     }
 
     return session;
@@ -90,41 +112,24 @@ const callbacks: NextAuthConfig["callbacks"] = {
 };
 
 const events: NextAuthConfig["events"] = {
-  async signIn({ user }) {
-    const referralCode = await getReferralCodeFromCookie();
-
-    if (!referralCode) {
-      return;
-    }
-
-    const referringUser = await prisma.user.findUnique({
-      where: { referralCode },
-    });
-
-    if (!referringUser) {
-      return;
-    }
-
-    if (referringUser.email === user.email) {
-      return;
-    }
-
-    const existingReferral = await prisma.referral.findUnique({
-      where: { userId: user.id },
-    });
-
-    if (existingReferral) {
-      return;
-    }
-
-    await prisma.referral.create({
-      data: {
-        userId: user.id!,
-        referringUserId: referringUser.id,
-        referralCodeUsed: referralCode,
-      },
-    });
-  },
+  // here can be included events such as creating posts, likes etc...
+  // async signIn({ user, isNewUser }) {
+  //   if (isNewUser) {
+  //     // Handle new user referrals (uncomment your existing logic)
+  //     const referralCode = await getReferralCodeFromCookie();
+  //     if (referralCode) {
+  //       const referringUser = await prisma.user.findUnique({ where: { referralCode } });
+  //       if (referringUser && referringUser.email !== user.email) {
+  //         await prisma.referral.create({
+  //           data: {
+  //             userId: user.id!,
+  //             referringUserId: referringUser.id,
+  //             referralCodeUsed: referralCode,
+  //           },
+  //         });
+  //       }
+  //     }
+  //   }
+  // },
 };
-
-export default { providers, pages, callbacks, events } satisfies NextAuthOptions;
+export default { providers, pages, callbacks, events } satisfies NextAuthConfig;

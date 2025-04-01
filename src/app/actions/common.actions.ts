@@ -1,7 +1,8 @@
 "use server";
 
 import { auth, signIn } from "@/auth";
-import { AuthError } from "next-auth";
+import { User } from "@prisma/client";
+import { AuthError } from "@auth/core/errors";
 import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { connection } from "next/server";
@@ -11,7 +12,7 @@ export const isomorphicNow = async () => {
   return Date.now();
 };
 
-export const fetchUser = async (email: string) => {
+export const fetchUser = async (email: string): Promise<User> => {
   const readonlyHeaders = await headers();
   const host = readonlyHeaders.get("host");
   const protocol = process?.env.NODE_ENV === "development" ? "http" : "https";
@@ -23,8 +24,9 @@ export const fetchUser = async (email: string) => {
     throw new Error("Failed to fetch user");
   }
 
-  return res.json();
+  return res.json() as Promise<User>; 
 };
+
 
 export const getUser = async (email: string) => {
   try {
