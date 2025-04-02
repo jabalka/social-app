@@ -30,3 +30,21 @@ export async function signInWithCredentials(email: string, password: string) {
     error: "Unknown error occurred auth-actions.ts",
   };
 }
+
+export const login = async (email: string, password: string) => {
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: error.cause?.err?.message ?? error.type };
+    }
+
+    throw error;
+  }
+};

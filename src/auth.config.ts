@@ -11,20 +11,20 @@ const providers: NextAuthConfig["providers"] = [
     clientId: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     async profile({ sub: id, email, name, picture: image }) {
-      const existingUser = await prisma.user.findUnique({ where: { email } });
+      // const existingUser = await prisma.user.findUnique({ where: { email } });
 
-      if (!existingUser) {
-        return await prisma.user.create({
-          data: {
-            id,
-            email,
-            name,
-            image,
+      // if (!existingUser) {
+      //   return await prisma.user.create({
+      //     data: {
+      //       id,
+      //       email,
+      //       name,
+      //       image,
 
-            emailVerified: new Date(), // Mark Google users as verified
-          },
-        });
-      }
+      //       emailVerified: new Date(), // Mark Google users as verified
+      //     },
+      //   });
+      // }
       return { id, email, name, image };
     },
   }),
@@ -35,9 +35,9 @@ const providers: NextAuthConfig["providers"] = [
       name: { type: "text", optional: true },
     },
     authorize: async (credentials) => {
-         try {
+      try {
         const { email, password } = await authSchema.parseAsync(credentials);
-   
+
         const user = await prisma.user.findUnique({
           where: { email },
           select: {
@@ -58,7 +58,7 @@ const providers: NextAuthConfig["providers"] = [
         }
         if (password) {
           const passwordsMatch = await verifyPassword(password, user.hashedPassword);
-          
+
           if (!passwordsMatch) {
             throw new Error(MESSAGES.INVALID_CREDENTIALS);
           }
@@ -85,10 +85,57 @@ const providers: NextAuthConfig["providers"] = [
 
 const pages: NextAuthConfig["pages"] = {
   signIn: "/auth",
-  verifyRequest: "/auth?slide=verify_email", // For email verification
+  // verifyRequest: "/auth?slide=verify_email", // For email verification
 };
 
 const callbacks: NextAuthConfig["callbacks"] = {
+  async signIn({ account, profile, credentials }) {
+    if (account?.provider === "google") {
+      // Check if user exists in your DB
+      const existingUser = await prisma.user.findUnique({
+        where: { email: profile?.email ?? "" },
+      });
+
+      if (existingUser) {
+        // Check if this Google account is already linked
+        const existingAccount = await prisma.account.findFirst({
+          where: {
+            userId: existingUser.id,
+            provider: "google",
+            providerAccountId: account.providerAccountId,
+          },
+        });
+
+        if (!existingAccount) {
+          // Link the Google account to existing user
+          await prisma.account.create({
+            data: {
+              userId: existingUser.id,
+              type: "oauth",
+              provider: "google",
+              providerAccountId: account.providerAccountId,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+            },
+          });
+        }
+
+        return true;
+      }
+
+      return true;
+    }
+
+    if (credentials) {
+      return true;
+    }
+
+    return false;
+  },
+
   async jwt({ token, user }) {
     if (user) {
       token.id = user.id;
