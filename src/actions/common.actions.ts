@@ -49,14 +49,12 @@ export const getCurrentUser = async () => {
   return getUser(session.user.email);
 };
 
-export const login = async (email: string, password: string, twoFactorToken?: string, backupCodes?: string[]) => {
+export const login = async (email: string, password: string) => {
   try {
     await signIn("credentials", {
       redirect: false,
       email,
       password,
-      ...(twoFactorToken ? { twoFactorToken } : {}),
-      ...(backupCodes ? { backupCodes: JSON.stringify(backupCodes) } : {}),
     });
 
     return { success: true };
