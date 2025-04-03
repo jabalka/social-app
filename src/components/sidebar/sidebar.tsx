@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, classNa
   return (
     <aside
       className={cn(
-        "flex flex-col border-r",
+        "flex flex-col border-r relative",
         {
           "border-zinc-300 bg-zinc-100": theme === Theme.LIGHT,
           "border-zinc-700 bg-zinc-900": theme === Theme.DARK,
@@ -26,6 +26,14 @@ const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, classNa
         className,
       )}
     >
+        <div className={cn(
+    "absolute -left-px top-0 bottom-0 w-2",
+    {
+      "bg-zinc-300": theme === Theme.LIGHT,
+      "bg-[#2b2725]": theme === Theme.DARK,
+    }
+  )} />
+
       <SidebarLogo className="mb-2 flex justify-center p-4" />
 
       <SidebarNavigation

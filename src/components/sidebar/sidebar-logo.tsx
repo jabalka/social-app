@@ -5,18 +5,18 @@ import Image from "next/image";
 import React from "react";
 
 interface Props {
+  size?: number;
   className?: string;
 }
 
-const SidebarLogo: React.FC<Props> = ({ className }) => {
+const SidebarLogo: React.FC<Props> = ({ className, size = 40 }) => {
   return (
     <div className={cn(className)}>
       <Image
         src="/images/civ-dev-logo.png"
         alt="CivDev Logo"
-        width={72}
-        height={72}
-        priority
+        width={size}
+        height={size}
         className="object-contain"
       />
     </div>

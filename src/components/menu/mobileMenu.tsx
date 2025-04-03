@@ -1,6 +1,6 @@
 import { ChevronRight, X } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SidebarLogo from "../sidebar/sidebar-logo";
 import GithubLogo from "../svg/github-logo";
 import TelegramLogo from "../svg/telegram-logo";
@@ -11,7 +11,6 @@ import MenuItem, { type MenuItem as MenuItemType } from "./menu-item";
 const menuItems: MenuItemType[] = [
   {
     label: "GET STARTED",
-    href: "#",
     hasDropdown: true,
     subItems: [
       { label: "What is Starck", href: "/What-is-Starck/" },
@@ -62,90 +61,127 @@ interface MobileMenuProps {
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        toggleMenu();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      if (contentRef.current) {
+        contentRef.current.scrollTop = 0;
+      }
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, toggleMenu]);
+
   const handleNavigateClick = () => {
-    // Navigates to the platform page
+    // Navigates to profile
   };
 
   return (
-    <div
-      className={`fixed right-0 top-0 h-full w-[320px] transform bg-[#0A0B1A] ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      } z-50 transition-transform duration-300 ease-in-out`}
-    >
-      <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-gray-800 p-4">
-          <SidebarLogo className="h-13 w-auto" />
-          <div
+    <>
+      {isOpen && <div className="fixed inset-0 z-40 bg-black bg-opacity-50" onClick={toggleMenu} />}
+
+      <div
+        ref={menuRef}
+        className={`fixed right-0 top-0 h-full w-[320px] transform bg-gradient-to-b from-[#6f635e] via-[#443d3a] to-[#443d3a] ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } z-50 transition-transform duration-300 ease-in-out`}
+      >
+        <div className="absolute -left-px bottom-0 top-0 w-0.5 bg-[#2b2725]" />
+
+        <div className="flex h-full flex-col overflow-hidden">
+          <div className="flex shrink-0 items-center justify-between border-b border-[#2b2725] p-4">
+            <SidebarLogo size={246} className="w-auto" />
+            <div
             className={`flex transform items-center justify-center transition-transform duration-700 ${
               isOpen ? "rotate-180" : "-rotate-180"
             }`}
           >
             <button
               onClick={toggleMenu}
-              className="text-orange-500 transition-colors hover:text-white"
+              className="text-white transition-colors hover:text-[#FF5C00]"
               aria-label="Close menu"
             >
               <X className="h-6 w-6" strokeWidth={4} />
             </button>
+            </div>
           </div>
-        </div>
 
-        <nav className="flex-1 overflow-y-auto px-4">
-          {menuItems.map((item, index) => (
-            <MenuItem key={index} item={item} toggleMenu={toggleMenu} />
-          ))}
-          <div className="mt-auto flex items-center justify-center border-t border-gray-800 p-4">
-            <button
-              onClick={handleNavigateClick}
-              className="flex items-center justify-center text-[#FF5C00] transition-colors hover:text-[#FF7A33]"
-            >
-              <span className="mr-2 text-lg font-medium">TO PLATFORM</span>
-              <ChevronRight className="h-5 w-5 transform transition-transform" strokeWidth={4} />
-            </button>
-          </div>
-          <div className="mt-4 px-4 pb-4">
-            <div className="flex flex-wrap justify-center gap-4 px-4">
-              <div className="flex gap-4">
-                <Link
-                  href="https://t.me/starckapp"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex h-12 w-12 items-center justify-center rounded-md border border-gray-800 text-gray-400 transition-colors hover:border-[#FF5C00]"
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-4">
+              {menuItems.map((item, index) => (
+                <MenuItem
+                  key={index}
+                  item={item}
+                  toggleMenu={toggleMenu}
+                  isOpen={openSubmenu === index}
+                  onToggle={() => setOpenSubmenu(openSubmenu === index ? null : index)}
+                />
+              ))}
+            </div>
+
+            <div className="mt-auto pt-12">
+              <div className="flex items-center justify-center p-4">
+                <button
+                  onClick={handleNavigateClick}
+                  className="flex items-center justify-center text-[#FF5C00] transition-colors hover:text-[#FF7A33]"
                 >
-                  <TelegramLogo className="fill-current text-[1.5rem] text-gray-400 transition-colors group-hover:text-[#FF5C00]" />
-                </Link>
-                <Link
-                  href="https://twitter.com/Starckcrypto"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex h-12 w-12 items-center justify-center rounded-md border border-gray-800 text-gray-400 transition-colors hover:border-[#FF5C00]"
-                >
-                  <XTwitterLogo className="fill-current text-[1.5rem] text-gray-400 transition-colors group-hover:text-[#FF5C00]" />
-                </Link>
-                <Link
-                  href="https://medium.com/@starckcrypto"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex h-12 w-12 items-center justify-center rounded-md border border-gray-800 text-gray-400 transition-colors hover:border-[#FF5C00]"
-                >
-                  <YoutubeLogo className="fill-current text-[1.5rem] text-gray-400 transition-colors group-hover:text-[#FF5C00]" />
-                </Link>
-                <Link
-                  href="https://github.com/StarckASIP/Starck"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex h-12 w-12 items-center justify-center rounded-md border border-gray-800 text-gray-400 transition-colors hover:border-[#FF5C00]"
-                >
-                  <GithubLogo className="fill-current text-[1.5rem] text-gray-400 transition-colors group-hover:text-[#FF5C00]" />
-                </Link>
+                  <span className="mr-2 text-lg font-medium">TO PLATFORM</span>
+                  <ChevronRight className="h-5 w-5" strokeWidth={4} />
+                </button>
+              </div>
+              <div className="px-4 pb-4">
+                <div className="flex justify-center gap-4">
+                  <Link
+                    href="https://t.me/starckapp"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 w-12 items-center justify-center rounded-md border border-[#bda69c] text-white transition-colors hover:border-[#FF5C00] hover:text-[#FF5C00]"
+                  >
+                    <TelegramLogo className="text-[1.5rem]" />
+                  </Link>
+                  <Link
+                    href="https://twitter.com/Starckcrypto"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 w-12 items-center justify-center rounded-md border border-[#bda69c] text-white transition-colors hover:border-[#FF5C00] hover:text-[#FF5C00]"
+                  >
+                    <XTwitterLogo className="text-[1.5rem]" />
+                  </Link>
+                  <Link
+                    href="https://medium.com/@starckcrypto"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 w-12 items-center justify-center rounded-md border border-[#bda69c] text-white transition-colors hover:border-[#FF5C00] hover:text-[#FF5C00]"
+                  >
+                    <YoutubeLogo className="text-[1.5rem]" />
+                  </Link>
+                  <Link
+                    href="https://github.com/StarckASIP/Starck"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 w-12 items-center justify-center rounded-md border border-[#bda69c] text-white transition-colors hover:border-[#FF5C00] hover:text-[#FF5C00]"
+                  >
+                    <GithubLogo className="text-[1.5rem]" />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </nav>
-
-        {/* FOOTER */}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

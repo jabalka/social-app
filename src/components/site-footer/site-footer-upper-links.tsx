@@ -11,17 +11,10 @@ const SiteFooterUpperLinks: React.FC<Props> = ({ className }) => {
     <>
       <div className={cn("flex flex-col items-center gap-2 sm:flex-row sm:gap-8", className)}>
         <Link
-          href="/documents/LegalDisclaimer-2024-02-16.pdf"
+          href="https://www.citizensadvice.org.uk/about-us/contact-us/"
           className="uppercase text-white transition-colors hover:text-[#ff6913] focus-visible:text-[#ff6913] focus-visible:outline-none"
         >
-          Legal disclaimer
-        </Link>
-
-        <Link
-          href="https://starck.gitbook.io/starck-whitepaper-v.3.0"
-          className="uppercase text-white transition-colors hover:text-[#ff6913] focus-visible:text-[#ff6913] focus-visible:outline-none"
-        >
-          Whitepaper
+          Legal Advice
         </Link>
 
         <Link
@@ -36,6 +29,13 @@ const SiteFooterUpperLinks: React.FC<Props> = ({ className }) => {
           className="uppercase text-white transition-colors hover:text-[#ff6913] focus-visible:text-[#ff6913] focus-visible:outline-none"
         >
           Privacy policy
+        </Link>
+
+        <Link
+          href="/contact"
+          className="uppercase text-white transition-colors hover:text-[#ff6913] focus-visible:text-[#ff6913] focus-visible:outline-none"
+        >
+          Contact us
         </Link>
       </div>
     </>
