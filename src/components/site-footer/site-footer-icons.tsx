@@ -6,6 +6,7 @@ import XTwitterLogo from "../svg/x-twitter-logo";
 import YoutubeLogo from "../svg/youtube-logo";
 
 const SiteFooterIcons: React.FC = () => {
+  
   return (
     <div className="flex flex-wrap justify-center gap-2 sm:flex-nowrap">
       <Link
@@ -30,7 +31,7 @@ const SiteFooterIcons: React.FC = () => {
       </Link>
 
       <Link
-        href="https://github.com/StarckASIP/Starck"
+        href="https://github.com/jabalka/social-app"
         className="rounded-full bg-white/10 p-2 transition-colors hover:bg-[#ff6913] focus-visible:bg-[#ff6913]"
       >
         <GithubLogo className="text-[1.5rem] text-white" />

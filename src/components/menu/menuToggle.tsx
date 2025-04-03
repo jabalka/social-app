@@ -8,7 +8,7 @@ interface MenuToggleProps {
 const MenuToggle: React.FC<MenuToggleProps> = ({ active, onClick }) => {
   return (
     <button
-      className="z-40 flex h-12 w-12 flex-col items-center justify-center rounded-full bg-[#FF5C00] transition-colors hover:bg-[#FF7A33] focus:outline-none"
+      className="z-40 flex h-12 w-12 flex-col items-center justify-center rounded-full bg-[#8f7f79] transition-colors hover:bg-[#bda69c] focus:outline-none"
       data-active={active}
       aria-label="Toggle menu"
       onClick={onClick}

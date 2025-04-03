@@ -8,7 +8,7 @@ interface Props {
 const SiteFooterSeparator: React.FC<Props> = ({ className }) => {
   return (
     <>
-      <div className={cn("mb-4 mt-8 border-t border-white", className)}></div>
+      <div className={cn("mb-2 mt-2 border-t border-white/50", className)}></div>
     </>
   );
 };

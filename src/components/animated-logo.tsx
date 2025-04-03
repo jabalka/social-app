@@ -10,8 +10,8 @@ interface Props {
 const AnimatedLogo: React.FC<Props> = ({ size, className }) => {
   return (
     <Image
-      src="/images/logoStarck.png"
-      alt="Starck Logo"
+      src="/images/civ-dev-logo.png"
+      alt="CivDev Logo"
       width={size}
       height={size}
       className={cn("group-hover:animate-tiltZoom", className)}
