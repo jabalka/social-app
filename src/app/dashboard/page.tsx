@@ -5,13 +5,14 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { redirect } from "next/navigation";
 
 
 const Dashboard: React.FC = () => {
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
-      // Redirect or handle unauthenticated state
+          redirect("/"); 
     }
   });
 

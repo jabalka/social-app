@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { cn } from "@/utils/cn.utils";
-import { BaseUserData } from "./create-account";
+import { BaseUserData } from "./create-account-flow";
 import { getUser } from "@/actions/common.actions";
 
 const formSchema = z.object({

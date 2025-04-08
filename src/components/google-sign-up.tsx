@@ -9,13 +9,13 @@ const GoogleSignIn: React.FC = () => {
       className="w-full"
     >
       <Button
-        aria-label="Sign in with Google"
+        aria-label="Sign up with Google"
         type="submit"
        className="mx-auto w-full justify-center rounded-full bg-white text-black hover:bg-gray-200 group"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-l">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5">
-            <title>Sign in with Google</title>
+            <title>Sign up with Google</title>
             <desc>Google G Logo</desc>
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -35,7 +35,7 @@ const GoogleSignIn: React.FC = () => {
             ></path>
           </svg>
         </div>
-        <span className="text-sm tracking-wide group-hover:text-white/80  text-black">Sign in with Google</span>
+        <span className="text-sm tracking-wide group-hover:text-white/80  text-black">Sign up with Google</span>
       </Button>
     </form>
   );

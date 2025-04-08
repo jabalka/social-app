@@ -11,6 +11,7 @@ import React from "react";
 import Hamburger from "./hamburger";
 import ProfileDetails from "./profile-details";
 import ThemeSwitcher from "./theme-switcher";
+import ThemeToggle from "./theme-toggle";
 
 interface Props {
   user: User | null;
@@ -45,6 +46,7 @@ const HeaderClient: React.FC<Props> = ({ user, className, onToggle }) => {
 
         <div className="flex items-center gap-4">
           <ThemeSwitcher theme={theme} onClick={switchTheme} />
+          <ThemeToggle theme={theme} onClick={switchTheme} />
 
           {user && <ProfileDetails theme={theme} user={user} />}
         </div>

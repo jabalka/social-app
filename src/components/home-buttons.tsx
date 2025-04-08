@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button"; // Use shadcn Button for consis
 // import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
-import CreateAccountFlow from "./create-account";
-import GoogleSignIn from "./google-sign-in";
+import CreateAccountFlow from "./create-account-flow";
+import GoogleSignUp from "./google-sign-up";
+import LoginFlow from "./login-flow";
 
 const HomeButtons: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
 
   
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md mt-20 ">
       <div className="mb-6 font-bold text-white">
         <h1 className="mb-2 text-3xl">Happening now</h1>
         <h3 className="text-xl">Join today.</h3>
@@ -22,12 +24,12 @@ const HomeButtons: React.FC = () => {
       <section className="flex w-full flex-col gap-3">
 
         <div className="mx-auto w-4/5 justify-center">
-        <GoogleSignIn />
+        <GoogleSignUp />
         </div>
 
         <Button
           variant="outline"
-          className="mx-auto w-4/5 justify-center rounded-xl bg-white text-black hover:bg-gray-200"
+          className="mx-auto w-4/5 justify-center rounded-full bg-white text-black hover:bg-gray-200"
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -40,7 +42,7 @@ const HomeButtons: React.FC = () => {
 
         <Button
           variant="outline"
-          className="mx-auto w-4/5 justify-center rounded-xl bg-white text-black hover:bg-gray-200"
+          className="mx-auto w-4/5 justify-center rounded-full bg-white text-black hover:bg-gray-200"
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -51,9 +53,9 @@ const HomeButtons: React.FC = () => {
           <span>Sign up with Facebook</span>
         </Button>
 
-        <div className="relative my-5 flex items-center text-center">
+        <div className="relative my-px flex items-center text-center">
           <div className="absolute w-full border-t border-gray-600"></div>
-          <div className="relative z-10 mx-auto bg-black px-2 text-gray-400">or</div>
+          <div className="relative z-10 mx-auto bg-black px-2 text-gray-300">or</div>
         </div>
 
         <div className="mx-auto w-4/5">
@@ -65,7 +67,9 @@ const HomeButtons: React.FC = () => {
           </Button>
         </div>
 
-        <span className="mt-2 text-center text-sm text-gray-400">
+
+
+        <span className="mt-px text-center text-xs text-gray-400">
           By signing up, you agree to the{" "}
           <a href="/toLink" className="text-blue-400 no-underline hover:underline">
             Terms of Service
@@ -79,9 +83,20 @@ const HomeButtons: React.FC = () => {
             Cookie Use.
           </a>
         </span>
+
+        <div className="mx-auto w-4/5 mt-10">
+        <h1 className="mb-3 text-lg font-semibold">Already have an account?</h1>
+          <Button
+            className="w-full justify-center rounded-full border-2 border-white bg-black font-bold text-blue-400 hover:bg-blue-900/30"
+            onClick={() => setIsLoginDialogOpen(true)}
+          >
+            Sign In
+          </Button>
+        </div>
       </section>
 
       {isCreateDialogOpen && <CreateAccountFlow onClose={() => setIsCreateDialogOpen(false)} />}
+      {isLoginDialogOpen && <LoginFlow onClose={() => setIsLoginDialogOpen(false)} />}
     </div>
   );
 };

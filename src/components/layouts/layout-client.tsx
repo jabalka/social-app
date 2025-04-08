@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import React, { PropsWithChildren } from "react";
 import MenuLayout from "./menu-layout";
 import SidebarLayoutClient from "./sidebar-layout-client";
+import WelcomeLayout from "./welcome-layout";
 
 const PATHS_WITH_MENU_LAYOUT = ["/dashboard"];
 
@@ -18,7 +19,7 @@ const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) =>
   const pathname = usePathname();
 
   if (pathname === "/") {
-    return <MenuLayout>{children}</MenuLayout>;
+    return <WelcomeLayout>{children}</WelcomeLayout>;
   }
 
   if (PATHS_WITH_MENU_LAYOUT.some((path) => pathname.startsWith(path))) {

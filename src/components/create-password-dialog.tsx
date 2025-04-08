@@ -12,7 +12,7 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { BaseUserData, ServerUserData } from "./create-account";
+import { BaseUserData, ServerUserData } from "./create-account-flow";
 
 const formSchema = z.object({
   password: z
