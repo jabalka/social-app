@@ -60,14 +60,13 @@ const MenuLayout: React.FC<PropsWithChildren> = ({ children }) => {
           />
         </>
       )}
-
-      <div className="flex flex-1 flex-col bg-gradient-to-b from-zinc-900 via-indigo-950 to-zinc-900">
+      <div className="flex flex-1 flex-col items-center justify-center p-4 bg-black text-white">
         <main className="flex-1">
           <div>{children}</div>
         </main>
 
-        <SiteFooter />
       </div>
+        <SiteFooter />
     </div>
   );
 };

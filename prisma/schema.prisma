@@ -11,6 +11,7 @@ model User {
   id                      String    @id @default(cuid())
   name                    String?
   email                   String?   @unique
+  username                String?    @unique
   hashedPassword          String?
   emailVerified           DateTime?
   verificationToken       String?
@@ -37,7 +38,8 @@ model Post {
   likes     Like[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-    @@index([createdAt]) // For pagination
+
+  @@index([createdAt]) // For pagination
 }
 
 model Comment {
@@ -49,7 +51,8 @@ model Comment {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-    @@index([postId, createdAt]) // For comment pagination
+
+  @@index([postId, createdAt]) // For comment pagination
 }
 
 model Like {

@@ -20,11 +20,7 @@ export interface UserData extends BaseUserData {
   // Ensure phone can't exist here
 }
 
-// export interface PhoneUser extends BaseUserData {
-//   type: "phone";
-//   phone: string;
-//   email?: never; // Ensure email can't exist here
-// }
+
 
 export interface ServerUserData extends BaseUserData {
   password: string;
@@ -45,7 +41,7 @@ const CreateAccountFlow: React.FC<CreateAccountFlowProps> = ({ onClose }) => {
 
   const handleSignupComplete = async () => {
     setIsPasswordOpen(false);
-    // here it needs to send the data to the server niggus
+
     onClose();
 
     router.push("/dashboard");

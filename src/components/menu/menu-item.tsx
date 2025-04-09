@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 export interface MenuItem {
   label: string;
@@ -9,6 +10,7 @@ export interface MenuItem {
     label: string;
     href: string;
   }>;
+  icon?: React.ReactNode;
 }
 
 interface MenuItemProps {
@@ -19,53 +21,94 @@ interface MenuItemProps {
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle }) => {
-  return (
-    <div className="overflow-hidden border-b border-[#2b2725]">
-      <button
-        className={`group flex w-full items-center justify-between py-3 text-left ${item.hasDropdown ? "cursor-pointer" : ""}`}
-        onClick={() => {
-          if (item.hasDropdown) {
-            onToggle();
-          } else if (item.href) {
-            toggleMenu();
-          }
-        }}
-      >
-        <span
-          className={`text-lg font-medium ${
-            item.hasDropdown
-              ? "text-white transition-colors group-hover:text-[#FF5C00]"
-              : "text-white hover:text-[#FF5C00]"
-          }`}
-        >
-          {item.label}
-        </span>
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onToggle(); // close submenu
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onToggle]);
+
+  return (
+    <div ref={menuRef} className="overflow-hidden border-b border-[#2b2725]">
+    <button
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`group flex w-full items-center justify-between py-3 text-left ${
+        item.hasDropdown ? "cursor-pointer" : ""
+      }`}
+      onClick={(e) => {
+        if (item.hasDropdown) {
+          onToggle();
+          if (isOpen) {
+            setIsHovered(false); 
+          }
+          (e.currentTarget as HTMLButtonElement).blur();
+        } else if (item.href) {
+          toggleMenu();
+        }
+      }}
+    >
+      <div className="flex w-full items-center justify-between">
+        {/* label + optional icon block */}
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-lg font-medium transition-colors ${
+              isOpen || isHovered ? "text-[#FF5C00]" : "text-white"
+            }`}
+          >
+            {item.label}
+          </span>
+          {!item.hasDropdown && item.icon && (
+            <div className="text-white transition-colors group-hover:text-[#FF5C00]">
+              {item.icon}
+            </div>
+          )}
+        </div>
+  
+        {/* Chevron separated, stable */}
         {item.hasDropdown && (
           <ChevronRight
             className={`h-5 w-5 transform transition-transform duration-300 ${
-              isOpen ? "rotate-90 text-[#FF5C00]" : "text-white group-hover:text-[#FF5C00]"
+              isOpen ? "rotate-90 text-[#FF5C00]" : isHovered ? "text-[#FF5C00]" : "text-white"
             }`}
             strokeWidth={4}
           />
         )}
-      </button>
-
-      <div className={`transition-all duration-900 ease-in-out ${isOpen ? "max-h-96" : "max-h-0"} overflow-hidden`}>
-        <div className="mb-2 ml-4 space-y-2">
-          {item.subItems?.map((subItem, index) => (
-            <Link
-              key={index}
-              href={subItem.href}
-              className="block py-1 text-[#bda69c] transition-colors hover:text-[#FF5C00]"
-              onClick={toggleMenu}
-            >
-              {subItem.label}
-            </Link>
-          ))}
-        </div>
+      </div>
+    </button>
+  
+    {/* Submenu */}
+    <div
+      className={`overflow-hidden transition-all duration-700 ease-in-out ${
+        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+      }`}
+    >
+      <div className="mb-2 ml-4 space-y-2">
+        {item.subItems?.map((subItem, index) => (
+          <Link
+            key={index}
+            href={subItem.href}
+            className="block py-1 text-[#bda69c] transition-colors hover:text-[#FF5C00]"
+            onClick={toggleMenu}
+          >
+            {subItem.label}
+          </Link>
+        ))}
       </div>
     </div>
+  </div>
   );
 };
 

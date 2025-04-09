@@ -1,10 +1,11 @@
 "use server";
 
 import { auth, signIn } from "@/auth";
-import { User } from "@prisma/client";
+
 import { AuthError } from "@auth/core/errors";
 import { revalidateTag } from "next/cache";
-import { headers } from "next/headers";
+
+import prisma from "@/prisma";
 import { connection } from "next/server";
 
 export const isomorphicNow = async () => {
@@ -12,29 +13,22 @@ export const isomorphicNow = async () => {
   return Date.now();
 };
 
-export const fetchUser = async (email: string): Promise<User> => {
-  const readonlyHeaders = await headers();
-  const host = readonlyHeaders.get("host");
-  const protocol = process?.env.NODE_ENV === "development" ? "http" : "https";
-  const url = `${protocol}://${host}/api/users/${encodeURIComponent(email)}`;
+export const findUserByIdentifier = async (identifier: string) => {
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
-  const res = await fetch(url, { next: { tags: [`user-${email}`] } });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch user");
-  }
-
-  return res.json() as Promise<User>; 
-};
-
-
-export const getUser = async (email: string) => {
-  try {
-    const user = await fetchUser(email);
-    return user;
-  } catch {
-    return null;
-  }
+  return prisma.user.findUnique({
+    where: isEmail ? { email: identifier.toLowerCase() } : { username: identifier },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      posts: true,
+      likes: true,
+      comments: true,
+      // can be added any User fields needed
+    },
+  });
 };
 
 export const refreshUser = async (email: string) => {
@@ -48,7 +42,7 @@ export const getCurrentUser = async () => {
     return null;
   }
 
-  return getUser(session.user.email);
+  return findUserByIdentifier(session.user.email);
 };
 
 export const login = async (email: string, password: string, twoFactorToken?: string, backupCodes?: string[]) => {

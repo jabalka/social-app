@@ -15,8 +15,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { cn } from "@/utils/cn.utils";
-import { BaseUserData } from "./create-account";
-import { getUser } from "@/actions/common.actions";
+import { BaseUserData } from "./create-account-flow";
+
+import Image from "next/image";
+import { findUserByIdentifier } from "@/app/actions/common.actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "What's your name?"),
@@ -110,7 +112,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
 
       const identifier = values.email;
       if (identifier) {
-        const existingUser = await getUser(identifier);
+        const existingUser = await findUserByIdentifier(identifier);
         if (existingUser) {
           setErrorMessage(`User with this email already exists!`);
           setIsReady(false);
@@ -128,7 +130,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
     setErrorMessage("");
 
     if (identifier) {
-      const existingUser = await getUser( identifier);
+      const existingUser = await findUserByIdentifier( identifier);
       if (existingUser) {
         setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
         return;
@@ -179,8 +181,17 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
           >
             <X className="h-4 w-4" />
           </Button>
+            
+        <Image
+          src="/images/civ-dev-logo-white.png"
+          alt="CivDev Logo"
+          width={80}
+          height={80}
+          className="absolute -right-4 -top-6 w-full max-w-[100px]"
+          priority
+        />
 
-          <DialogTitle className="mb-4 text-center text-xl font-semibold">Create your account</DialogTitle>
+          <DialogTitle className="mb-2 text-center text-xl font-semibold">Create your account</DialogTitle>
 
           <Form {...form}>
             <form className="space-y-4">

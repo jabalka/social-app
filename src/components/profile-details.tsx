@@ -2,16 +2,16 @@
 
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { User } from "@prisma/client";
 import { CircleUserRound } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import React from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { SafeUser } from "./layouts/layout-client";
 
 interface Props {
   theme: string;
-  user: User;
+  user: SafeUser;
   className?: string;
 }
 

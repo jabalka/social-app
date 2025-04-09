@@ -10,7 +10,7 @@ interface Props {
 const AnimatedLogo: React.FC<Props> = ({ size, className }) => {
   return (
     <Image
-      src="/images/civ-dev-logo.png"
+        src="/images/civ-dev-logo-black.png"
       alt="CivDev Logo"
       width={size}
       height={size}

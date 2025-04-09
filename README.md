@@ -43,9 +43,15 @@ when fetching clientSide in NextJS - good to use library useSWR
 
 NeonPostSQL - for DB in AWS
 
-
+        Authentication.,
+        Connect To DB
+        3rd party Providers API
+        Interface Library
+        Real Time notification = web sockets
 
 -ToDO
     * Create a Profile SidebarMenu with toggle to show Logout, Edit Profile etc.
     * Fix the Footer
     * Fix Login Page - Add Login functionality and change buttons' color
+
+    * Move the footer's icons in the bottom right corner and make them a bit smaller!
