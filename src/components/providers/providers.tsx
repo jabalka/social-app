@@ -17,7 +17,7 @@ const Providers: React.FC<PropsWithChildren> = async ({ children }) => {
       <HtmlProviders>
         <ThemeProviders>
           <SafeThemeProviders>
-    
+        
               <ConfirmationProviders>
                 <ToasterProviders>
                   <SidebarProviders>{children}</SidebarProviders>

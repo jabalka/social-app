@@ -1,14 +1,14 @@
 "use client";
 
 import { cn } from "@/utils/cn.utils";
-import { User } from "@prisma/client";
 import { BarChart3, Coins, FileText, Flame, LayoutDashboard, Newspaper, Settings, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 import SidebarNavItem from "./sidebar-nav-item";
+import { SafeUser } from "../layouts/layout-client";
 
 interface Props {
-  user: User | null;
+  user: SafeUser | null;
   theme: string;
   sidebarExpanded: boolean;
   className?: string;

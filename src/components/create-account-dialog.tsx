@@ -16,8 +16,9 @@ import { z } from "zod";
 
 import { cn } from "@/utils/cn.utils";
 import { BaseUserData } from "./create-account-flow";
-import { getUser } from "@/actions/common.actions";
+
 import Image from "next/image";
+import { findUserByIdentifier } from "@/app/actions/common.actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "What's your name?"),
@@ -111,7 +112,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
 
       const identifier = values.email;
       if (identifier) {
-        const existingUser = await getUser(identifier);
+        const existingUser = await findUserByIdentifier(identifier);
         if (existingUser) {
           setErrorMessage(`User with this email already exists!`);
           setIsReady(false);
@@ -129,7 +130,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
     setErrorMessage("");
 
     if (identifier) {
-      const existingUser = await getUser( identifier);
+      const existingUser = await findUserByIdentifier( identifier);
       if (existingUser) {
         setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
         return;

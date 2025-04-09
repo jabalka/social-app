@@ -4,7 +4,6 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSidebarContext } from "@/context/sidebar-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { User } from "@prisma/client";
 import { setCookie } from "cookies-next";
 import { useTheme } from "next-themes";
 import React from "react";
@@ -12,9 +11,10 @@ import Hamburger from "./hamburger";
 import ProfileDetails from "./profile-details";
 import ThemeSwitcher from "./theme-switcher";
 import ThemeToggle from "./theme-toggle";
+import { SafeUser } from "./layouts/layout-client";
 
 interface Props {
-  user: User | null;
+  user: SafeUser | null;
   className?: string;
   onToggle: () => void;
 }

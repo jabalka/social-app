@@ -2,13 +2,13 @@
 
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { User } from "@prisma/client";
 import React from "react";
 import SidebarLogo from "./sidebar-logo";
 import SidebarNavigation from "./sidebar-navigation";
+import { SafeUser } from "../layouts/layout-client";
 
 interface SidebarProps {
-  user: User | null;
+  user: SafeUser | null;
   theme: string;
   sidebarExpanded: boolean;
   className?: string;

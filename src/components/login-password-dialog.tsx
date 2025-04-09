@@ -12,8 +12,9 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { BaseUserData, ServerUserData } from "./create-account-flow";
+import {  ServerUserData } from "./create-account-flow";
 import Image from "next/image";
+import { BaseLoginUserData } from "./login-flow";
 
 const formSchema = z.object({
   password: z.string(),
@@ -29,10 +30,9 @@ type FormValues = z.infer<typeof formSchema>;
 interface LoginPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userData: BaseUserData; // userData needs an interface as the data is passed from previous dialog
+  userData: BaseLoginUserData; // userData needs an interface as the data is passed from previous dialog
   onComplete: () => void;
   onClose: () => void;
-  emailFromParent: string;
 }
 
 const LoginPasswordDialog: React.FC<LoginPasswordDialogProps> = ({
@@ -45,7 +45,10 @@ const LoginPasswordDialog: React.FC<LoginPasswordDialogProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const emailFromParent = userData.email;
+  let emailFromParent;
+  if(userData.email){
+    emailFromParent = userData.email;
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,15 +75,15 @@ const LoginPasswordDialog: React.FC<LoginPasswordDialogProps> = ({
         const passwordValid = await form.trigger("password");
 
         if (passTouched && !hasPassword) {
-          form.setError("confirmPassword", {
+          form.setError("password", {
             type: "manual",
             message: "Passwords don't match",
           });
         } else {
-          form.clearErrors("confirmPassword");
+          form.clearErrors("password");
         }
 
-        const ready = passwordValid && match && hasPassword && hasConfirm;
+        const ready = passwordValid && hasPassword;
         setIsReady(ready);
       }, 400);
     });
@@ -97,7 +100,6 @@ const LoginPasswordDialog: React.FC<LoginPasswordDialogProps> = ({
     const completeUserData: ServerUserData = {
       password: values.password,
       email: userData.email,
-      name: userData.name,
     };
     const result = await registerUser(completeUserData.email, completeUserData.password, completeUserData.name);
 
@@ -217,7 +219,7 @@ const LoginPasswordDialog: React.FC<LoginPasswordDialogProps> = ({
             className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
             disabled={!isReady}
           >
-            Create Account
+            Login
           </Button>
 
           <Button

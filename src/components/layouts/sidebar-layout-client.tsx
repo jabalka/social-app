@@ -4,15 +4,15 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSidebarContext } from "@/context/sidebar-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { User } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import React, { PropsWithChildren, useEffect } from "react";
 import Footer from "../sitebar-footer";
 import HeaderClient from "../header-client";
 import Sidebar from "../sidebar/sidebar";
+import { SafeUser } from "./layout-client";
 
 interface Props {
-  user: User | null;
+  user: SafeUser | null;
 }
 
 const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {

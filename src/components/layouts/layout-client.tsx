@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "@prisma/client";
+import { Post, Comment, Like } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import React, { PropsWithChildren } from "react";
 import MenuLayout from "./menu-layout";
@@ -11,8 +11,19 @@ const PATHS_WITH_MENU_LAYOUT = ["/dashboard"];
 
 const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard"];
 
+
+export type SafeUser = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  image: string | null;
+  posts: Post[];  
+  comments: Comment[]; 
+  likes: Like[]; 
+};
 interface Props {
-  user: User | null;
+  user: SafeUser | null;
+  children: React.ReactNode;
 }
 
 const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {

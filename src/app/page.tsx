@@ -1,16 +1,29 @@
-import { auth } from "@/auth";
+"use client"
+
 import HomeButtons from "@/components/home-buttons";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import type React from "react";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
-const Home: React.FC = async () => {
-  const session = await auth();
+const Home: React.FC = () => {
+  const { status } = useSession();
 
-  if (session?.user) {
-    redirect("/dashboard");
+  useEffect(() => {
+    if (status === "authenticated") {
+      redirect("/dashboard");
+    }
+  }, [status]);
+
+  if (status === "loading") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <p>Loading...</p>
+      </main>
+    );
   }
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col items-center md:flex-row md:items-start">
       <div className="mb-0 flex justify-center md:mb-0 md:mr-2 md:w-2/3">

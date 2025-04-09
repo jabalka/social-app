@@ -13,7 +13,7 @@ const SidebarLogo: React.FC<Props> = ({ className, size = 40 }) => {
   return (
     <div className={cn(className)}>
       <Image
-        src="/images/civ-dev-logo.png"
+        src="/images/civ-dev-logo-white.png"
         alt="CivDev Logo"
         width={size}
         height={size}

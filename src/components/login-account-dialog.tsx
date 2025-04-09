@@ -1,19 +1,20 @@
 "use client";
 
-import { getUser } from "@/actions/common.actions";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
+import Image from "next/image";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import GoogleSignIn from "./google-sign-in";
 import { BaseLoginUserData } from "./login-flow";
-import Image from "next/image";
+import { findUserByIdentifier } from "@/app/actions/common.actions";
 
 const formSchema = z.object({
   username: z.string().min(1, "Please enter your username.").optional(),
@@ -41,6 +42,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
       email: "",
       // phone: "",
     },
+    shouldUnregister: true,
     mode: "onChange",
     criteriaMode: "all",
   });
@@ -54,8 +56,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
       const hasUsername = !!values.username?.trim();
       const hasEmail = !!values.email?.trim();
 
-      form.clearErrors(["email"]);
-      form.clearErrors(["username"]);
+      form.clearErrors(["email", "username"]);
 
       if (emailTouched && !hasEmail) {
         if (emailTouched) {
@@ -64,32 +65,16 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
             message: "Email is required.",
           });
         }
-      } else if (usernameTouched && hasUsername) {
-        if (usernameTouched) {
-          form.setError("username", {
-            type: "manuel",
-            message: "Username is required.",
-          });
-        }
+      }
+      if (usernameTouched && !hasUsername) {
+        form.setError("username", {
+          type: "manual",
+          message: "Username is required.",
+        });
       }
 
-      if (values.username || values.email) {
-        const isReadyNow = hasUsername || hasEmail;
-
-        setIsReady(isReadyNow);
-        setErrorMessage("");
-      }
-
-      const identifier = values.email || values.username;
-      if (identifier) {
-        const existingUser = await getUser(identifier);
-        if (!existingUser && values.email) {
-          setErrorMessage(`User with this email already exists!`);
-        } else if (!existingUser && values.username) {
-          setErrorMessage(`User with this username already exists!`);
-        }
-        setIsReady(false);
-      }
+      setIsReady(hasUsername || hasEmail);
+      setErrorMessage("");
     });
 
     return () => subscription.unsubscribe();
@@ -98,13 +83,18 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
   const handleNext = async () => {
     const values = form.getValues();
     console.log("**********values:  ", values);
-    const identifier = values.email || values.username;
     setErrorMessage("");
 
+    const valid = await form.trigger();
+    if (!valid) {
+      return;
+    }
+
+    const identifier = values.email || values.username;
     if (identifier) {
-      const existingUser = await getUser(identifier);
-      if (existingUser) {
-        setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
+      const existingUser = await findUserByIdentifier(identifier);
+      if (!existingUser) {
+        setErrorMessage(`User with this ${values.email ? "email" : "username"} do not exist!`);
         return;
       }
     }
@@ -122,17 +112,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
   };
 
   const toggleInputType = () => {
-    setIsUsername((prev) => {
-      const next = !prev;
-      if (next) {
-        form.unregister("email");
-        form.setValue("username", "");
-      } else {
-        form.setValue("email", "");
-        form.unregister("username");
-      }
-      return next;
-    });
+    setIsUsername((prev) => !prev);
   };
 
   const testCheck = () => {
@@ -159,39 +139,41 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
             <X className="h-4 w-4" />
           </Button>
 
-                  <Image
-                    src="/images/civ-dev-logo-white.png"
-                    alt="CivDev Logo"
-                    width={80}
-                    height={80}
-                    className="absolute -right-4 -top-6 w-full max-w-[100px]"
-                    priority
-                  />
+          <Image
+            src="/images/civ-dev-logo-white.png"
+            alt="CivDev Logo"
+            width={80}
+            height={80}
+            className="absolute -right-4 -top-6 w-full max-w-[100px]"
+            priority
+          />
 
           <DialogTitle className="mb-4 text-center text-2xl font-semibold">Sign in CivilDev</DialogTitle>
           <div className="mx-auto w-4/5 justify-center">
-                    <GoogleSignIn />
-                  </div>
+            <GoogleSignIn />
+          </div>
           <Form {...form}>
             <form className="space-y-4">
               <div className="w-full max-w-md">
                 <div className="flex w-full flex-col gap-3">
-          
-
                   {isUsername ? (
                     <FormField
                       control={form.control}
                       name="username"
-                      render={({ field }) => (
+                      render={({ field, fieldState }) => (
                         <FormItem>
                           <FormLabel className="mx-auto w-4/5 justify-center text-gray-400">Username</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger("username");
+                              }}
                               className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500"
                             />
                           </FormControl>
-                          <FormMessage />
+                          {fieldState.isTouched && <FormMessage />}
                         </FormItem>
                       )}
                     />
@@ -199,16 +181,20 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
                     <FormField
                       control={form.control}
                       name="email"
-                      render={({ field }) => (
+                      render={({ field, fieldState }) => (
                         <FormItem>
                           <FormLabel className="mx-auto w-4/5 justify-center text-gray-400">Email</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger("email");
+                              }}
                               className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500"
                             />
                           </FormControl>
-                          <FormMessage />
+                          {fieldState.isTouched && <FormMessage />}
                         </FormItem>
                       )}
                     />

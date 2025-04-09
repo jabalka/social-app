@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 
 export async function signInWithGoogle() {
@@ -48,3 +48,14 @@ export const login = async (email: string, password: string) => {
     throw error;
   }
 };
+
+
+export async function logout() {
+  try {
+    await signOut({ redirect: false}); 
+    return { success: true };
+  } catch (error) {
+    console.error("Logout error:", error);
+    return { success: false, error: "Failed to logout" };
+  }
+}

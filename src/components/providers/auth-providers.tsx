@@ -1,12 +1,11 @@
-import { auth } from "@/auth";
+"use client";
+
 import { SessionProvider } from "next-auth/react";
 import React, { PropsWithChildren } from "react";
 
-const AuthProviders: React.FC<PropsWithChildren> = async ({ children }) => {
-  const session = await auth();
+const AuthProviders: React.FC<PropsWithChildren> =({ children }) => {
 
-
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+  return <SessionProvider>{children}</SessionProvider>;
 };
 
 export default AuthProviders;
