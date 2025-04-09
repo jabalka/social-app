@@ -17,6 +17,7 @@ import { z } from "zod";
 import { cn } from "@/utils/cn.utils";
 import { BaseUserData } from "./create-account-flow";
 import { getUser } from "@/actions/common.actions";
+import Image from "next/image";
 
 const formSchema = z.object({
   name: z.string().min(1, "What's your name?"),
@@ -179,8 +180,17 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
           >
             <X className="h-4 w-4" />
           </Button>
+            
+        <Image
+          src="/images/civ-dev-logo-white.png"
+          alt="CivDev Logo"
+          width={80}
+          height={80}
+          className="absolute -right-4 -top-6 w-full max-w-[100px]"
+          priority
+        />
 
-          <DialogTitle className="mb-4 text-center text-xl font-semibold">Create your account</DialogTitle>
+          <DialogTitle className="mb-2 text-center text-xl font-semibold">Create your account</DialogTitle>
 
           <Form {...form}>
             <form className="space-y-4">

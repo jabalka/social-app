@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import GoogleSignIn from "./google-sign-in";
 import { BaseLoginUserData } from "./login-flow";
+import Image from "next/image";
 
 const formSchema = z.object({
   username: z.string().min(1, "Please enter your username.").optional(),
@@ -158,93 +159,87 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
             <X className="h-4 w-4" />
           </Button>
 
-          <DialogTitle className="mb-4 text-center text-2xl font-semibold">Sign in CivilDev</DialogTitle>
+                  <Image
+                    src="/images/civ-dev-logo-white.png"
+                    alt="CivDev Logo"
+                    width={80}
+                    height={80}
+                    className="absolute -right-4 -top-6 w-full max-w-[100px]"
+                    priority
+                  />
 
+          <DialogTitle className="mb-4 text-center text-2xl font-semibold">Sign in CivilDev</DialogTitle>
+          <div className="mx-auto w-4/5 justify-center">
+                    <GoogleSignIn />
+                  </div>
           <Form {...form}>
             <form className="space-y-4">
               <div className="w-full max-w-md">
                 <div className="flex w-full flex-col gap-3">
-                  <div className="mx-auto w-4/5 justify-center">
-                    <GoogleSignIn />
-                  </div>
+          
 
                   {isUsername ? (
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-400 mx-auto w-4/5 justify-center">Username</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="mx-auto w-4/5 justify-center text-gray-400">Username</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="mx-auto w-4/5 justify-center text-gray-400">Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
-              ) : (
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-400 mx-auto w-4/5 justify-center">Email</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
-              <div className="text-right mx-auto w-4/5 justify-center">
-                <button type="button" onClick={toggleInputType} className="text-sm text-blue-500 hover:underline">
-                  {isUsername ? "Use email instead" : "Use username instead"}
-                </button>
-              </div>
+                  <div className="mx-auto w-4/5 justify-center text-right">
+                    <button type="button" onClick={toggleInputType} className="text-sm text-blue-500 hover:underline">
+                      {isUsername ? "Use email instead" : "Use username instead"}
+                    </button>
+                  </div>
 
-              {errorMessage && <div className="text-center text-red-500">{errorMessage}</div>}
+                  {errorMessage && <div className="text-center text-red-500">{errorMessage}</div>}
 
-              <Button
-                type="button"
-                className="mx-auto w-4/5 justify-center rounded-full bg-white font-bold text-black hover:bg-gray-200"
-                disabled={!isReady}
-                onClick={handleNext}
-              >
-                Next
-              </Button>
+                  <Button
+                    type="button"
+                    className="mx-auto w-4/5 justify-center rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                    disabled={!isReady}
+                    onClick={handleNext}
+                  >
+                    Next
+                  </Button>
 
-              <Button
-                type="button"
-                className="mx-auto w-4/5 justify-center rounded-full bg-white font-bold text-black hover:bg-gray-200"
-                onClick={testCheck}
-              >
-                Test Check
-              </Button>
-
+                  <Button
+                    type="button"
+                    className="mx-auto w-4/5 justify-center rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                    onClick={testCheck}
+                  >
+                    Test Check
+                  </Button>
                 </div>
               </div>
-              {/* <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-400">Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        maxLength={50}
-                        className="border-gray-600 bg-transparent text-white focus:border-blue-500"
-                      />
-                    </FormControl>
-                    <div className="text-right text-xs text-gray-500">{field.value.length}/50</div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-
-
             </form>
           </Form>
         </DialogContent>

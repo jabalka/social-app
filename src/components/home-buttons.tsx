@@ -27,7 +27,9 @@ const HomeButtons: React.FC = () => {
         <GoogleSignUp />
         </div>
 
-        <Button
+
+        {/* ----------- Since Apple API for sign in is paid, this function will be temporarily disabled! ---------------- */}
+        {/* <Button
           variant="outline"
           className="mx-auto w-4/5 justify-center rounded-full bg-white text-black hover:bg-gray-200"
         >
@@ -38,7 +40,7 @@ const HomeButtons: React.FC = () => {
             />
           </svg>
           <span>Sign up with Apple</span>
-        </Button>
+        </Button> */}
 
         <Button
           variant="outline"

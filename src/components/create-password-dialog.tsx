@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { BaseUserData, ServerUserData } from "./create-account-flow";
+import Image from "next/image";
 
 const formSchema = z.object({
   password: z
@@ -145,6 +146,15 @@ const CreatePasswordDialog: React.FC<CreatePasswordDialogProps> = ({
         >
           <X className="h-4 w-4" />
         </Button>
+
+                <Image
+                  src="/images/civ-dev-logo-white.png"
+                  alt="CivDev Logo"
+                  width={80}
+                  height={80}
+                  className="absolute -right-4 -top-6 w-full max-w-[100px]"
+                  priority
+                />
 
         <DialogTitle className="mb-4 text-center text-xl font-semibold">Create a password</DialogTitle>
 
