@@ -1,27 +1,16 @@
-"use client"
 
+import { auth } from "@/auth";
 import HomeButtons from "@/components/home-buttons";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import type React from "react";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 
-const Home: React.FC = () => {
-  const { status } = useSession();
+const Home: React.FC = async () => {
+  const session = await auth(); // SERVER-SIDE call, no waiting
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      redirect("/dashboard");
-    }
-  }, [status]);
-
-  if (status === "loading") {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-black text-white">
-        <p>Loading...</p>
-      </main>
-    );
+  if (session?.user) {
+    redirect("/dashboard"); // Instant, before any page shows
   }
 
   return (

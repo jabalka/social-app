@@ -66,7 +66,9 @@ interface MobileMenuProps {
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
     const router = useRouter();
 
   useEffect(() => {
@@ -88,20 +90,18 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu }) => {
     };
   }, [isOpen, toggleMenu]);
 
-  const handleNavigateClick = () => {
-    router.push("/");
-    logout();
-
-    return (
-      <LogoutLoader />
-    );
-  };
+  const handleNavigateClick = async () => {
+    setIsLoggingOut(true);
+  await logout();
+  setIsLoggingOut(false);
+  router.push("/");
+ };
 
   return (
     <>
       {isOpen && <div className="fixed inset-0 z-40 bg-black bg-opacity-50" onClick={toggleMenu} />}
-
-      <div
+      {isLoggingOut ? <LogoutLoader /> : (
+        <div
         ref={menuRef}
         className={`fixed right-0 top-0 h-full w-[320px] transform bg-gradient-to-b from-[#6f635e] via-[#443d3a] to-[#443d3a] ${
           isOpen ? "translate-x-0" : "translate-x-full"
@@ -191,6 +191,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu }) => {
           </div>
         </div>
       </div>
+      )}
+
+      
     </>
   );
 };

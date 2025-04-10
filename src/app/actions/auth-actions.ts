@@ -31,13 +31,18 @@ export async function signInWithCredentials(email: string, password: string) {
   };
 }
 
-export const login = async (email: string, password: string) => {
+export const login = async (identifier: string, password: string) => {
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+  const loginCredentials = isEmail
+  ? { email: identifier.toLowerCase(), password }
+  : { username: identifier, password };
+
   try {
     await signIn("credentials", {
-      email,
-      password,
+      ...loginCredentials,
       redirect: false,
-    });
+     });
 
     return { success: true };
   } catch (error) {

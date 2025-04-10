@@ -35,25 +35,23 @@ const LoginFlow: React.FC<LoginAccountFlowProps> = ({ onClose }) => {
 
   const handleLoginComplete = async () => {
     setIsPasswordOpen(false);
+    router.push("/dashboard");
 
     onClose();
-
-    router.push("/dashboard");
   };
 
   return (
-
     <>
       <LoginAccountDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} onNext={handleLoginNext} onClose={onClose} />
       {userData && (
-  <LoginPasswordDialog
-    open={isPasswordOpen}
-    onOpenChange={setIsPasswordOpen}
-    userData={userData}
-    onComplete={handleLoginComplete}
-    onClose={onClose}
-  />
-)}
+        <LoginPasswordDialog
+          open={isPasswordOpen}
+          onOpenChange={setIsPasswordOpen}
+          userData={userData}
+          onComplete={handleLoginComplete}
+          onClose={onClose}
+        />
+      )}
     </>
   );
 };
