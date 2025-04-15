@@ -1,36 +1,26 @@
 "use client";
 
-import { signInWithCredentials } from "@/app/actions/auth-actions";
-import { registerUser } from "@/app/actions/credentials-register.actions";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { resetPassword } from "@/app/actions/reset-password.actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, X } from "lucide-react";
 import Image from "next/image";
-import type React from "react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { BaseUserData, ServerUserData } from "./create-account-flow";
+import toast from "react-hot-toast";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { Input } from "./ui/input";
 import { PasswordFormValues, PasswordSchema } from "@/schemas/password";
 
-interface CreatePasswordDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  userData: BaseUserData; // userData needs an interface as the data is passed from previous dialog
-  onComplete: () => void;
-  onClose: () => void;
+interface ResetPasswordClientProps {
+  token?: string | null;
 }
 
-const CreatePasswordDialog: React.FC<CreatePasswordDialogProps> = ({
-  open,
-  onOpenChange,
-  userData,
-  onComplete,
-  onClose,
-}) => {
-  const [errorMessage, setErrorMessage] = useState("");
+const ResetPasswordClient: React.FC<ResetPasswordClientProps> = ({ token }) => {
+  const router = useRouter();
+  const [open, setOpen] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -80,51 +70,44 @@ const CreatePasswordDialog: React.FC<CreatePasswordDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const values = form.getValues();
+    const { password } = form.getValues();
 
-    setErrorMessage("");
+    if (!token) {
+      toast.error("Invalid or expired reset link.");
+      return;
+    }
 
-    const completeUserData: ServerUserData = {
-      password: values.password,
-      email: userData.email,
-      name: userData.name,
-    };
-    const result = await registerUser(completeUserData.email, completeUserData.password, completeUserData.name);
+    try {
+      const result = await resetPassword(token, password);
 
-    if (result.success) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      await signInWithCredentials(completeUserData.email, completeUserData.password);
-
-      onOpenChange(false);
-      onComplete();
-    } else {
-      setErrorMessage(result.error ?? "Something went wrong, please try again later.");
+      if (result.success) {
+        toast.success("Password reset successfully!");
+        router.push("/dashboard");
+      } else {
+        toast.error(result.error || "Failed to reset password.");
+      }
+    } catch {
+      toast.error("Something went wrong. Try again.");
     }
   };
 
-  const testCheck = () => {
-    console.log("**********values:  ", form.getValues());
-    console.log("is The form valid: ", form.formState.isValid);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        aria-describedby="dialog-password-creation"
+        aria-describedby="dialog-reset-password"
         onInteractOutside={(e) => e.preventDefault()}
         className="fixed left-1/2 top-1/2 z-50 max-w-md -translate-x-1/2 -translate-y-1/2 transform rounded-lg border border-gray-600 bg-black p-8 text-white"
       >
-        <p id="dialog-password-creation" className="sr-only">
-          Secure password setup
+        <p id="dialog-reset-password" className="sr-only">
+          Reset your password
         </p>
         <Button
           variant="ghost"
           size="icon"
           className="absolute left-2 top-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white"
           onClick={() => {
-            onOpenChange(false);
-            onClose();
+            setOpen(false);
+            router.push("/");
           }}
         >
           <X className="h-4 w-4" />
@@ -139,16 +122,16 @@ const CreatePasswordDialog: React.FC<CreatePasswordDialogProps> = ({
           priority
         />
 
-        <DialogTitle className="mb-4 text-center text-xl font-semibold">Create a password</DialogTitle>
+        <DialogTitle className="mb-4 text-center text-xl font-semibold">Reset your password</DialogTitle>
 
         <Form {...form}>
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-400">Password</FormLabel>
+                  <FormLabel className="text-gray-400">New Password</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input
@@ -221,23 +204,12 @@ const CreatePasswordDialog: React.FC<CreatePasswordDialogProps> = ({
               )}
             />
 
-            {errorMessage && <div className="text-center text-red-500">{errorMessage}</div>}
-
             <Button
               type="submit"
-              onClick={handleSubmit}
               className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
               disabled={!isReady}
             >
-              Create Account
-            </Button>
-
-            <Button
-              type="button"
-              className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
-              onClick={testCheck}
-            >
-              Test Check
+              Reset Password
             </Button>
           </form>
         </Form>
@@ -246,4 +218,4 @@ const CreatePasswordDialog: React.FC<CreatePasswordDialogProps> = ({
   );
 };
 
-export default CreatePasswordDialog;
+export default ResetPasswordClient;

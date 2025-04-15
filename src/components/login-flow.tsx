@@ -7,6 +7,8 @@ import LoginPasswordDialog from "./login-password-dialog";
 
 interface LoginAccountFlowProps {
   onClose: () => void;
+  onForgotPassword: () => void;
+  onSignUpRequest: () => void;
 }
 
 export type BaseLoginUserData = { username: string; email?: never } | { username?: never; email: string };
@@ -21,7 +23,7 @@ export interface ServerUserData {
   email: string;
 }
 
-const LoginFlow: React.FC<LoginAccountFlowProps> = ({ onClose }) => {
+const LoginFlow: React.FC<LoginAccountFlowProps> = ({ onClose, onForgotPassword, onSignUpRequest }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(true);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [userData, setUserData] = useState<BaseLoginUserData>();
@@ -42,7 +44,13 @@ const LoginFlow: React.FC<LoginAccountFlowProps> = ({ onClose }) => {
 
   return (
     <>
-      <LoginAccountDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} onNext={handleLoginNext} onClose={onClose} />
+      <LoginAccountDialog
+        open={isLoginOpen}
+        onOpenChange={setIsLoginOpen}
+        onNext={handleLoginNext}
+        onClose={onClose}
+        onSignUpRequest={onSignUpRequest}
+      />
       {userData && (
         <LoginPasswordDialog
           open={isPasswordOpen}
@@ -50,6 +58,7 @@ const LoginFlow: React.FC<LoginAccountFlowProps> = ({ onClose }) => {
           userData={userData}
           onComplete={handleLoginComplete}
           onClose={onClose}
+          onForgotPassword={onForgotPassword}
         />
       )}
     </>

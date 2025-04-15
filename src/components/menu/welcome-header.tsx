@@ -1,6 +1,6 @@
 import React from "react";
 
-import AnimatedLogo from "../animated-logo";
+import SiteLogoBlack from "../site-logo-black";
 import WelcomeMenu from "./welcomeMenu";
 
 interface Props {
@@ -12,7 +12,7 @@ const WelcomeHeader: React.FC<Props> = ({ className = "" }) => {
     <header className={`relative bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#443d3a] md:block ${className}`}>
       <div className="container mx-auto flex h-52 flex-col items-center justify-between px-1 pb-1">
         <div className="relative -top-16 flex flex-1 items-center justify-center">
-          <AnimatedLogo size={330} />
+          <SiteLogoBlack size={330} />
         </div>
         <div className="absolute bottom-1 sm:bottom-1 md:bottom-1 lg:bottom-1 xl:bottom-1 2xl:bottom-1 w-full justify-center">
           <WelcomeMenu />

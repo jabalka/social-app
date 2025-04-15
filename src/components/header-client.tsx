@@ -35,9 +35,9 @@ const HeaderClient: React.FC<Props> = ({ user, className, onToggle }) => {
       <header
         className={cn(
           "flex items-center justify-between border-b p-4",
-          {
-            "border-zinc-300 bg-gradient-to-r from-zinc-100 via-indigo-50 via-30% to-slate-200": theme === Theme.LIGHT,
-            "border-zinc-700 bg-gradient-to-r from-zinc-900 via-indigo-950 via-30% to-zinc-900": theme === Theme.DARK,
+          {//
+            "border-zinc-300 bg-gradient-to-r from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa]": theme === Theme.LIGHT,
+            "border-zinc-700 bg-gradient-to-r from-[#6f635e] via-[#443d3a] to-[#443d3a]": theme === Theme.DARK,
           },
           className,
         )}

@@ -1,3 +1,5 @@
+import { Theme } from "@/types/theme.enum";
+import { cn } from "@/utils/cn.utils";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -18,9 +20,10 @@ interface MenuItemProps {
   toggleMenu: () => void;
   isOpen: boolean;
   onToggle: () => void;
+  theme: string;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle }) => {
+const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle, theme }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -41,7 +44,10 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle 
   }, [isOpen, onToggle]);
 
   return (
-    <div ref={menuRef} className="overflow-hidden border-b border-[#2b2725]">
+    <div ref={menuRef} className={cn("overflow-hidden border-b border-[#2b2725]", {
+              "text-zinc-700": theme === Theme.LIGHT,
+              "text-zinc-200": theme === Theme.DARK,
+    })}>
     <button
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -65,13 +71,13 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle 
         <div className="flex items-center gap-2">
           <span
             className={`text-lg font-medium transition-colors ${
-              isOpen || isHovered ? "text-[#FF5C00]" : "text-white"
+              isOpen || isHovered ? "text-[#FF5C00]" : ""
             }`}
           >
             {item.label}
           </span>
           {!item.hasDropdown && item.icon && (
-            <div className="text-white transition-colors group-hover:text-[#FF5C00]">
+            <div className="transition-colors group-hover:text-[#FF5C00]">
               {item.icon}
             </div>
           )}
@@ -81,7 +87,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle 
         {item.hasDropdown && (
           <ChevronRight
             className={`h-5 w-5 transform transition-transform duration-300 ${
-              isOpen ? "rotate-90 text-[#FF5C00]" : isHovered ? "text-[#FF5C00]" : "text-white"
+              isOpen ? "rotate-90 text-[#FF5C00]" : isHovered ? "text-[#FF5C00]" : ""
             }`}
             strokeWidth={4}
           />
@@ -100,7 +106,10 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle 
           <Link
             key={index}
             href={subItem.href}
-            className="block py-1 text-[#bda69c] transition-colors hover:text-[#FF5C00]"
+            className={cn("block py-1 transition-colors hover:text-[#FF5C00]", {
+                      "text-zinc-700": theme === Theme.LIGHT,
+                      "text-zinc-200": theme === Theme.DARK,
+            })}
             onClick={toggleMenu}
           >
             {subItem.label}

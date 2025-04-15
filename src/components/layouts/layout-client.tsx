@@ -34,7 +34,7 @@ const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) =>
   }
 
   if (PATHS_WITH_MENU_LAYOUT.some((path) => pathname.startsWith(path))) {
-    return <MenuLayout>{children}</MenuLayout>;
+    return <MenuLayout user={user}>{children}</MenuLayout>;
   }
 
   if (PATHS_WITH_SIDEBAR_LAYOUT.some((path) => pathname.startsWith(path))) {

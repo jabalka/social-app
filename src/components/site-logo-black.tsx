@@ -1,20 +1,18 @@
-"use client";
-
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import React from "react";
 
 interface Props {
-  size?: number;
+  size: number;
   className?: string;
 }
 
-const SidebarLogo: React.FC<Props> = ({ className, size = 40 }) => {
+const SiteLogoBlack: React.FC<Props> = ({ size = 40, className }) => {
   return (
     <div className={cn(className)}>
       <Image
-        src="/images/civ-dev-logo-white.png"
-        alt="CivDev Logo"
+        src="/images/civ-dev-logo-black.png"
+        alt="CivilDev Logo"
         width={size}
         height={size}
         className="object-contain"
@@ -23,4 +21,4 @@ const SidebarLogo: React.FC<Props> = ({ className, size = 40 }) => {
   );
 };
 
-export default SidebarLogo;
+export default SiteLogoBlack;
