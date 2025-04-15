@@ -6,27 +6,26 @@ import { Button } from "@/components/ui/button"; // Use shadcn Button for consis
 import type React from "react";
 import { useState } from "react";
 import CreateAccountFlow from "./create-account-flow";
+import ForgotPasswordDialog from "./forgot-password-dialog";
 import GoogleSignUp from "./google-sign-up";
 import LoginFlow from "./login-flow";
 
 const HomeButtons: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [isResetPassOpen, setIsResetPassOpen] = useState(false);
 
-  
   return (
-    <div className="w-full max-w-md mt-20 ">
+    <div className="mt-20 w-full max-w-md">
       <div className="mb-6 font-bold text-white">
         <h1 className="mb-2 text-3xl">Happening now</h1>
         <h3 className="text-xl">Join today.</h3>
       </div>
 
       <section className="flex w-full flex-col gap-3">
-
         <div className="mx-auto w-4/5 justify-center">
-        <GoogleSignUp />
+          <GoogleSignUp />
         </div>
-
 
         {/* ----------- Since Apple API for sign in is paid, this function will be temporarily disabled! ---------------- */}
         {/* <Button
@@ -69,8 +68,6 @@ const HomeButtons: React.FC = () => {
           </Button>
         </div>
 
-
-
         <span className="mt-px text-center text-xs text-gray-400">
           By signing up, you agree to the{" "}
           <a href="/toLink" className="text-blue-400 no-underline hover:underline">
@@ -86,8 +83,8 @@ const HomeButtons: React.FC = () => {
           </a>
         </span>
 
-        <div className="mx-auto w-4/5 mt-10">
-        <h1 className="mb-3 text-lg font-semibold">Already have an account?</h1>
+        <div className="mx-auto mt-10 w-4/5">
+          <h1 className="mb-3 text-lg font-semibold">Already have an account?</h1>
           <Button
             className="w-full justify-center rounded-full border-2 border-white bg-black font-bold text-blue-400 hover:bg-blue-900/30"
             onClick={() => setIsLoginDialogOpen(true)}
@@ -97,8 +94,35 @@ const HomeButtons: React.FC = () => {
         </div>
       </section>
 
-      {isCreateDialogOpen && <CreateAccountFlow onClose={() => setIsCreateDialogOpen(false)} />}
-      {isLoginDialogOpen && <LoginFlow onClose={() => setIsLoginDialogOpen(false)} />}
+      {isCreateDialogOpen && (
+        <CreateAccountFlow
+          onClose={() => setIsCreateDialogOpen(false)}
+          onLoginRequest={() => {
+            setIsLoginDialogOpen(true);
+            setIsCreateDialogOpen(false);
+          }}
+        />
+      )}
+      {isLoginDialogOpen && (
+        <LoginFlow
+          onClose={() => setIsLoginDialogOpen(false)}
+          onForgotPassword={() => {
+            setIsResetPassOpen(true);
+            setIsLoginDialogOpen(false);
+          }}
+          onSignUpRequest={() => {
+            setIsCreateDialogOpen(true);
+            setIsLoginDialogOpen(false);
+          }}
+        />
+      )}
+      {isResetPassOpen && (
+        <ForgotPasswordDialog
+          open={isResetPassOpen}
+          onOpenChange={setIsResetPassOpen}
+          onClose={() => setIsResetPassOpen(false)}
+        />
+      )}
     </div>
   );
 };

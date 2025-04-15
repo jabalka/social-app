@@ -1,8 +1,7 @@
 "use server";
 
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 
-import { AuthError } from "@auth/core/errors";
 import { revalidateTag } from "next/cache";
 
 import prisma from "@/prisma";
@@ -45,22 +44,3 @@ export const getCurrentUser = async () => {
   return findUserByIdentifier(session.user.email);
 };
 
-export const login = async (email: string, password: string, twoFactorToken?: string, backupCodes?: string[]) => {
-  try {
-    await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-      ...(twoFactorToken ? { twoFactorToken } : {}),
-      ...(backupCodes ? { backupCodes: JSON.stringify(backupCodes) } : {}),
-    });
-
-    return { success: true };
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: error.cause?.err?.message ?? error.type };
-    }
-
-    throw error;
-  }
-};

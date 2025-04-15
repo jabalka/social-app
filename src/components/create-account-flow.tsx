@@ -7,6 +7,7 @@ import CreatePasswordDialog from "./create-password-dialog";
 
 interface CreateAccountFlowProps {
   onClose: () => void;
+  onLoginRequest: () => void;
 }
 
 export interface BaseUserData {
@@ -20,14 +21,12 @@ export interface UserData extends BaseUserData {
   // Ensure phone can't exist here
 }
 
-
-
 export interface ServerUserData extends BaseUserData {
   password: string;
   email: string;
 }
 
-const CreateAccountFlow: React.FC<CreateAccountFlowProps> = ({ onClose }) => {
+const CreateAccountFlow: React.FC<CreateAccountFlowProps> = ({ onClose, onLoginRequest }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(true);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [userData, setUserData] = useState<BaseUserData>();
@@ -54,6 +53,7 @@ const CreateAccountFlow: React.FC<CreateAccountFlowProps> = ({ onClose }) => {
         onOpenChange={setIsCreateOpen}
         onNext={handleCreateNext}
         onClose={onClose}
+        onLoginRequest={onLoginRequest}
       />
       {userData && (
         <CreatePasswordDialog

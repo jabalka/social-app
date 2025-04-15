@@ -1,6 +1,6 @@
 "use client";
 
-
+import { findUserByIdentifier } from "@/app/actions/common.actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,7 +14,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import GoogleSignIn from "./google-sign-in";
 import { BaseLoginUserData } from "./login-flow";
-import { findUserByIdentifier } from "@/app/actions/common.actions";
 
 const formSchema = z.object({
   username: z.string().min(1, "Please enter your username.").optional(),
@@ -28,9 +27,16 @@ interface LoginAccountDialogProps {
   onOpenChange: (open: boolean) => void;
   onNext: (data: BaseLoginUserData) => void;
   onClose: () => void;
+  onSignUpRequest: () => void;
 }
 
-const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenChange, onNext, onClose }) => {
+const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({
+  open,
+  onOpenChange,
+  onNext,
+  onClose,
+  onSignUpRequest,
+}) => {
   const [isUsername, setIsUsername] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -115,6 +121,12 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
     setIsUsername((prev) => !prev);
   };
 
+  const toggleSignUp = () => {
+    onOpenChange(false);
+    onSignUpRequest();
+    onClose();
+  };
+
   const testCheck = () => {
     console.log("**********values:  ", form.getValues());
     console.log("is The form valid: ", form.formState.isValid);
@@ -141,19 +153,19 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
 
           <Image
             src="/images/civ-dev-logo-white.png"
-            alt="CivDev Logo"
+            alt="CivilDev Logo"
             width={80}
             height={80}
             className="absolute -right-4 -top-6 w-full max-w-[100px]"
             priority
           />
 
-          <DialogTitle className="mb-4 text-center text-2xl font-semibold">Sign in CivilDev</DialogTitle>
+          <DialogTitle className="mb-2 text-center text-xl font-semibold">Sign in to CivilDev</DialogTitle>
           <div className="mx-auto w-4/5 justify-center">
             <GoogleSignIn />
           </div>
           <Form {...form}>
-            <form className="space-y-4">
+            <form className="space-y-4 mx-auto w-4/5 justify-center">
               <div className="w-full max-w-md">
                 <div className="flex w-full flex-col gap-3">
                   {isUsername ? (
@@ -162,7 +174,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
                       name="username"
                       render={({ field, fieldState }) => (
                         <FormItem>
-                          <FormLabel className="mx-auto w-4/5 justify-center text-gray-400">Username</FormLabel>
+                          <FormLabel className="text-gray-400">Username</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -170,7 +182,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
                                 field.onChange(e);
                                 form.trigger("username");
                               }}
-                              className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500"
+                              className="border-gray-600 bg-transparent text-white focus:border-blue-500"
                             />
                           </FormControl>
                           {fieldState.isTouched && <FormMessage />}
@@ -183,7 +195,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
                       name="email"
                       render={({ field, fieldState }) => (
                         <FormItem>
-                          <FormLabel className="mx-auto w-4/5 justify-center text-gray-400">Email</FormLabel>
+                          <FormLabel className="text-gray-400">Email</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -191,7 +203,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
                                 field.onChange(e);
                                 form.trigger("email");
                               }}
-                              className="mx-auto w-4/5 justify-center border-gray-600 bg-transparent text-white focus:border-blue-500"
+                              className="border-gray-600 bg-transparent text-white focus:border-blue-500"
                             />
                           </FormControl>
                           {fieldState.isTouched && <FormMessage />}
@@ -200,7 +212,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
                     />
                   )}
 
-                  <div className="mx-auto w-4/5 justify-center text-right">
+                  <div className="text-right">
                     <button type="button" onClick={toggleInputType} className="text-sm text-blue-500 hover:underline">
                       {isUsername ? "Use email instead" : "Use username instead"}
                     </button>
@@ -210,7 +222,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
 
                   <Button
                     type="button"
-                    className="mx-auto w-4/5 justify-center rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                    className="rounded-full bg-white font-bold text-black hover:bg-gray-200"
                     disabled={!isReady}
                     onClick={handleNext}
                   >
@@ -219,11 +231,18 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({ open, onOpenCha
 
                   <Button
                     type="button"
-                    className="mx-auto w-4/5 justify-center rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                    className="rounded-full bg-white font-bold text-black hover:bg-gray-200"
                     onClick={testCheck}
                   >
                     Test Check
                   </Button>
+                </div>
+
+                <div className="text-left mt-4">
+                  <span className="mx-auto w-4/5 justify-center text-sm text-gray-400">Don’t have an account? </span>
+                  <button type="button" onClick={toggleSignUp} className="text-sm text-blue-500 hover:underline">
+                     Sign up 
+                  </button>
                 </div>
               </div>
             </form>

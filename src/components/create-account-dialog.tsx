@@ -17,8 +17,8 @@ import { z } from "zod";
 import { cn } from "@/utils/cn.utils";
 import { BaseUserData } from "./create-account-flow";
 
-import Image from "next/image";
 import { findUserByIdentifier } from "@/app/actions/common.actions";
+import Image from "next/image";
 
 const formSchema = z.object({
   name: z.string().min(1, "What's your name?"),
@@ -42,9 +42,16 @@ interface CreateAccountDialogProps {
   onOpenChange: (open: boolean) => void;
   onNext: (data: BaseUserData) => void;
   onClose: () => void;
+  onLoginRequest: () => void;
 }
 
-const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenChange, onNext, onClose }) => {
+const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
+  open,
+  onOpenChange,
+  onNext,
+  onClose,
+  onLoginRequest,
+}) => {
   // const [isPhone, setIsPhone] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -130,7 +137,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
     setErrorMessage("");
 
     if (identifier) {
-      const existingUser = await findUserByIdentifier( identifier);
+      const existingUser = await findUserByIdentifier(identifier);
       if (existingUser) {
         setErrorMessage(`User with this ${values.email ? "email" : "phone"} already exists!`);
         return;
@@ -157,6 +164,11 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
   //     return next;
   //   });
   // };
+  const toggleSignIn = () => {
+    onOpenChange(false);
+    onLoginRequest();
+    onClose();
+  };
 
   const testCheck = () => {
     console.log("**********values:  ", form.getValues());
@@ -181,20 +193,22 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
           >
             <X className="h-4 w-4" />
           </Button>
-            
-        <Image
-          src="/images/civ-dev-logo-white.png"
-          alt="CivDev Logo"
-          width={80}
-          height={80}
-          className="absolute -right-4 -top-6 w-full max-w-[100px]"
-          priority
-        />
 
-          <DialogTitle className="mb-2 text-center text-xl font-semibold">Create your account</DialogTitle>
+          <Image
+            src="/images/civ-dev-logo-white.png"
+            alt="CivilDev Logo"
+            width={80}
+            height={80}
+            className="absolute -right-4 -top-6 w-full max-w-[100px]"
+            priority
+          />
+
+          <DialogTitle className="mb-2 text-center text-xl font-semibold">Join CivilDev today</DialogTitle>
 
           <Form {...form}>
-            <form className="space-y-4">
+            <form className="space-y-4 mx-auto w-4/5 justify-center">
+            <div className="w-full max-w-md">
+            <div className="flex w-full flex-col gap-3">
               <FormField
                 control={form.control}
                 name="name"
@@ -267,7 +281,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-full border-gray-600 bg-transparent pl-3 text-left font-normal text-white",
+                                "mx-auto w-full justify-center border-gray-600 bg-transparent pl-3 text-left font-normal text-white",
                                 !field.value && "text-gray-400",
                               )}
                             >
@@ -311,6 +325,15 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({ open, onOpenC
               >
                 Test Check
               </Button>
+              </div>
+
+              <div className="mx-auto mt-4 w-full justify-center text-left">
+                <span className="mx-auto w-4/5 justify-center text-sm text-gray-400">Have an account already? </span>
+                <button type="button" onClick={toggleSignIn} className="text-sm text-blue-500 hover:underline">
+                  Log in
+                </button>
+              </div>
+              </div>
             </form>
           </Form>
         </DialogContent>

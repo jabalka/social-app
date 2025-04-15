@@ -2,16 +2,23 @@
 
 import React, { PropsWithChildren, useEffect, useState } from "react";
 
+import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSidebarContext } from "@/context/sidebar-context";
 import DesktopHeader from "../menu/desktop-header";
 import MobileMenu from "../menu/mobileMenu";
 import StickyHeader from "../menu/sticky-header";
 import SiteFooter from "../site-footer/site-footer";
+import { SafeUser } from "./layout-client";
 
-const MenuLayout: React.FC<PropsWithChildren> = ({ children }) => {
+interface Props {
+  user: SafeUser | null;
+}
+
+const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { sidebarExpanded, setSidebarExpanded } = useSidebarContext();
+  const { theme } = useSafeThemeContext();
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,29 +51,30 @@ const MenuLayout: React.FC<PropsWithChildren> = ({ children }) => {
         <>
           {" "}
           <StickyHeader
+            theme={theme}
             sidebarExpanded={sidebarExpanded}
             onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}
           />
-          <MobileMenu isOpen={sidebarExpanded} toggleMenu={toggleMenu} />
+          <MobileMenu user={user} theme={theme} isOpen={sidebarExpanded} toggleMenu={toggleMenu} />
         </>
       ) : (
         <>
-          <DesktopHeader className="z-50 hidden" />
+          <DesktopHeader user={user} className="z-50 hidden" />
 
           <DesktopHeader
+            user={user}
             className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
               isScrolled ? "translate-y-0 shadow-[0_1px_2px_0_rgba(0,0,0,0.1)]" : "-translate-y-full"
             }`}
           />
         </>
       )}
-      <div className="flex flex-1 flex-col items-center justify-center p-4 bg-black text-white">
-        <main className="flex-1">
-          <div>{children}</div>
-        </main>
 
-      </div>
-        <SiteFooter />
+      <main className="flex flex-1 flex-col items-center justify-center bg-black p-4 text-white">
+        <div>{children}</div>
+      </main>
+
+      <SiteFooter theme={theme} />
     </div>
   );
 };

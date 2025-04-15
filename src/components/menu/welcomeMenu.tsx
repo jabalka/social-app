@@ -18,7 +18,7 @@ const WelcomeMenu: React.FC = () => {
         <DropdownButton
           label="ABOUT"
           items={[
-            { href: "/media", label: "What is CivDev" },
+            { href: "/media", label: "What is CivilDev" },
             { href: "/media", label: "FAQ" },
             { href: "/media", label: "CONTACT" },
           ]}

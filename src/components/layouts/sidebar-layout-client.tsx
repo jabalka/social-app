@@ -6,10 +6,10 @@ import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { usePathname } from "next/navigation";
 import React, { PropsWithChildren, useEffect } from "react";
-import Footer from "../sitebar-footer";
 import HeaderClient from "../header-client";
 import Sidebar from "../sidebar/sidebar";
 import { SafeUser } from "./layout-client";
+import SiteFooter from "../site-footer/site-footer";
 
 interface Props {
   user: SafeUser | null;
@@ -52,7 +52,7 @@ const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, childre
           {children}
         </main>
 
-        <Footer theme={theme} />
+        <SiteFooter theme={theme} />
       </div>
     </div>
   );

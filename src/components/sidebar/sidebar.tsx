@@ -3,7 +3,7 @@
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import React from "react";
-import SidebarLogo from "./sidebar-logo";
+import SiteLogoWhite from "../site-logo-white";
 import SidebarNavigation from "./sidebar-navigation";
 import { SafeUser } from "../layouts/layout-client";
 
@@ -20,8 +20,10 @@ const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, classNa
       className={cn(
         "flex flex-col border-r relative",
         {
-          "border-zinc-300 bg-zinc-100": theme === Theme.LIGHT,
-          "border-zinc-700 bg-zinc-900": theme === Theme.DARK,
+              "border-zinc-300 bg-gradient-to-b from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa] text-zinc-700":
+                theme === Theme.LIGHT,
+              "border-zinc-700 bg-gradient-to-b from-[#6f635e] via-[#443d3a] to-[#443d3a] text-zinc-200":
+                theme === Theme.DARK,
         },
         className,
       )}
@@ -34,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, classNa
     }
   )} />
 
-      <SidebarLogo className="mb-2 flex justify-center p-4" />
+      <SiteLogoWhite className="mb-2 flex justify-center p-4" />
 
       <SidebarNavigation
         user={user}

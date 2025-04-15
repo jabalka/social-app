@@ -1,38 +1,54 @@
+import { useSafeThemeContext } from "@/context/safe-theme-context";
+import { Theme } from "@/types/theme.enum";
+import { cn } from "@/utils/cn.utils";
+import { setCookie } from "cookies-next";
+import { useTheme } from "next-themes";
 import React from "react";
-import AnimatedLogo from "../animated-logo";
+import { SafeUser } from "../layouts/layout-client";
+import SiteLogoBlack from "../site-logo-black";
+import SiteLogoWhite from "../site-logo-white";
+import ThemeToggle from "../theme-toggle";
 import DesktopMenu from "./desktopMenu";
-// import { useSafeThemeContext } from "@/context/safe-theme-context";
-// import { useTheme } from "next-themes";
-// import { setCookie } from "cookies-next";
-// import { Theme } from "@/types/theme.enum";
-// import ThemeToggle from "../theme-toggle";
-
 interface DesktopHeaderProps {
   className?: string;
+  user: SafeUser | null;
 }
 
 const DesktopHeader: React.FC<DesktopHeaderProps> = ({ className = "" }) => {
-  // const { setTheme } = useTheme();
-  // const { theme } = useSafeThemeContext();
+  const { setTheme } = useTheme();
+  const { theme } = useSafeThemeContext();
 
-  // const switchTheme = () => {
-  //   const otherTheme = theme === Theme.DARK ? Theme.LIGHT : Theme.DARK;
-  //   setTheme(otherTheme);
-  //   setCookie("theme", otherTheme, { path: "/" });
-  // };
+  const switchTheme = () => {
+    const otherTheme = theme === Theme.DARK ? Theme.LIGHT : Theme.DARK;
+    setTheme(otherTheme);
+    setCookie("theme", otherTheme, { path: "/" });
+  };
+
   return (
-    <header className={`bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#443d3a] md:block ${className}`}>
-      <AnimatedLogo size={130} className="absolute top-10 -translate-y-1/2 md:-left-2 lg:left-4 xl:left-8" />
+    <header
+      className={cn(`md:block ${className}`, {
+        "border-zinc-300 bg-gradient-to-br from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa] text-zinc-700":
+          theme === Theme.LIGHT,
+        "border-zinc-700 bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#443d3a] text-zinc-300":
+          theme === Theme.DARK,
+      })}
+    >
+      {theme === Theme.DARK ? (
+        <SiteLogoWhite size={130} className="absolute top-10 -translate-y-1/2 md:-left-2 lg:left-4 xl:left-8" />
+      ) : (
+        <SiteLogoBlack size={130} className="absolute top-10 -translate-y-1/2 md:-left-2 lg:left-4 xl:left-8" />
+      )}
+
+      <ThemeToggle className="absolute left-40 top-[52px]" theme={theme} onClick={switchTheme} />
       <div className="container mx-auto px-1">
         <div className="flex h-20 items-center">
           <div className="flex flex-1 justify-center pl-24">
-            <DesktopMenu />
+            <DesktopMenu theme={theme} />
           </div>
         </div>
         <div className="absolute left-0 right-0 h-0.5 bg-[#2b2725]" />
       </div>
     </header>
-    //       <ThemeToggle theme={theme} onClick={switchTheme} />
   );
 };
 

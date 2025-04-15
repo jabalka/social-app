@@ -1,17 +1,9 @@
 
-import { auth } from "@/auth";
-import HomeButtons from "@/components/home-buttons";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import type React from "react";
-import { Suspense } from "react";
 
-const Home: React.FC = async () => {
-  const session = await auth(); // SERVER-SIDE call, no waiting
+const ProfileDashboard: React.FC = async () => {
 
-  if (session?.user) {
-    redirect("/dashboard"); // Instant, before any page shows
-  }
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col items-center md:flex-row md:items-start">
@@ -27,12 +19,10 @@ const Home: React.FC = async () => {
       </div>
 
       <div className="mb-14 flex w-full flex-col items-center md:mt-0 md:w-2/3 md:items-start">
-        <Suspense>
-          <HomeButtons />
-        </Suspense>
+    <p>Welcome to your profile page</p>
       </div>
     </div>
   );
 };
 
-export default Home;
+export default ProfileDashboard;
