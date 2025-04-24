@@ -117,7 +117,7 @@ const CreateProjectForm = () => {
     await fetch(`/api/projects/${projectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrls: uploadedUrls }),
+      body: JSON.stringify({ newImageUrls: uploadedUrls, deletedImageUrls: [] }),
     });
 
     console.log("Project and images uploaded successfully!");
