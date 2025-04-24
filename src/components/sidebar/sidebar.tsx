@@ -20,10 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, classNa
       className={cn(
         "flex flex-col border-r relative",
         {
-              "border-zinc-300 bg-gradient-to-b from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa] text-zinc-700":
-                theme === Theme.LIGHT,
-              "border-zinc-700 bg-gradient-to-b from-[#6f635e] via-[#443d3a] to-[#443d3a] text-zinc-200":
-                theme === Theme.DARK,
+          "border-zinc-300 bg-zinc-100": theme === Theme.LIGHT,
+          "border-zinc-700 bg-zinc-900": theme === Theme.DARK,
         },
         className,
       )}

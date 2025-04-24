@@ -55,3 +55,12 @@ NeonPostSQL - for DB in AWS
     * Fix Login Page - Add Login functionality and change buttons' color
 
     * Move the footer's icons in the bottom right corner and make them a bit smaller!
+
+## Image Uploading
+-it uses supabase API DB to upload images on public domain where later each project can access the related image and be visualized in the app.
+
+
+4. 🗺 Browsable Map (Later Step)
+You’ll use something like Leaflet or Google Maps to display all projects on a public map, using the stored latitude and longitude.
+
+Want me to help with that part too? I can show how to fetch all project locations and display them on a map.

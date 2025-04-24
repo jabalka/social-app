@@ -7,7 +7,10 @@ import MenuLayout from "./menu-layout";
 import SidebarLayoutClient from "./sidebar-layout-client";
 import WelcomeLayout from "./welcome-layout";
 
-const PATHS_WITH_MENU_LAYOUT = ["/dashboard"];
+const PATHS_WITH_MENU_LAYOUT = [
+  "/dashboard",
+  "/create-project",
+];
 
 const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard"];
 

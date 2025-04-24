@@ -4,6 +4,8 @@ import React, { PropsWithChildren, useEffect, useState } from "react";
 
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSidebarContext } from "@/context/sidebar-context";
+import { Theme } from "@/types/theme.enum";
+import { cn } from "@/utils/cn.utils";
 import DesktopHeader from "../menu/desktop-header";
 import MobileMenu from "../menu/mobileMenu";
 import StickyHeader from "../menu/sticky-header";
@@ -59,7 +61,7 @@ const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
         </>
       ) : (
         <>
-          <DesktopHeader user={user} className="z-50 hidden" />
+          <DesktopHeader user={user} className="z-50 hidden top-0" />
 
           <DesktopHeader
             user={user}
@@ -70,7 +72,14 @@ const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
         </>
       )}
 
-      <main className="flex flex-1 flex-col items-center justify-center bg-black p-4 text-white">
+      <main
+        className={cn("flex flex-1 flex-col items-center justify-center", {
+        "bg-gradient-to-b from-[#f7f3f1] via-[#f0e3dd] to-[#f7f3f1] text-zinc-700":
+          theme === Theme.LIGHT,
+        "bg-gradient-to-b from-[#121211] via-[#332f2d] to-[#121211] text-zinc-200":
+          theme === Theme.DARK,
+        })}
+      >
         <div>{children}</div>
       </main>
 
