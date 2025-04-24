@@ -26,10 +26,10 @@ const DesktopHeader: React.FC<DesktopHeaderProps> = ({ className = "" }) => {
 
   return (
     <header
-      className={cn(`md:block ${className}`, {
-        "border-zinc-300 bg-gradient-to-br from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa] text-zinc-700":
+      className={cn(`md:block relative border-b-2 ${className}`, {
+        "border-[#bda69c] bg-gradient-to-br from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa] text-zinc-700":
           theme === Theme.LIGHT,
-        "border-zinc-700 bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#443d3a] text-zinc-300":
+        "border-[#72645f] bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#443d3a] text-zinc-300":
           theme === Theme.DARK,
       })}
     >
@@ -46,7 +46,6 @@ const DesktopHeader: React.FC<DesktopHeaderProps> = ({ className = "" }) => {
             <DesktopMenu theme={theme} />
           </div>
         </div>
-        <div className="absolute left-0 right-0 h-0.5 bg-[#2b2725]" />
       </div>
     </header>
   );

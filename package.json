@@ -40,6 +40,7 @@
     "@radix-ui/react-select": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.62.9",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -47,6 +48,7 @@
     "@types/react-google-recaptcha": "^2.1.9",
     "@types/speakeasy": "^2.0.10",
     "autoprefixer": "^10.4.20",
+    "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.0",
@@ -58,6 +60,7 @@
     "husky": "^8.0.3",
     "input-otp": "^1.4.1",
     "keccak256": "^1.0.6",
+    "leaflet": "^1.9.4",
     "lint-staged": "^15.2.10",
     "lucide-react": "^0.460.0",
     "merkletreejs": "^0.4.1",
@@ -77,8 +80,9 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-google-recaptcha": "^3.1.0",
-    "react-hook-form": "^7.54.2",
+    "react-hook-form": "^7.56.1",
     "react-hot-toast": "^2.5.2",
+    "react-leaflet": "^4.2.1",
     "resend": "^4.2.0",
     "schema-dts": "^1.1.2",
     "speakeasy": "^2.0.0",
@@ -91,5 +95,9 @@
     "viem": "^2.22.19",
     "wagmi": "^2.12.33",
     "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.17",
+    "@types/uuid": "^10.0.0"
   }
 }

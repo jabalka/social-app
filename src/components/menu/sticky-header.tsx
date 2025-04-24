@@ -16,9 +16,9 @@ interface Props {
 const StickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => {
   return (
     <header
-      className={cn("sticky top-0 z-40 md:hidden", {
-        "border-zinc-300 bg-gradient-to-r from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa]": theme === Theme.LIGHT,
-        "border-zinc-700 bg-gradient-to-r from-[#6f635e] via-[#443d3a] to-[#443d3a]": theme === Theme.DARK,
+      className={cn("sticky top-0 z-40 md:hidden border-b-2", {
+        "border-[#bda69c] bg-gradient-to-r from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa]": theme === Theme.LIGHT,
+        "border-[#72645f] bg-gradient-to-r from-[#6f635e] via-[#443d3a] to-[#443d3a]": theme === Theme.DARK,
       })}
     >
       <div className="container mx-auto px-4">
@@ -32,7 +32,7 @@ const StickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => 
           </div>
           <MenuToggle active={!sidebarExpanded} onClick={onToggle} />
         </div>
-        <div className="absolute left-0 right-0 h-0.5 bg-[#2b2725]" />
+
       </div>
     </header>
   );
@@ -40,7 +40,3 @@ const StickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => 
 
 export default StickyHeader;
 
-// className={cn("flex flex-col rounded-md  shadow-lg", {
-//                 "bg-[#443d3a]": theme === Theme.DARK,
-//                 "bg-[#eeded7]": theme === Theme.LIGHT,
-//               })}
