@@ -11,7 +11,7 @@ interface MapComponentProps {
   onPick: (lat: number, lng: number) => void
 }
 
-const MapComponent = ({ position, onPick }: MapComponentProps) => {
+const MapComponent : React.FC<MapComponentProps> = ({ position, onPick }) => {
   const mapRef = useRef<L.Map | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const markerRef = useRef<L.Marker | null>(null)

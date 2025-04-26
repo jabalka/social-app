@@ -21,7 +21,7 @@ const MapWrapper: FC<MapWrapperProps> = (props) => {
     setIsMounted(true)
 
     // Dynamically import the map component
-    import("./map-component").then((module) => {
+    import("./map").then((module) => {
       setMapComponent(() => module.default)
     })
 

@@ -3,14 +3,24 @@
 import type { User } from "next-auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import React from "react";
 
 interface DashboardClientProps {
   user: User;
+  projects: {
+    id: string;
+    title: string;
+    latitude: number;
+    longitude: number;
+  }[];
 }
 
-const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
+const MapWrapper = dynamic(() => import("./map-wrapper-viewer"), { ssr: false });
+
+const DashboardClient: React.FC<DashboardClientProps> = ({ user, projects }) => {
   return (
-    <div className="w-full max-w-md text-center">
+    <div className="w-full max-w-3xl text-center">
       <h1 className="text-3xl font-bold mb-6">Welcome {user.name ?? "User"}</h1>
       <p className="mb-8">You have successfully logged in!</p>
       <Link href="/">
@@ -18,6 +28,10 @@ const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
           Back to Home
         </Button>
       </Link>
+
+      <div className="h-[600px] w-full rounded border">
+      <MapWrapper projects={projects} />
+    </div>
     </div>
   );
 };
