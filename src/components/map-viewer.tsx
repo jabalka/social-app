@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useId } from "react";
+import { renderToString } from "react-dom/server";
 import L from "leaflet";
+import ProjectPopupContent from "./map-viewer-project-pop-up";
 
 interface Project {
   id: string;
@@ -14,7 +16,7 @@ interface ViewerMapProps {
   projects: Project[];
 }
 
-const ProjectMap: React.FC<ViewerMapProps> = ({ projects }) => {
+const MapViewer: React.FC<ViewerMapProps> = ({ projects }) => {
   const containerId = useId(); // generates unique ID per component instance
   const mapRef = useRef<L.Map | null>(null);
 
@@ -29,26 +31,36 @@ const ProjectMap: React.FC<ViewerMapProps> = ({ projects }) => {
     const map = L.map(container).setView([51.505, -0.09], 6);
     mapRef.current = map;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        zIndex: 10, 
+      }).addTo(map);
 
     const icon = L.icon({
       iconUrl: "/images/marker-icon.png",
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
+      iconSize: [60, 60],
+      iconAnchor: [30, 60],
     });
 
     projects.forEach((project) => {
-      L.marker([project.latitude, project.longitude], { icon })
-        .addTo(map)
-        .bindPopup(project.title);
-    });
+        const popupContent = renderToString(
+          <ProjectPopupContent
+            title={project.title}
+            latitude={project.latitude}
+            longitude={project.longitude}
+          />
+        );
+      
+        L.marker([project.latitude, project.longitude], { icon })
+          .addTo(map)
+          .bindPopup(popupContent);
+      });
 
     return () => {
       map.remove(); // FULLY remove map to avoid reusing container
     };
   }, [projects, containerId]);
 
-  return <div id={containerId} className="h-full w-full" />;
+  return <div id={containerId} className="relative z-10 h-full w-full" />;
 };
 
-export default ProjectMap;
+export default MapViewer;

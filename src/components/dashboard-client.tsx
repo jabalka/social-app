@@ -20,7 +20,7 @@ const MapWrapper = dynamic(() => import("./map-wrapper-viewer"), { ssr: false })
 
 const DashboardClient: React.FC<DashboardClientProps> = ({ user, projects }) => {
   return (
-    <div className="w-full max-w-3xl text-center">
+    <div className="sm:w-96 md:w-[768px] text-center ">
       <h1 className="text-3xl font-bold mb-6">Welcome {user.name ?? "User"}</h1>
       <p className="mb-8">You have successfully logged in!</p>
       <Link href="/">

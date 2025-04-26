@@ -94,7 +94,7 @@ const CreateProjectForm = () => {
     const { projectId } = await res.json();
     const uploadedUrls: string[] = [];
 
-    const images = Array.from(data.images).slice(0, 10);
+    const images = data.images ? Array.from(data.images).slice(0, 10) : [];
 
     for (const image of images) {
       const formData = new FormData();

@@ -17,7 +17,11 @@ const DashboardPage: React.FC = async () => {
     select: { id: true, title: true, latitude: true, longitude: true },
   });
 
-  return <DashboardClient user={session.user} projects={projects} />;
+  return (
+  <>
+    <DashboardClient user={session.user} projects={projects} />
+  </>
+  )
 };
 
 export default DashboardPage;

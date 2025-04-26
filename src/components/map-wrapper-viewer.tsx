@@ -13,7 +13,7 @@ interface ProjectMapViewerProps {
   projects: Project[];
 }
 
-const ProjectMapViewer: React.FC<ProjectMapViewerProps> = ({ projects }) => {
+const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ projects }) => {
   const [MapComponent, setMapComponent] = useState<React.ComponentType<ProjectMapViewerProps> | null>(null);
 
   useEffect(() => {
@@ -29,4 +29,4 @@ const ProjectMapViewer: React.FC<ProjectMapViewerProps> = ({ projects }) => {
   return <MapComponent projects={projects} />;
 };
 
-export default ProjectMapViewer;
+export default MapViewerWrapper;
