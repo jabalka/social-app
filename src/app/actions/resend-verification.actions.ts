@@ -1,8 +1,8 @@
 "use server";
 
-import prisma from "@/prisma";
 import { bytesToHex, randomBytes } from "@/utils/crypto.utils";
 import { sendVerificationEmail } from "./credentials-register.actions";
+import prisma from "@/lib/prisma";
 
 export async function resendVerificationEmail(email: string) {
   const user = await prisma.user.findUnique({

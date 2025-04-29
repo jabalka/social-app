@@ -2,7 +2,6 @@
   "name": "port-next-app",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "lint-staged:eslint:fix": "eslint --fix **/*.{ts,tsx}",
     "lint-staged:prettier:write": "prettier --write **/*.{ts,tsx,css}",
@@ -98,6 +97,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.17",
-    "@types/uuid": "^10.0.0"
+    "@types/uuid": "^10.0.0",
+    "cross-env": "^7.0.3"
   }
 }

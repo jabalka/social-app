@@ -1,4 +1,5 @@
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
+
 
 // Add a comment to a post
 const createComment = async (commentData: { content: string; postId: string; authorId: string }) => {

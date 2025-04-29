@@ -51,10 +51,16 @@ NeonPostSQL - for DB in AWS
 
 -ToDO
     * Create a Profile SidebarMenu with toggle to show Logout, Edit Profile etc.
-    * Fix the Footer
-    * Fix Login Page - Add Login functionality and change buttons' color
+    
 
-    * Move the footer's icons in the bottom right corner and make them a bit smaller!
+    * Any project has a state - in progress, proposal, completed (with related icon to it)
+    -   This state will be visualized also with a status bar attached to it. (With some animations etc)
+
+
+    * If more than one project has the same location then they must be visualized as a stack on the map
+
+
+
 
 ## Image Uploading
 -it uses supabase API DB to upload images on public domain where later each project can access the related image and be visualized in the app.

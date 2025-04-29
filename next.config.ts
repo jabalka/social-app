@@ -1,7 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
@@ -14,7 +12,7 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingExcludes: {
     "*": ["./.prisma/client/libquery_engine-debian*"],
-  }
+  },
 };
 
 export default nextConfig;

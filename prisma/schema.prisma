@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ProjectStatus {
+  PROPOSED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
 model User {
   id                      String    @id @default(cuid())
   name                    String?
@@ -30,20 +37,22 @@ model User {
 }
 
 model Project {
-  id          String         @id @default(cuid())
-  title       String
-  description String
-  postcode    String
-  latitude    Float
-  longitude   Float
-  // imageUrls     String[] // Supabase image URLs
-  author      User           @relation("UserProjects", fields: [authorId], references: [id])
-  authorId    String
-  comments    Comment[]
-  likes       Like[]
-  images      ProjectImage[] @relation("ProjectImages")
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id            String         @id @default(cuid())
+  title         String
+  description   String
+  postcode      String
+  latitude      Float
+  longitude     Float
+  progress      Int            @default(0) // Value from 0 to 100
+  status        ProjectStatus  @default(PROPOSED)
+  progressNotes String? // Optional field for details
+  author        User           @relation("UserProjects", fields: [authorId], references: [id])
+  authorId      String
+  comments      Comment[]
+  likes         Like[]
+  images        ProjectImage[] @relation("ProjectImages")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model ProjectImage {

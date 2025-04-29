@@ -1,5 +1,5 @@
 import ResetPasswordClient from "@/components/reset-password-client";
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 

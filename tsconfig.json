@@ -27,6 +27,6 @@
     "esm": true,
     "moduleResolution": "node" 
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/site-footer/site-footer-upper-links-welcome.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/site-footer/site-footer-upper-links-welcome.tsx", "next.config.js", "next.config.js"],
+  "exclude": ["node_modules", ".next", "comment-likes-posts-hooks-etrc"]
 }
