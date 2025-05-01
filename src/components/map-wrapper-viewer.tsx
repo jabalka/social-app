@@ -1,15 +1,51 @@
 "use client";
 
+import { ProjectStatus } from "@prisma/client";
 import { useEffect, useState } from "react";
 
-interface Project {
+export interface Project {
   id: string;
   title: string;
+  description: string;
+  postcode: string;
   latitude: number;
   longitude: number;
+  progress: number;
+  status: ProjectStatus;
+  progressNotes: string | null;
+  author: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    username: string | null;
+    image: string | null;
+  };
+  comments: {
+    id: string;
+    content: string;
+    authorId: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  likes: {
+    id: string;
+    userId: string;
+    createdAt: Date;
+  }[];
+  images: {
+    id: string;
+    url: string;
+    projectId: string;
+    createdAt: Date;
+  }[];
+  categories: {
+    id: string;
+    name: string;
+    icon: string;
+  }[];
 }
 
-interface ProjectMapViewerProps {
+export interface ProjectMapViewerProps {
   projects: Project[];
 }
 

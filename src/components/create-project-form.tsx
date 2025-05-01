@@ -2,6 +2,7 @@
 
 import type React from "react";
 
+import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -16,6 +17,7 @@ interface FormData {
   latitude: number;
   longitude: number;
   images: FileList;
+  categories: string[];
 }
 
 const CreateProjectForm = () => {
@@ -28,6 +30,7 @@ const CreateProjectForm = () => {
       latitude: 51.505,
       longitude: -0.09,
       images: undefined as unknown as FileList,
+      categories: [],
     },
   });
   const { register, handleSubmit, setValue } = methods;
@@ -71,6 +74,8 @@ const CreateProjectForm = () => {
       return;
     }
 
+    console.log("📦 Submitting project with categories:", data.categories);
+
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -80,11 +85,10 @@ const CreateProjectForm = () => {
         postcode: data.postcode,
         latitude: data.latitude,
         longitude: data.longitude,
+        categories: data.categories,
         imageUrls: [],
       }),
     });
-
-    console.log("Submitted lat/lng:", data.latitude, data.longitude);
 
     if (!res.ok) {
       console.error("Failed to create project");
@@ -124,6 +128,8 @@ const CreateProjectForm = () => {
     setKey(Date.now());
   };
 
+  const selected = methods.watch("categories") || [];
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -131,10 +137,38 @@ const CreateProjectForm = () => {
         <textarea {...register("description")} placeholder="Description" className="h-80 w-full border p-2" />
         <input
           {...register("postcode")}
-          placeholder="Enter UK postcode"
+          placeholder="Enter UK postcode or select on the map"
           onChange={handlePostcodeChange}
           className="w-full border p-2"
         />
+
+        <div>
+          <p className="font-medium">Select up to 3 categories that best match project`s topic:</p>
+          <div className="flex flex-wrap gap-4">
+            {PROJECT_CATEGORIES.map(({ id, name, icon: Icon }) => {
+              const isChecked = selected.includes(id);
+
+              return (
+                <label key={id} className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    value={id}
+                    onChange={(e) => {
+                      const current = methods.getValues("categories") || [];
+                      const updated = e.target.checked
+                        ? [...current, id].slice(0, 3)
+                        : current.filter((cid) => cid !== id);
+                      methods.setValue("categories", updated);
+                    }}
+                  />
+                  <Icon className="h-5 w-5" />
+                  <span>{name}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
 
         <DragAndDropArea name="images" previewUrls={previewUrls} onPreviewUrlsChange={setPreviewUrls} />
 

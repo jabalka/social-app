@@ -179,5 +179,17 @@ const events: NextAuthConfig["events"] = {
   //     }
   //   }
   // },
+  async createUser({ user }) {
+    try {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: { connect: { id: "citizen" } },
+        },
+      });
+    } catch (err) {
+      console.error("Failed to assign citizen role:", err);
+    }
+  },
 };
 export default { providers, pages, callbacks, events } satisfies NextAuthConfig;

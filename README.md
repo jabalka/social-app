@@ -50,6 +50,11 @@ NeonPostSQL - for DB in AWS
         Real Time notification = web sockets
 
 -ToDO
+
+`   *Giving some issue when assigning categories to a project when created so when to visualize the categories gives an empty array []
+
+
+
     * Create a Profile SidebarMenu with toggle to show Logout, Edit Profile etc.
     
 
@@ -59,14 +64,35 @@ NeonPostSQL - for DB in AWS
 
     * If more than one project has the same location then they must be visualized as a stack on the map
 
+## User Roles with Icons
+- Each User will have its own role in the app with meaningful icon
+    Role	        |Description	                    |Icon Name (Lucide)
+    Citizen	        |Regular user submitting/engaging	|user
+    Admin	        |Platform manager, assigns roles	|user-cog
+    Mayor	        |City-level authority	            |gavel
+    Council	        |Local council member	            |users
+    Planner	        |Civil engineer/urban planner	    |compass
+    Inspector	    |Reviews projects, audits	        |check-circle-2
 
 
+## Project Categories with Icons
+- Project can select up to 3 out of 5 categories to be assigned to.
+    Category	      |  Description	                  |  Icon Name (Lucide)
+    Infrastructure	  |  Roads, bridges, utilities	      |  building
+    Environmental	  |  Parks, green spaces, cleanups	  |  leaf
+    Education	      |  Schools, libraries, workshops	  |  graduation-cap
+    Public Safety	  |  Fire, police, lighting	          |  shield-check
+    Transport	      |  Bus stops, bike lanes, signage	  |  bus
 
 ## Image Uploading
 -it uses supabase API DB to upload images on public domain where later each project can access the related image and be visualized in the app.
 
 
-4. 🗺 Browsable Map (Later Step)
-You’ll use something like Leaflet or Google Maps to display all projects on a public map, using the stored latitude and longitude.
 
-Want me to help with that part too? I can show how to fetch all project locations and display them on a map.
+## Prisma
+    -npx prisma generate - generates the prisma schemas
+    -npx prisma db push  - populate the db
+    -npx prisma db seed  - needs to populate essential data (roles, categories to DB) needs to be ran any first time etc.
+    - npx prisma migrate reset - this will automatically run the seed, reset DB and apply migrations
+
+    -npx prisma studio   - run the prisma studio

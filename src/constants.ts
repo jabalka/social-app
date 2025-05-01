@@ -23,43 +23,16 @@ export const PARTNER_REFERRAL_STAKING_BONUS_PERCENTAGE = 5;
 export const DEFAULT_THEME = Theme.DARK;
 export const DEFAULT_SIDEBAR_EXPANDED = true;
 
-// News related constants
-export const CRYPTO_NEWS_TICKERS = ["BTC", "ETH"];
-export const CRYPTO_NEWS_ITEMS_PER_PAGE = 10;
+// Project Categories
+export const PROJECT_CATEGORIES = [
+  { id: "infrastructure", name: "Infrastructure", icon: "building" },
+  { id: "environmental", name: "Environmental", icon: "leaf" },
+  { id: "education", name: "Education", icon: "graduation-cap" },
+  { id: "public-safety", name: "Public Safety", icon: "shield-check" },
+  { id: "transport", name: "Transport", icon: "bus" },
+];
 
-// Widget's Refresh Interval
-export const REFRESH_INTERVAL = 60000;
 
-// Currency Values - Widget Related
-export const currencyMap: Record<string, string> = {
-  usd: "USD",
-  eur: "EUR",
-  rub: "RUB",
-  gbp: "GBP",
-  php: "PHP",
-};
-
-export const fiatSymbolMap: Record<string, string> = {
-  usd: "$",
-  eur: "€",
-  gbp: "£",
-  jpy: "¥",
-  aud: "A$",
-  cad: "C$",
-  chf: "CHF",
-  cny: "¥",
-  inr: "₹",
-};
-
-export const cryptoSymbolMap: Record<string, string> = {
-  btc: "₿",
-  eth: "Ξ",
-  ltc: "Ł",
-  bnb: "B",
-  xrp: "✕",
-  ada: "₳",
-};
-// ------- END ------- Currency Values
 
 // Messages
 export const MESSAGES = {

@@ -30,6 +30,7 @@ export async function registerUser(email: string, password: string, name: string
         name,
         hashedPassword,
         verificationToken,
+        role: { connect: { id: "citizen" } },
         // emailVerified: new Date(),
       },
     });

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { title, description, postcode, latitude, longitude, imageUrls } = body;
+  const { title, description, postcode, latitude, longitude, imageUrls, categories = [] } = body;
 
   try {
     const project = await prisma.project.create({
@@ -21,6 +21,12 @@ export async function POST(req: NextRequest) {
         latitude,
         longitude,
         authorId: session.user.id,
+        categories: {
+          connect: categories.slice(0, 3).map((id: string) => {
+            console.log("⛓️api/projects/route Connecting category:", id);
+            return { id };
+          }), //only 3 allowed
+        },
         images: {
           create:
             imageUrls?.map((url: string) => ({
@@ -30,6 +36,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         images: true,
+        categories: true, 
       },
     });
 

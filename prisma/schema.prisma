@@ -26,6 +26,8 @@ model User {
   resetToken              String?
   resetTokenExpiry        DateTime?
   image                   String?
+  roleId                  String?
+  role                    Role?     @relation(fields: [roleId], references: [id])
   accounts                Account[]
   sessions                Session[]
   projects                Project[] @relation("UserProjects")
@@ -43,22 +45,29 @@ model Project {
   postcode      String
   latitude      Float
   longitude     Float
-  progress      Int            @default(0) // Value from 0 to 100
+  progress      Int            @default(0)
   status        ProjectStatus  @default(PROPOSED)
-  progressNotes String? // Optional field for details
+  progressNotes String?
   author        User           @relation("UserProjects", fields: [authorId], references: [id])
   authorId      String
   comments      Comment[]
   likes         Like[]
   images        ProjectImage[] @relation("ProjectImages")
+  categories    Category[]     @relation("ProjectCategories")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
 
-model ProjectImage {
-  id  String @id @default(cuid())
-  url String // the public URL of the uploaded image
+model Category {
+  id       String    @id
+  name     String    @unique
+  icon     String
+  projects Project[] @relation("ProjectCategories")
+}
 
+model ProjectImage {
+  id        String   @id @default(cuid())
+  url       String
   project   Project  @relation("ProjectImages", fields: [projectId], references: [id])
   projectId String
   createdAt DateTime @default(now())
@@ -75,7 +84,7 @@ model Post {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  @@index([createdAt]) // For pagination
+  @@index([createdAt])
 }
 
 model Comment {
@@ -94,7 +103,7 @@ model Comment {
   parentId String?
   replies  Comment[] @relation("CommentReplies")
 
-  likes Like[] // ← Now related back from Like
+  likes Like[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -103,7 +112,6 @@ model Comment {
 model Like {
   id String @id @default(cuid())
 
-  // Optional polymorphic relations:
   post   Post?   @relation(fields: [postId], references: [id])
   postId String?
 
@@ -142,6 +150,13 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+}
+
+model Role {
+  id    String @id
+  name  String @unique
+  icon  String
+  users User[]
 }
 
 model Session {

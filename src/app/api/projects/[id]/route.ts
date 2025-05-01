@@ -16,6 +16,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     postcode,
     latitude,
     longitude,
+    progressNotes,
+    categories,
     newImageUrls = [],
     deletedImageUrls = [],
   } = await request.json();
@@ -41,7 +43,21 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     const updatedProject = await prisma.project.update({
       where: { id },
-      data: { title, description, postcode, latitude, longitude },
+      data: {
+        title,
+        description,
+        postcode,
+        latitude,
+        longitude,
+        progressNotes,
+        categories: {
+          set: categories.slice(0, 3).map((id: string) => ({ id })),
+        },
+      },
+      include: {
+        categories: true,
+        images: true,
+      },
     });
 
     return NextResponse.json(updatedProject);

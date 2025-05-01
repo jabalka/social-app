@@ -5,15 +5,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import React from "react";
+import { Project } from "./map-wrapper-viewer";
 
 interface DashboardClientProps {
   user: User;
-  projects: {
-    id: string;
-    title: string;
-    latitude: number;
-    longitude: number;
-  }[];
+  projects: Project[];
 }
 
 const MapWrapper = dynamic(() => import("./map-wrapper-viewer"), { ssr: false });
