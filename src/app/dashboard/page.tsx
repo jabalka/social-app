@@ -13,9 +13,8 @@ const DashboardPage: React.FC = async () => {
   }
 
   const projects = await prisma.project.findMany({
-    where: { authorId: session.user.id },
     include: {
-      categories: true, 
+      categories: true,
       images: true,
       comments: true,
       likes: true,

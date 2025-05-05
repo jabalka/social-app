@@ -1,6 +1,7 @@
 "use client";
 
 import { ProjectStatus } from "@prisma/client";
+import { User } from "next-auth";
 import { useEffect, useState } from "react";
 
 export interface Project {
@@ -46,10 +47,11 @@ export interface Project {
 }
 
 export interface ProjectMapViewerProps {
+  user: User;
   projects: Project[];
 }
 
-const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ projects }) => {
+const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ user, projects }) => {
   const [MapComponent, setMapComponent] = useState<React.ComponentType<ProjectMapViewerProps> | null>(null);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ projects }) => {
     return <div className="flex h-full w-full items-center justify-center bg-gray-100">Loading map...</div>;
   }
 
-  return <MapComponent projects={projects} />;
+  return <MapComponent user={user} projects={projects} />;
 };
 
 export default MapViewerWrapper;

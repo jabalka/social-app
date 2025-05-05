@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         longitude,
         progressNotes,
         categories: {
-          set: categories.slice(0, 3).map((id: string) => ({ id })),
+          set: (categories ?? []).slice(0, 3).map((id: string) => ({ id })),
         },
       },
       include: {

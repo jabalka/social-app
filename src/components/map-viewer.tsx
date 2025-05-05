@@ -3,7 +3,8 @@
 import { ProjectStatus } from "@prisma/client";
 import L from "leaflet";
 import { useEffect, useId, useRef } from "react";
-import { renderToString } from "react-dom/server";
+import ReactDOM from "react-dom/client";
+import ProjectMapLegend from "./map-legend";
 import ProjectPopupContent from "./map-viewer-project-pop-up";
 import { ProjectMapViewerProps } from "./map-wrapper-viewer";
 
@@ -34,7 +35,7 @@ const getMarkerIcon = (status: ProjectStatus): L.Icon => {
   });
 };
 
-const MapViewer: React.FC<ProjectMapViewerProps> = ({ projects }) => {
+const MapViewer: React.FC<ProjectMapViewerProps> = ({ user, projects }) => {
   const containerId = useId(); // generates unique ID per component instance
   const mapRef = useRef<L.Map | null>(null);
 
@@ -58,28 +59,37 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({ projects }) => {
     // });
 
     projects.forEach((project) => {
-      console.log("projectDetials: ", project);
-      const popupContent = renderToString(
+      const icon = getMarkerIcon(project.status);
+      const popupContainer = document.createElement("div");
+      ReactDOM.createRoot(popupContainer).render(
         <ProjectPopupContent
+          user={user}
+          id={project.id}
           title={project.title}
+          images={project.images}
           latitude={project.latitude}
           longitude={project.longitude}
           progress={project.progress}
           categories={project.categories}
+          likes={project.likes}
+          comments={project.comments}
         />,
       );
 
-      const icon = getMarkerIcon(project.status);
-
-      L.marker([project.latitude, project.longitude], { icon }).addTo(map).bindPopup(popupContent);
+      L.marker([project.latitude, project.longitude], { icon }).addTo(map).bindPopup(popupContainer);
     });
 
     return () => {
       map.remove();
     };
-  }, [projects, containerId]);
+  }, [projects, containerId, user]);
 
-  return <div id={containerId} className="relative z-10 h-full w-full" />;
+  return (
+    <div className="relative z-10 h-full w-full">
+      <div id={containerId} className="h-full w-full" />
+      <ProjectMapLegend />
+    </div>
+  );
 };
 
 export default MapViewer;

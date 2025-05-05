@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
         authorId: session.user.id,
         categories: {
           connect: categories.slice(0, 3).map((id: string) => {
-            console.log("⛓️api/projects/route Connecting category:", id);
             return { id };
           }), //only 3 allowed
         },
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         images: true,
-        categories: true, 
+        categories: true,
       },
     });
 

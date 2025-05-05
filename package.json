@@ -6,7 +6,7 @@
   "scripts": {
     "lint-staged:eslint:fix": "eslint --fix **/*.{ts,tsx}",
     "lint-staged:prettier:write": "prettier --write **/*.{ts,tsx,css}",
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

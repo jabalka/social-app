@@ -90,9 +90,32 @@ NeonPostSQL - for DB in AWS
 
 
 ## Prisma
+                **For local development (first setup):
+       
+                npx prisma migrate reset  (command when you want a clean local DB with seed data)
+                    -Resets your DB
+                    -Applies all migrations
+                    -Runs your prisma/seed.ts file (i.e., npx prisma db seed)
+                    -Regenerates the Prisma Client
+
+                npx prisma db push  (syncing schema without resetting data)
+                npx prisma generate
+                    -You just changed your schema but don’t want to lose data
+                    -You’re not running real migrations
+
+                npx prisma db seed  (Use this only after db is already set up)
+
+                npx prisma studio   (run the prisma studio)
+
+
     -npx prisma generate - generates the prisma schemas
     -npx prisma db push  - populate the db
     -npx prisma db seed  - needs to populate essential data (roles, categories to DB) needs to be ran any first time etc.
     - npx prisma migrate reset - this will automatically run the seed, reset DB and apply migrations
 
     -npx prisma studio   - run the prisma studio
+
+
+## Access the user via user-context everywhere on client side
+    - import { useSafeUser } from "@/context/user-context";
+    -   const user = useSafeUser();
