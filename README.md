@@ -35,11 +35,7 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-
-
-
 when fetching clientSide in NextJS - good to use library useSWR
-
 
 NeonPostSQL - for DB in AWS
 
@@ -51,12 +47,10 @@ NeonPostSQL - for DB in AWS
 
 -ToDO
 
-`   *Giving some issue when assigning categories to a project when created so when to visualize the categories gives an empty array []
-
-
+` \*Giving some issue when assigning categories to a project when created so when to visualize the categories gives an empty array []
 
     * Create a Profile SidebarMenu with toggle to show Logout, Edit Profile etc.
-    
+
 
     * Any project has a state - in progress, proposal, completed (with related icon to it)
     -   This state will be visualized also with a status bar attached to it. (With some animations etc)
@@ -65,33 +59,34 @@ NeonPostSQL - for DB in AWS
     * If more than one project has the same location then they must be visualized as a stack on the map
 
 ## User Roles with Icons
-- Each User will have its own role in the app with meaningful icon
-    Role	        |Description	                    |Icon Name (Lucide)
-    Citizen	        |Regular user submitting/engaging	|user
-    Admin	        |Platform manager, assigns roles	|user-cog
-    Mayor	        |City-level authority	            |gavel
-    Council	        |Local council member	            |users
-    Planner	        |Civil engineer/urban planner	    |compass
-    Inspector	    |Reviews projects, audits	        |check-circle-2
 
+- Each User will have its own role in the app with meaningful icon
+  Role |Description |Icon Name (Lucide)
+  Citizen |Regular user submitting/engaging |user
+  Admin |Platform manager, assigns roles |user-cog
+  Mayor |City-level authority |gavel
+  Council |Local council member |users
+  Planner |Civil engineer/urban planner |compass
+  Inspector |Reviews projects, audits |check-circle-2
 
 ## Project Categories with Icons
+
 - Project can select up to 3 out of 5 categories to be assigned to.
-    Category	      |  Description	                  |  Icon Name (Lucide)
-    Infrastructure	  |  Roads, bridges, utilities	      |  building
-    Environmental	  |  Parks, green spaces, cleanups	  |  leaf
-    Education	      |  Schools, libraries, workshops	  |  graduation-cap
-    Public Safety	  |  Fire, police, lighting	          |  shield-check
-    Transport	      |  Bus stops, bike lanes, signage	  |  bus
+  Category | Description | Icon Name (Lucide)
+  Infrastructure | Roads, bridges, utilities | building
+  Environmental | Parks, green spaces, cleanups | leaf
+  Education | Schools, libraries, workshops | graduation-cap
+  Public Safety | Fire, police, lighting | shield-check
+  Transport | Bus stops, bike lanes, signage | bus
 
 ## Image Uploading
+
 -it uses supabase API DB to upload images on public domain where later each project can access the related image and be visualized in the app.
 
-
-
 ## Prisma
+
                 **For local development (first setup):
-       
+
                 npx prisma migrate reset  (command when you want a clean local DB with seed data)
                     -Resets your DB
                     -Applies all migrations
@@ -115,7 +110,11 @@ NeonPostSQL - for DB in AWS
 
     -npx prisma studio   - run the prisma studio
 
-
 ## Access the user via user-context everywhere on client side
+
     - import { useSafeUser } from "@/context/user-context";
     -   const user = useSafeUser();
+
+IT RE-RENDERS EVERYTIME IT REFRESHPROJECTS() AS IT MIGHT BE BEFAUSE OF USEEFFECT
+
+let's say author will be able to delete the whole project (by confirming with typing "delete project" on an input field), edit Title, Description, Images, but this only if project is in stage Proposed, if project is in stage Inn-Progress the only thing author can update or edit is to be able to add more images, if project is in completed stage then author cannot edit it at all.

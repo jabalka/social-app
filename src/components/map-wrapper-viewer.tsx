@@ -49,9 +49,10 @@ export interface Project {
 export interface ProjectMapViewerProps {
   user: User;
   projects: Project[];
+  refreshProjects(): void;
 }
 
-const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ user, projects }) => {
+const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ user, projects, refreshProjects }) => {
   const [MapComponent, setMapComponent] = useState<React.ComponentType<ProjectMapViewerProps> | null>(null);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ user, projects }) =
     return <div className="flex h-full w-full items-center justify-center bg-gray-100">Loading map...</div>;
   }
 
-  return <MapComponent user={user} projects={projects} />;
+  return <MapComponent user={user} projects={projects} refreshProjects={refreshProjects} />;
 };
 
 export default MapViewerWrapper;

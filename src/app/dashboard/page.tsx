@@ -2,6 +2,7 @@ import type React from "react";
 
 import { auth } from "@/auth";
 import DashboardClient from "@/components/dashboard-client";
+import { ProjectProvider } from "@/context/project-context";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
@@ -24,7 +25,9 @@ const DashboardPage: React.FC = async () => {
 
   return (
     <>
-      <DashboardClient user={session.user} projects={projects} />
+      <ProjectProvider initialProjects={projects}>
+        <DashboardClient user={session.user} />
+      </ProjectProvider>
     </>
   );
 };

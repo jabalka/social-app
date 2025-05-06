@@ -45,3 +45,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const projects = await prisma.project.findMany({
+      include: {
+        categories: true,
+        images: true,
+        comments: true,
+        likes: true,
+        author: true,
+      },
+    });
+
+    return NextResponse.json(projects, { status: 200 });
+  } catch (error) {
+    console.error("[PROJECT_GET_ERROR]", error);
+    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
+  }
+}

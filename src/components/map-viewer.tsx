@@ -35,7 +35,7 @@ const getMarkerIcon = (status: ProjectStatus): L.Icon => {
   });
 };
 
-const MapViewer: React.FC<ProjectMapViewerProps> = ({ user, projects }) => {
+const MapViewer: React.FC<ProjectMapViewerProps> = ({ user, projects, refreshProjects }) => {
   const containerId = useId(); // generates unique ID per component instance
   const mapRef = useRef<L.Map | null>(null);
 
@@ -62,18 +62,7 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({ user, projects }) => {
       const icon = getMarkerIcon(project.status);
       const popupContainer = document.createElement("div");
       ReactDOM.createRoot(popupContainer).render(
-        <ProjectPopupContent
-          user={user}
-          id={project.id}
-          title={project.title}
-          images={project.images}
-          latitude={project.latitude}
-          longitude={project.longitude}
-          progress={project.progress}
-          categories={project.categories}
-          likes={project.likes}
-          comments={project.comments}
-        />,
+        <ProjectPopupContent user={user} project={project} refreshProjects={refreshProjects} />,
       );
 
       L.marker([project.latitude, project.longitude], { icon }).addTo(map).bindPopup(popupContainer);
@@ -82,7 +71,7 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({ user, projects }) => {
     return () => {
       map.remove();
     };
-  }, [projects, containerId, user]);
+  }, [projects, containerId, user, refreshProjects]);
 
   return (
     <div className="relative z-10 h-full w-full">

@@ -5,56 +5,25 @@ import { User } from "next-auth";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import CommentCreation from "./create-comment";
+import { Project } from "./map-wrapper-viewer";
+import ProjectDetailsDialog from "./project-details";
 
 interface ProjectPopupContentProps {
   user: User;
-  id: string;
-  title: string;
-  latitude: number;
-  longitude: number;
-  progress: number;
-  categories: {
-    id: string;
-    name: string;
-    icon: string;
-  }[];
-  images: {
-    id: string;
-    url: string;
-    projectId: string;
-    createdAt: Date;
-  }[];
-  likes: {
-    id: string;
-    userId: string;
-    createdAt: Date;
-  }[];
-  comments: {
-    id: string;
-    content: string;
-    authorId: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
+  project: Project;
+  refreshProjects(): void;
 }
 
-const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
-  user,
-  id,
-  title,
-  images,
-  progress,
-  categories,
-  comments,
-}) => {
+const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project, refreshProjects }) => {
   const [likes, setLikes] = useState<{ id: string; userId: string; createdAt: Date }[]>([]);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
 
   const fetchLikes = useCallback(async () => {
     try {
-      const res = await fetch(`/api/projects/${id}/like`);
+      const res = await fetch(`/api/projects/${project.id}/like`);
       if (res.ok) {
         const data = await res.json();
         setLikes(data);
@@ -62,11 +31,10 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
     } catch (err) {
       console.error("Failed to fetch likes:", err);
     }
-  }, [id]);
+  }, [project.id]);
 
   useEffect(() => {
     fetchLikes();
-
     const interval = setInterval(fetchLikes, 60000);
     return () => clearInterval(interval);
   }, [fetchLikes]);
@@ -89,9 +57,10 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
     setIsLiking(true);
 
     try {
-      const res = await fetch(`/api/projects/${id}/like`, { method: "POST" });
+      const res = await fetch(`/api/projects/${project.id}/like`, { method: "POST" });
       if (res.ok) {
         await fetchLikes();
+        refreshProjects();
       } else {
         console.error("Failed to like project");
       }
@@ -104,13 +73,13 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
 
   return (
     <div className="rounded border p-4">
-      <h2 className="mb-1 text-lg font-bold">{title}</h2>
+      <h2 className="mb-1 text-lg font-bold">{project.title}</h2>
 
-      {images.length > 0 && (
+      {project.images.length > 0 && (
         <div className="mb-3 flex justify-center">
           <Image
-            src={images[0].url}
-            alt={`${title} preview`}
+            src={project.images[0].url}
+            alt={`${project.title} preview`}
             width={124}
             height={32}
             className="rounded object-cover"
@@ -120,7 +89,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
 
       {/* Category Icons */}
       <div className="mt-2 flex gap-2">
-        {categories.map(({ id, name }) => {
+        {project.categories.map(({ id, name }) => {
           const matched = PROJECT_CATEGORIES.find((cat) => cat.id === id);
           const Icon = matched?.icon;
 
@@ -141,13 +110,16 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
       <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner">
         <div
           className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600 transition-all"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${project.progress}%` }}
         />
       </div>
-      <p className="mt-1 text-xs text-gray-500">{progress}% complete</p>
+      <p className="mt-1 text-xs text-gray-500">{project.progress}% complete</p>
 
       {/* CTA */}
-      <button className="mt-2 w-full rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">
+      <button
+        className="mt-2 w-full rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+        onClick={() => setShowDetailsModal(true)}
+      >
         View Details
       </button>
 
@@ -173,12 +145,23 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
           onClick={() => setShowCommentModal(true)}
           className="rounded bg-purple-500 px-3 py-1 text-sm text-white hover:bg-purple-600"
         >
-          Comments ({comments.length})
+          Comments ({project.comments.length})
         </button>
       </div>
 
       {/* Comment Modal */}
-      {showCommentModal && <CommentCreation user={user} projectId={id} onClose={() => setShowCommentModal(false)} />}
+      {showCommentModal && (
+        <CommentCreation user={user} projectId={project.id} onClose={() => setShowCommentModal(false)} />
+      )}
+      {showDetailsModal && (
+        <ProjectDetailsDialog
+          user={user}
+          project={project}
+          open={true}
+          onClose={() => setShowDetailsModal(false)}
+          refreshProjects={refreshProjects}
+        />
+      )}
     </div>
   );
 };
