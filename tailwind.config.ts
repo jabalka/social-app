@@ -136,7 +136,93 @@ export default {
             clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
           },
           "10%": {
-            boxShadow: "inset 0 0 0 2px #fd4595, 0 0 10px 2px #fd4595",
+            boxShadow: "inset 0 0 0 2px #d82206, 0 0 10px 2px #d82206",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+        snakeBorderViolet: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #c74cd4, 0 0 10px 2px #c74cd4",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+        snakeBorderHover: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #ffffff, 0 0 10px 2px #ffffff",
             clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
           },
           "20%": {
@@ -229,8 +315,10 @@ export default {
       },
       animation: {
         progressBarGlow: "progressBarGlow 3s ease-in-out infinite",
-        snakeBorderGreen: "snakeBorderGreen 2s ease-in-out forwards",
-        snakeBorderPink: "snakeBorderPink 2s ease-in-out forwards",
+        snakeBorderGreen: "snakeBorderGreen 3s ease-in-out forwards",
+        snakeBorderPink: "snakeBorderPink 3s ease-in-out forwards",
+        snakeBorderViolet: "snakeBorderViolet 1s ease-in-out infinite",
+        snakeBorderHover: "snakeBorderHover 1.5s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         rippleEffect: "rippleEffect 600ms linear",

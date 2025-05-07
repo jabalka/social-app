@@ -97,7 +97,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
     const timeout = setTimeout(() => {
       setAnimationKey(0);
-    }, 2000); // match animation duration (in ms)
+    }, 3000); // match animation duration (in ms)
 
     return () => clearTimeout(timeout);
   }, [animationKey]);
@@ -339,21 +339,21 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
         {/* Interaction buttons */}
         <div className="mt-4 flex justify-between gap-2">
           <div className="relative flex flex-col items-center">
-            <span className="mb-1 text-sm text-gray-300">({likes.length}) Likes</span>
-            <div className="relative inline-flex">
+            <span className="mb-1 text-sm">({likes.length}) Likes</span>
+            <div className="relative inline-flex overflow-hidden rounded-full p-[4px]">
               <button
                 onClick={handleLike}
-                className={`w-32 rounded-lg px-3 py-1 text-sm text-white ${
+                className={`w-32 rounded-full py-1 text-sm text-white transition duration-300 ${
                   likes.some((like) => like.userId === user.id)
-                    ? "bg-gradient-to-br from-[#185b17] via-[#2a8829] to-[#185b17] hover:bg-gradient-to-br hover:from-[#359c33] hover:via-[#185b17] hover:to-[#359c33] hover:outline hover:outline-2 hover:outline-[#359c33]/60"
-                    : "bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline hover:outline-2 hover:outline-[#dd4386]/60"
+                    ? "bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] outline outline-[#359c33]/60 hover:bg-gradient-to-br hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2"
+                    : "bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
                 }`}
               >
                 {likes.some((like) => like.userId === user.id) ? "Liked" : "Like"}
                 {animationKey > 0 && (
                   <span
                     key={animationKey}
-                    className={`pointer-events-none absolute -inset-[2px] overflow-hidden rounded-xl ${
+                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full ${
                       likes.some((like) => like.userId === user.id)
                         ? "animate-snakeBorderGreen"
                         : "animate-snakeBorderPink"
@@ -364,7 +364,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
             </div>
           </div>
           <div className="relative flex flex-col items-center">
-            <div className="mb-1 flex items-center gap-1 text-sm text-gray-300">
+            <div className="mb-1 flex items-center gap-1 text-sm">
               ({project.comments.length})
               <button
                 onClick={() => setShowAllComments(true)}
@@ -373,12 +373,17 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
                 All Comments
               </button>
             </div>
-            <div className="relative inline-flex">
+            {/* from-[#185b17] via-[#2a8829] to-[#185b17] */}
+            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
               <button
                 onClick={() => setShowCommentModal(true)}
-                className="w-32 rounded-lg bg-purple-500 px-3 py-1 text-sm text-white hover:bg-purple-600"
+                className={`w-32 rounded-full bg-gradient-to-br from-[#c879d0] via-[#7c3184] to-[#c879d0] py-1 text-sm text-white outline outline-[#9b52a3]/60 transition duration-300 hover:bg-gradient-to-br hover:from-[#9b52a3] hover:via-[#c879d0] hover:to-[#7c3184] hover:outline-2`}
               >
                 Comment
+                <span
+                  key={animationKey}
+                  className={`group-hover:animate-snakeBorderViolet pointer-events-none absolute inset-0 overflow-hidden rounded-full`}
+                />
               </button>
             </div>
           </div>
@@ -416,20 +421,19 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           )}
         </div>
 
-
         <div className="mb-4">
           <h3 className="font-semibold">Progress</h3>
-          <div className="relative h-3 w-full rounded-full border-[1px] border-gray-400 bg-gray-200 overflow-hidden">
-  <div
-    className="relative h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all duration-300"
-    style={{ width: `${project.progress}%` }}
-  >
-    {/* Glowing shimmer */}
-    <div className="absolute inset-0 overflow-hidden rounded-full">
-      <div className="absolute h-full w-full bg-gradient-to-r from-transparent via-white to-transparent animate-progressBarGlow" />
-    </div>
-  </div>
-</div>
+          <div className="relative h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200">
+            <div
+              className="relative h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all duration-300"
+              style={{ width: `${project.progress}%` }}
+            >
+              {/* Glowing shimmer */}
+              <div className="absolute inset-0 overflow-hidden rounded-full">
+                <div className="animate-progressBarGlow absolute h-full w-full bg-gradient-to-r from-transparent via-white to-transparent" />
+              </div>
+            </div>
+          </div>
           <p
             className={cn("text-md mt-1 text-gray-500", {
               "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
