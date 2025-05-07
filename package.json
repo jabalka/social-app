@@ -2,7 +2,7 @@
   "name": "port-next-app",
   "version": "0.1.0",
   "private": true,
-    "type": "module",
+  "type": "module",
   "scripts": {
     "lint-staged:eslint:fix": "eslint --fix **/*.{ts,tsx}",
     "lint-staged:prettier:write": "prettier --write **/*.{ts,tsx,css}",
@@ -16,7 +16,7 @@
     "test:prisma": "ts-node --esm prisma-test.ts"
   },
   "prisma": {
-  "seed": "node --loader ts-node/esm prisma/seed.ts"
+    "seed": "node --loader ts-node/esm prisma/seed.ts"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -74,7 +74,6 @@
     "next-themes": "^0.4.3",
     "pino-pretty": "^13.0.0",
     "postcss": "^8",
-    "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
     "prettier-plugin-tailwindcss": "^0.6.10",
     "prisma": "^6.5.0",
@@ -103,6 +102,7 @@
     "@types/leaflet": "^1.9.17",
     "@types/uuid": "^10.0.0",
     "cross-env": "^7.0.3",
+    "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"

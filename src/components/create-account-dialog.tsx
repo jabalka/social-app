@@ -55,6 +55,7 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
   // const [isPhone, setIsPhone] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [emailValue, setEmailValue] = useState("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -69,70 +70,134 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
   });
 
   useEffect(() => {
-    // form.unregister("phone");
+    const subscription = form.watch((values, { name }) => {
+      const email = values.email?.trim();
+      const emailTouched = form.formState.touchedFields.email;
+  
+      const emailState = form.getFieldState("email");
+  
+      if (name === "email") {
+        if (emailTouched && !email) {
+          if (!emailState.error || emailState.error?.message !== "Email is required.") {
+            form.setError("email", {
+              type: "manual",
+              message: "Email is required.",
+            });
+          }
+        }
+  
+        // If email is now filled, and a "required" error exists → clear it
+        if (email && emailState.error?.message === "Email is required.") {
+          form.clearErrors("email");
+        }
 
-    const subscription = form.watch(async (values, { name }) => {
-      const touched = form.formState.touchedFields;
-      const emailTouched = !!touched.email;
-      // const phoneTouched = !!touched.phone;
-
-      const hasEmail = !!values.email?.trim();
-      // const hasPhone = !!values.phone?.trim();
-
-      // form.clearErrors(["email", "phone"]);
-      form.clearErrors(["email"]);
-
-      // if ((emailTouched || phoneTouched) && !hasEmail && !hasPhone) {
-      //   if (emailTouched) {
-      //     form.setError("email", {
-      //       type: "manual",
-      //       message: "Either email or phone is required.",
-      //     });
-      //   }
-      //   if (phoneTouched) {
-      //     form.setError("phone", {
-      //       type: "manual",
-      //       message: "Either phone or email is required.",
-      //     });
-      //   }
-      // }
-
-      if (emailTouched && !hasEmail) {
-        if (emailTouched) {
-          form.setError("email", {
-            type: "manual",
-            message: "Email is required.",
-          });
+        if (!email && emailState.error?.message === "Please enter a valid email.") {
+          form.clearErrors("email");
         }
       }
-
-      if (name && values.dob && values.email) {
-        const isValidName = !!name.trim();
-        const isValidDob = !!values.dob;
-        const isValidContact = !!values.email?.trim();
-
-        const isReadyNow = isValidName && isValidDob && isValidContact;
-
-        setIsReady(isReadyNow);
-        setErrorMessage("");
-      }
-
-      const identifier = values.email;
-      if (identifier) {
-        const existingUser = await findUserByIdentifier(identifier);
-        if (existingUser) {
-          setErrorMessage(`User with this email already exists!`);
-          setIsReady(false);
-        }
-      }
+  
+      // Set readiness based on all fields being valid
+      const ready = !!values.name?.trim() && !!values.dob && !!email;
+      setIsReady(ready);
     });
-
+  
     return () => subscription.unsubscribe();
   }, [form]);
 
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "email") {
+        setEmailValue(value.email || "");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+  
+  useEffect(() => {
+    const email = emailValue.trim();
+    const emailState = form.getFieldState("email");
+  
+    if (!email || emailState.invalid) return;
+  
+    const delay = setTimeout(async () => {
+      const existing = await findUserByIdentifier(email);
+  
+      const currentEmail = form.getValues("email")?.trim();
+      if (existing && currentEmail === email && !form.getFieldState("email").error) {
+        form.setError("email", {
+          type: "manual",
+          message: "A user with this email already exists.",
+        });
+      }
+    }, 500);
+  
+    return () => clearTimeout(delay);
+  }, [emailValue, form]);
+
+  // useEffect(() => {
+  //   // form.unregister("phone");
+
+  //   const subscription = form.watch(async (values, { name }) => {
+  //     const touched = form.formState.touchedFields;
+  //     const emailTouched = !!touched.email;
+  //     // const phoneTouched = !!touched.phone;
+
+  //     const hasEmail = !!values.email?.trim();
+  //     // const hasPhone = !!values.phone?.trim();
+
+  //     // form.clearErrors(["email", "phone"]);
+  //     form.clearErrors(["email"]);
+
+  //     // if ((emailTouched || phoneTouched) && !hasEmail && !hasPhone) {
+  //     //   if (emailTouched) {
+  //     //     form.setError("email", {
+  //     //       type: "manual",
+  //     //       message: "Either email or phone is required.",
+  //     //     });
+  //     //   }
+  //     //   if (phoneTouched) {
+  //     //     form.setError("phone", {
+  //     //       type: "manual",
+  //     //       message: "Either phone or email is required.",
+  //     //     });
+  //     //   }
+  //     // }
+
+  //     if (emailTouched && !hasEmail) {
+  //       if (emailTouched) {
+  //         form.setError("email", {
+  //           type: "manual",
+  //           message: "Email is required.",
+  //         });
+  //       }
+  //     }
+
+  //     if (name && values.dob && values.email) {
+  //       const isValidName = !!name.trim();
+  //       const isValidDob = !!values.dob;
+  //       const isValidContact = !!values.email?.trim();
+
+  //       const isReadyNow = isValidName && isValidDob && isValidContact;
+
+  //       setIsReady(isReadyNow);
+  //       setErrorMessage("");
+  //     }
+
+  //     const identifier = values.email;
+  //     if (identifier) {
+  //       const existingUser = await findUserByIdentifier(identifier);
+  //       if (existingUser) {
+  //         setErrorMessage(`User with this email already exists!`);
+  //         setIsReady(false);
+  //       }
+  //     }
+  //   });
+
+  //   return () => subscription.unsubscribe();
+  // }, [form]);
+
   const handleNext = async () => {
     const values = form.getValues();
-    console.log("**********values:  ", values);
     const identifier = values.email;
     setErrorMessage("");
 
@@ -206,29 +271,29 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
           <DialogTitle className="mb-2 text-center text-xl font-semibold">Join CivilDev today</DialogTitle>
 
           <Form {...form}>
-            <form className="space-y-4 mx-auto w-4/5 justify-center">
-            <div className="w-full max-w-md">
-            <div className="flex w-full flex-col gap-3">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-400">Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        maxLength={50}
-                        className="border-gray-600 bg-transparent text-white focus:border-blue-500"
-                      />
-                    </FormControl>
-                    <div className="text-right text-xs text-gray-500">{field.value.length}/50</div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form className="mx-auto w-4/5 justify-center space-y-4">
+              <div className="w-full max-w-md">
+                <div className="flex w-full flex-col gap-3">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-400">Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            maxLength={50}
+                            className="border-gray-600 bg-transparent text-white focus:border-blue-500"
+                          />
+                        </FormControl>
+                        <div className="text-right text-xs text-gray-500">{field.value.length}/50</div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* {isPhone ? (
+                  {/* {isPhone ? (
                 <FormField
                   control={form.control}
                   name="phone"
@@ -243,96 +308,99 @@ const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
                   )}
                 />
               ) : ( */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-400">Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} className="border-gray-600 bg-transparent text-white focus:border-blue-500" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-400">Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            className="border-gray-600 bg-transparent text-white focus:border-blue-500"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* <div className="text-right">
+                  {/* <div className="text-right">
                 <button type="button" onClick={toggleInputType} className="text-sm text-blue-500 hover:underline">
                   {isPhone ? "Use email instead" : "Use phone instead"}
                 </button>
               </div> */}
 
-              <div className="space-y-2">
-                <h3 className="text-white">Date of birth</h3>
-                <p className="text-sm text-gray-400">
-                  This will not be shown publicly. Confirm your own age, even if this account is for a business, a pet,
-                  or something else.
-                </p>
+                  <div className="space-y-2">
+                    <h3 className="text-white">Date of birth</h3>
+                    <p className="text-sm text-gray-400">
+                      This will not be shown publicly. Confirm your own age, even if this account is for a business, a
+                      pet, or something else.
+                    </p>
 
-                <FormField
-                  control={form.control}
-                  name="dob"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mx-auto w-full justify-center border-gray-600 bg-transparent pl-3 text-left font-normal text-white",
-                                !field.value && "text-gray-400",
-                              )}
-                            >
-                              {field.value ? format(field.value, "MM/dd/yyyy") : <span>MM/DD/YYYY</span>}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto border-gray-700 bg-gray-900 p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                            className="bg-gray-900 text-white"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                    <FormField
+                      control={form.control}
+                      name="dob"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "mx-auto w-full justify-center border-gray-600 bg-transparent pl-3 text-left font-normal text-white",
+                                    !field.value && "text-gray-400",
+                                  )}
+                                >
+                                  {field.value ? format(field.value, "MM/dd/yyyy") : <span>MM/DD/YYYY</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto border-gray-700 bg-gray-900 p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                                initialFocus
+                                className="bg-gray-900 text-white"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              {errorMessage && <div className="text-center text-red-500">{errorMessage}</div>}
+                  {errorMessage && <div className="text-center text-red-500">{errorMessage}</div>}
 
-              <Button
-                type="button"
-                className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
-                disabled={!isReady}
-                onClick={handleNext}
-              >
-                Next
-              </Button>
+                  <Button
+                    type="button"
+                    className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                    disabled={!isReady}
+                    onClick={handleNext}
+                  >
+                    Next
+                  </Button>
 
-              <Button
-                type="button"
-                className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
-                onClick={testCheck}
-              >
-                Test Check
-              </Button>
-              </div>
+                  <Button
+                    type="button"
+                    className="w-full rounded-full bg-white font-bold text-black hover:bg-gray-200"
+                    onClick={testCheck}
+                  >
+                    Test Check
+                  </Button>
+                </div>
 
-              <div className="mx-auto mt-4 w-full justify-center text-left">
-                <span className="mx-auto w-4/5 justify-center text-sm text-gray-400">Have an account already? </span>
-                <button type="button" onClick={toggleSignIn} className="text-sm text-blue-500 hover:underline">
-                  Log in
-                </button>
-              </div>
+                <div className="mx-auto mt-4 w-full justify-center text-left">
+                  <span className="mx-auto w-4/5 justify-center text-sm text-gray-400">Have an account already? </span>
+                  <button type="button" onClick={toggleSignIn} className="text-sm text-blue-500 hover:underline">
+                    Log in
+                  </button>
+                </div>
               </div>
             </form>
           </Form>

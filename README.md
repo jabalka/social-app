@@ -128,3 +128,15 @@ and if to change project status a user must be one of following roles:
 "admin", "council", "mayor".,
 and to change the project categories (if assigned wrong by creator)., user must be one of the following roles:
 "admin", "council", "mayor", "planner", "inspector"
+
+
+## TODO
+    -when project is edited
+        -title min lenght and max length
+        - details min length and max length
+
+        - project progress should not be available to edit bu author but other roles
+        - if admin is an author they must be able to edit all data 
+        - Save project button does not reflect or update the project
+        - Welcome Header needs to change color with Theme
+        - Leaving Comment needs to refreshProjects

@@ -40,6 +40,7 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({
   const [isUsername, setIsUsername] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // const [inputValue, setInputValue] = useState("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -54,33 +55,72 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({
   });
 
   useEffect(() => {
-    const subscription = form.watch(async (values) => {
-      const touched = form.formState.touchedFields;
-      const emailTouched = !!touched.email;
-      const usernameTouched = !!touched.username;
+    const subscription = form.watch((values, { name }) => {
+      const username = values.username?.trim() ?? "";
+      const email = values.email?.trim() ?? "";
+      const emailTouched = form.formState.touchedFields.email;
+      const usernameTouched = form.formState.touchedFields.username;
 
-      const hasUsername = !!values.username?.trim();
-      const hasEmail = !!values.email?.trim();
-
-      form.clearErrors(["email", "username"]);
-
-      if (emailTouched && !hasEmail) {
-        if (emailTouched) {
+      if (name === "email") {
+        const state = form.getFieldState("email");
+        if (emailTouched && !email && (!state.error || state.error.message !== "Email is required.")) {
           form.setError("email", {
             type: "manual",
-            message: "Email is required.",
+            message: "Email is required."
           });
         }
-      }
-      if (usernameTouched && !hasUsername) {
-        form.setError("username", {
-          type: "manual",
-          message: "Username is required.",
-        });
+        if (email && state.error?.message === "Email is required.") {
+          form.clearErrors("email");
+        }
       }
 
-      setIsReady(hasUsername || hasEmail);
-      setErrorMessage("");
+      if (name === "username") {
+        const state = form.getFieldState("username");
+        if (usernameTouched && !username && (!state.error || state.error.message !== "Username is required.")) {
+          form.setError("username", {
+            type: "manual",
+            message: "Username is required."
+          });
+        }
+        if (username && state.error?.message === "Username is required.") {
+          form.clearErrors("username");
+        }
+      }
+
+      setIsReady(
+        (email && form.formState.errors.email === undefined) || !!username
+      );
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // useEffect(() => {
+  //   const value = inputValue.trim();
+  //   const field = isUsername ? "username" : "email";
+  //   const state = form.getFieldState(field);
+
+  //   if (!value || state.invalid) return;
+
+  //   const delay = setTimeout(async () => {
+  //     const existing = await findUserByIdentifier(value);
+  //     const current = form.getValues(field)?.trim();
+  //     if (!existing && current === value && !form.getFieldState(field).error) {
+  //       form.setError(field, {
+  //         type: "manual",
+  //         message: `User with this ${field} does not exist.`
+  //       });
+  //     }
+  //   }, 500);
+
+  //   return () => clearTimeout(delay);
+  // }, [ inputValue, isUsername, form]);
+
+  useEffect(() => {
+    const subscription = form.watch((values, { name }) => {
+      if (name === "email" || name === "username") {
+        // setInputValue(values[name] || "");
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -88,7 +128,6 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({
 
   const handleNext = async () => {
     const values = form.getValues();
-    console.log("**********values:  ", values);
     setErrorMessage("");
 
     const valid = await form.trigger();
@@ -118,6 +157,10 @@ const LoginAccountDialog: React.FC<LoginAccountDialogProps> = ({
   };
 
   const toggleInputType = () => {
+    const target = isUsername ? "username" : "email";
+    form.setValue(target, "");
+    form.clearErrors(target);
+    // setInputValue("");
     setIsUsername((prev) => !prev);
   };
 
