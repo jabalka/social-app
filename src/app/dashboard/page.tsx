@@ -11,6 +11,7 @@ const DashboardPage: React.FC = async () => {
 
   if (!session?.user) {
     redirect("/");
+  } else {
   }
 
   const projects = await prisma.project.findMany({

@@ -1,4 +1,5 @@
 import "@/assets/styles/index.css";
+import "@/styles/leaflet.css";
 import "leaflet/dist/leaflet.css";
 import LayoutClient from "@/components/layouts/layout-client";
 import Providers from "@/components/providers/providers";

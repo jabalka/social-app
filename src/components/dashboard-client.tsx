@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { useProjectContext } from "@/context/project-context";
-import type { User } from "next-auth";
+import { AuthUser } from "@/models/auth";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import React from "react";
 
 interface DashboardClientProps {
-  user: User;
+  user: AuthUser;
 }
 
 const MapWrapper = dynamic(() => import("./map-wrapper-viewer"), { ssr: false });

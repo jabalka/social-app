@@ -11,28 +11,24 @@ export const EIGHTEEN_MONTHS_MS = 18 * MONTH_MS;
 export const TWO_DAYS_MS = 2 * DAY_MS;
 export const FOURTEEN_DAYS_MS = 14 * DAY_MS;
 
-// Blockchain related constants
-
-export const USER_REFERRAL_STAKING_BONUS_PERCENTAGE = 3;
-export const ADMIN_REFERRAL_STAKING_BONUS_PERCENTAGE = 5;
-export const AFFILIATE_REFERRAL_STAKING_BONUS_PERCENTAGE = 5;
-export const AMBASSADOR_REFERRAL_STAKING_BONUS_PERCENTAGE = 5;
-export const PARTNER_REFERRAL_STAKING_BONUS_PERCENTAGE = 5;
-
 // UI related constants
 export const DEFAULT_THEME = Theme.DARK;
 export const DEFAULT_SIDEBAR_EXPANDED = true;
 
 // Project Categories
-export const PROJECT_CATEGORIES = [
-  { id: "infrastructure", name: "Infrastructure", icon: "building" },
-  { id: "environmental", name: "Environmental", icon: "leaf" },
-  { id: "education", name: "Education", icon: "graduation-cap" },
-  { id: "public-safety", name: "Public Safety", icon: "shield-check" },
-  { id: "transport", name: "Transport", icon: "bus" },
-];
+// export const PROJECT_CATEGORIES = [
+//   { id: "infrastructure", name: "Infrastructure", icon: "building" },
+//   { id: "environmental", name: "Environmental", icon: "leaf" },
+//   { id: "education", name: "Education", icon: "graduation-cap" },
+//   { id: "public-safety", name: "Public Safety", icon: "shield-check" },
+//   { id: "transport", name: "Transport", icon: "bus" },
+// ];
 
-
+// User Role Permissions
+export const ALLOWED_ROLES_FOR_PROGRESS_NOTES = ["admin", "council", "mayor", "planner", "inspector"];
+export const ALLOWED_ROLES_FOR_PROGRESS = ["admin", "council", "mayor", "inspector"];
+export const ALLOWED_ROLES_FOR_PROJECT_STATUS = ["admin", "council", "mayor"];
+export const ALLOWED_ROLES_FOR_PROJECT_CATEGORIES = ["admin", "council", "mayor", "planner", "inspector"];
 
 // Messages
 export const MESSAGES = {
@@ -48,20 +44,6 @@ export const MESSAGES = {
   VERIFICATION_SUCCESSFUL: "Email verified successfully",
   PASSWORDS_MISMATCH: "Passwords don't match",
   NEW_PASSWORDS_MISMATCH: "New passwords don't match",
-
-  // Multi-Factor Authentication
-  MFA_REQUIRED_TO_WITHDRAW: "You must enable MFA in order to withdraw",
-  MFA_MISSING_TOKEN: "Missing MFA 6-digit authenticator code",
-  MFA_INVALID_TOKEN: "Invalid 6-digit code",
-  MFA_ENABLED_SUCCESSFULLY: "MFA set up successfully",
-  MFA_INVALID_BACKUP_CODES: "Invalid backup codes",
-  MFA_RESET_SUCCESSFUL: "MFA has been reset successfully, you can now set it up again",
-
-  // Staking and Tokens
-  INSUFFICIENT_TOKENS: "Insufficient amount of tokens",
-  TOKENS_STAKED_SUCCESSFULLY: (amount: number) => `${amount.toFixed(2)} STK staked successfully`,
-  TOKENS_CLAIMED_SUCCESSFULLY: (amount: number) => `${amount.toFixed(2)} STK claimed successfully`,
-  NO_EARNINGS_TO_CLAIM: "No earnings available at this time",
 
   // Communicating with users
   MESSAGE_SENT_SUCCESSFULLY: (email: string) => `Message sent successfully to ${email}`,

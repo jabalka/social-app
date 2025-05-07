@@ -118,3 +118,13 @@ NeonPostSQL - for DB in AWS
 IT RE-RENDERS EVERYTIME IT REFRESHPROJECTS() AS IT MIGHT BE BEFAUSE OF USEEFFECT
 
 let's say author will be able to delete the whole project (by confirming with typing "delete project" on an input field), edit Title, Description, Images, but this only if project is in stage Proposed, if project is in stage Inn-Progress the only thing author can update or edit is to be able to add more images, if project is in completed stage then author cannot edit it at all.
+
+
+basically, to change the progress note of project the user must be from one of following roles:
+"admin", "council", "mayor", "planner", "inspector".,
+and if to change the progress level of project user must be one of following roles:
+"admin", "council", "mayor", "inspector".,
+and if to change project status a user must be one of following roles:
+"admin", "council", "mayor".,
+and to change the project categories (if assigned wrong by creator)., user must be one of the following roles:
+"admin", "council", "mayor", "planner", "inspector"

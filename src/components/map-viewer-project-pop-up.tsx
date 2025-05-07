@@ -1,88 +1,50 @@
 "use client";
 
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
-import { User } from "next-auth";
+import { AuthUser } from "@/models/auth";
+import { Theme } from "@/types/theme.enum";
+import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import CommentCreation from "./create-comment";
 import { Project } from "./map-wrapper-viewer";
 import ProjectDetailsDialog from "./project-details";
+import { Button } from "./ui/button";
 
 interface ProjectPopupContentProps {
-  user: User;
+  user: AuthUser;
   project: Project;
   refreshProjects(): void;
+  theme: string;
 }
 
-const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project, refreshProjects }) => {
-  const [likes, setLikes] = useState<{ id: string; userId: string; createdAt: Date }[]>([]);
+const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project, refreshProjects, theme }) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [isLiking, setIsLiking] = useState(false);
-  const [animationKey, setAnimationKey] = useState<number>(0);
-
-  const fetchLikes = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/projects/${project.id}/like`);
-      if (res.ok) {
-        const data = await res.json();
-        setLikes(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch likes:", err);
-    }
-  }, [project.id]);
-
-  useEffect(() => {
-    fetchLikes();
-    const interval = setInterval(fetchLikes, 60000);
-    return () => clearInterval(interval);
-  }, [fetchLikes]);
-
-  useEffect(() => {
-    if (animationKey === 0) return;
-
-    const timeout = setTimeout(() => {
-      setAnimationKey(0);
-    }, 1500); // match animation duration (in ms)
-
-    return () => clearTimeout(timeout);
-  }, [animationKey]);
-
-  const alreadyLiked = likes.some((like) => like.userId === user.id);
-
-  const handleLike = async () => {
-    setAnimationKey(Date.now());
-    if (!user.id || isLiking) return;
-    setIsLiking(true);
-
-    try {
-      const res = await fetch(`/api/projects/${project.id}/like`, { method: "POST" });
-      if (res.ok) {
-        await fetchLikes();
-        refreshProjects();
-      } else {
-        console.error("Failed to like project");
-      }
-    } catch (err) {
-      console.error("Like error:", err);
-    } finally {
-      setIsLiking(false);
-    }
-  };
 
   return (
-    <div className="rounded border p-4">
-      <h2 className="mb-1 text-lg font-bold">{project.title}</h2>
+    <div
+      className={cn("h-[360px] w-48 flex flex-col justify-between rounded border p-4 shadow", {
+        "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+        "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+      })}
+      style={
+        {
+          "--popup-bg": theme === Theme.LIGHT ? "#f0e3dd" : "#332f2d",
+          backgroundColor: "var(--popup-bg)",
+        } as React.CSSProperties & Record<string, string>
+      }
+    >
+      <h2 className="mb-1 text-sm font-bold">{project.title}</h2>
 
       {project.images.length > 0 && (
-        <div className="mb-3 flex justify-center">
+        <div className="mb-3 h-24 w-full overflow-hidden rounded">
           <Image
             src={project.images[0].url}
             alt={`${project.title} preview`}
-            width={124}
-            height={32}
-            className="rounded object-cover"
+            width={240}
+            height={240}
+            className="h-full w-full object-cover"
           />
         </div>
       )}
@@ -96,7 +58,12 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
           return (
             Icon && (
               <div key={id} className="group relative flex items-center justify-center">
-                <Icon className="h-5 w-5 text-gray-700 group-hover:text-blue-500" />
+                <Icon
+                  className={cn("h-5 w-5", {
+                    "text-gray-700 group-hover:text-orange-700": theme === Theme.LIGHT,
+                    "text-zinc-200 group-hover:text-orange-700": theme === Theme.DARK,
+                  })}
+                />
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white transition-all group-hover:scale-100">
                   {name}
                 </div>
@@ -106,52 +73,53 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
         })}
       </div>
 
-      {/* Progress Bar */}
-      <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner">
+      <div className="mt-3 h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200 shadow-inner">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600 transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all"
           style={{ width: `${project.progress}%` }}
         />
       </div>
-      <p className="mt-1 text-xs text-gray-500">{project.progress}% complete</p>
+      <p
+        className={cn("mt-1 text-xs text-gray-500", {
+          "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+          "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+        })}
+      >
+        {project.progress}% completed
+      </p>
 
-      {/* CTA */}
-      <button
-        className="mt-2 w-full rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+      <Button
+        //  "[#FF5C00]"
+        className={cn("rounded-full px-8 py-3 font-bold transition duration-300 hover:outline hover:outline-2", {
+          "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
+            theme === Theme.LIGHT,
+          "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
+            theme === Theme.DARK,
+        })}
         onClick={() => setShowDetailsModal(true)}
       >
         View Details
-      </button>
+      </Button>
 
-      {/* Action Buttons */}
-      <div className="mt-3 flex justify-between gap-2">
-        <div className="relative inline-flex">
-          <button
-            onClick={handleLike}
-            className={`rounded px-3 py-1 text-sm text-white ${
-              alreadyLiked ? "bg-green-700 hover:bg-green-900" : "bg-pink-700 hover:bg-pink-900"
-            }`}
-          >
-            {alreadyLiked ? "Liked" : "Like"} ({likes.length})
-            {animationKey > 0 && (
-              <span
-                key={animationKey}
-                className="animate-snakeBorder pointer-events-none absolute -inset-[2px] overflow-hidden rounded-lg"
-              />
-            )}
-          </button>
+      <div
+        className={cn("flex justify-between text-sm", {
+          "text-zinc-700": theme === Theme.LIGHT,
+          "text-zinc-200": theme === Theme.DARK,
+        })}
+      >
+        <div className="flex flex-col items-center">
+          <span>❤️ {project.likes.length}</span>
+          <span className="text-xs">Likes</span>
         </div>
-        <button
-          onClick={() => setShowCommentModal(true)}
-          className="rounded bg-purple-500 px-3 py-1 text-sm text-white hover:bg-purple-600"
-        >
-          Comments ({project.comments.length})
-        </button>
+        <div className="flex flex-col items-center">
+          <span>💬 {project.comments.length}</span>
+          <span className="text-xs">Comments</span>
+        </div>
       </div>
 
       {/* Comment Modal */}
       {showCommentModal && (
-        <CommentCreation user={user} projectId={project.id} onClose={() => setShowCommentModal(false)} />
+        <CommentCreation user={user} projectId={project.id} onClose={() => setShowCommentModal(false)} theme={theme} />
       )}
       {showDetailsModal && (
         <ProjectDetailsDialog
@@ -160,6 +128,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
           open={true}
           onClose={() => setShowDetailsModal(false)}
           refreshProjects={refreshProjects}
+          theme={theme}
         />
       )}
     </div>

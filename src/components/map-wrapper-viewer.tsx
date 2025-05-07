@@ -1,7 +1,7 @@
 "use client";
 
+import { AuthUser } from "@/models/auth";
 import { ProjectStatus } from "@prisma/client";
-import { User } from "next-auth";
 import { useEffect, useState } from "react";
 
 export interface Project {
@@ -47,7 +47,7 @@ export interface Project {
 }
 
 export interface ProjectMapViewerProps {
-  user: User;
+  user: AuthUser;
   projects: Project[];
   refreshProjects(): void;
 }
