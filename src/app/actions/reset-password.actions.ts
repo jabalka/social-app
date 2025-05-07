@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
 import { hashPassword } from "@/utils/crypto.utils";
 
 export const resetPassword = async (token: string, newPassword: string) => {

@@ -1,0 +1,21 @@
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-tip-container {
+  background: transparent !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--popup-bg, #fff) !important;
+}

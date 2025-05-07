@@ -7,7 +7,7 @@ import type React from "react";
 import { Suspense } from "react";
 
 const Home: React.FC = async () => {
-  const session = await auth(); // SERVER-SIDE call, no waiting
+  const session = await auth();
 
   if (session?.user) {
     redirect("/dashboard"); // Instant, before any page shows

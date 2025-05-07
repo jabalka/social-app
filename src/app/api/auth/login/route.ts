@@ -1,5 +1,5 @@
 // /app/api/auth/login/route.ts
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
 import { verifyPassword } from "@/utils/crypto.utils";
 import { NextRequest, NextResponse } from "next/server";
 

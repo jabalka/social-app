@@ -2,7 +2,10 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { MESSAGES } from "./constants";
-import prisma from "./prisma";
+
+import type { AdapterUser } from "next-auth/adapters";
+import prisma from "./lib/prisma";
+import { AuthUser } from "./models/auth";
 import { authSchema } from "./schemas/auth.schema";
 import { verifyPassword } from "./utils/crypto.utils";
 
@@ -11,20 +14,6 @@ const providers: NextAuthConfig["providers"] = [
     clientId: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     async profile({ sub: id, email, name, picture: image }) {
-      // const existingUser = await prisma.user.findUnique({ where: { email } });
-
-      // if (!existingUser) {
-      //   return await prisma.user.create({
-      //     data: {
-      //       id,
-      //       email,
-      //       name,
-      //       image,
-
-      //       emailVerified: new Date(), // Mark Google users as verified
-      //     },
-      //   });
-      // }
       return { id, email, name, image };
     },
   }),
@@ -40,13 +29,12 @@ const providers: NextAuthConfig["providers"] = [
 
         const user = await prisma.user.findUnique({
           where: { email },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-            hashedPassword: true,
-            emailVerified: true,
+          include: {
+            comments: true,
+            likes: true,
+            posts: true,
+            projects: true,
+            role: true,
           },
         });
 
@@ -63,13 +51,9 @@ const providers: NextAuthConfig["providers"] = [
             throw new Error(MESSAGES.INVALID_CREDENTIALS);
           }
         }
+        const { ...safeUser } = user;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
+        return safeUser;
       } catch (error) {
         throw error;
       }
@@ -138,20 +122,52 @@ const callbacks: NextAuthConfig["callbacks"] = {
 
   async jwt({ token, user }) {
     if (user) {
-      token.id = user.id;
-      token.email = user.email;
-      token.name = user.name;
-      token.picture = user.image;
+      const dbUser = await prisma.user.findUnique({
+        where: { email: user.email! },
+        include: {
+          comments: true,
+          likes: true,
+          posts: true,
+          projects: true,
+          role: true,
+        },
+      });
+
+      if (dbUser) {
+        token.id = dbUser.id;
+        token.name = dbUser.name;
+        token.email = dbUser.email;
+        token.image = dbUser.image;
+        token.username = dbUser.username;
+        token.emailVerified = dbUser.emailVerified;
+        token.roleId = dbUser.roleId;
+        token.comments = dbUser.comments;
+        token.likes = dbUser.likes;
+        token.posts = dbUser.posts;
+        token.projects = dbUser.projects;
+        token.role = dbUser.role;
+      }
     }
+
     return token;
   },
 
   async session({ session, token }) {
-    if (session.user) {
-      session.user.id = token.id as string;
-      session.user.email = token.email as string;
-      session.user.image = token.picture as string;
-      session.user.name = token.name as string;
+    if (session.user && token?.id) {
+      session.user = {
+        id: token.id!,
+        name: token.name ?? null,
+        email: token.email ?? "",
+        username: token.username ?? null,
+        emailVerified: token.emailVerified ?? null,
+        image: token.image ?? null,
+        roleId: token.roleId ?? null,
+        comments: token.comments ?? [],
+        likes: token.likes ?? [],
+        posts: token.posts ?? [],
+        projects: token.projects ?? [],
+        role: token.role ?? null,
+      } as AdapterUser & AuthUser;
     }
 
     return session;
@@ -178,5 +194,17 @@ const events: NextAuthConfig["events"] = {
   //     }
   //   }
   // },
+  async createUser({ user }) {
+    try {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: { connect: { id: "citizen" } },
+        },
+      });
+    } catch (err) {
+      console.error("Failed to assign citizen role:", err);
+    }
+  },
 };
 export default { providers, pages, callbacks, events } satisfies NextAuthConfig;

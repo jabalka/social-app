@@ -75,6 +75,49 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        snakeBorder: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+//             Top-left: `0 0`
+//             Top-right: `100% 0`
+//             Bottom-right: `100% 100%`
+//             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #0ccd08, 0 0 10px 2px #0ccd08",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -102,23 +145,20 @@ export default {
         },
         "left-to-right": {
           "0%": { transform: "translateX(0)" },
-          "50%": { transform: "translateX(400px)" }, // how much to move to right
+          "50%": { transform: "translateX(400px)" },
           "100%": { transform: "translateX(0)" },
         },
         "up-and-down": {
           "0%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-250px)" }, // how much to move up
+          "50%": { transform: "translateY(-250px)" },
           "100%": { transform: "translateY(0)" },
         },
-
         "image-up-and-down-lg": {
-          // for larger window screens
           "0%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(250px)" },
           "100%": { transform: "translateY(0)" },
         },
         "image-up-and-down-sm": {
-          // when windows screen is smaller
           "0%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(100px)" },
           "100%": { transform: "translateY(0)" },
@@ -138,6 +178,7 @@ export default {
         },
       },
       animation: {
+        snakeBorder: "snakeBorder 2s ease-in-out forwards",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         rippleEffect: "rippleEffect 600ms linear",

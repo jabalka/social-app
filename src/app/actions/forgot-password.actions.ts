@@ -1,8 +1,8 @@
 "use server";
 
-import prisma from "@/prisma";
 // import { AuthSlide } from "@/types/auth-slide.enum";
 import { getResetPasswordEmailComponent } from "@/components/render-reset-password-email";
+import prisma from "@/lib/prisma";
 import { bytesToHex, randomBytes } from "@/utils/crypto.utils";
 import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { Resend } from "resend";

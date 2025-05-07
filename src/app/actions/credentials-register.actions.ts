@@ -1,7 +1,7 @@
 "use server";
 
 import { MESSAGES } from "@/constants";
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
 import { bytesToHex, randomBytes, hashPassword  } from "@/utils/crypto.utils";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
@@ -30,6 +30,7 @@ export async function registerUser(email: string, password: string, name: string
         name,
         hashedPassword,
         verificationToken,
+        role: { connect: { id: "citizen" } },
         // emailVerified: new Date(),
       },
     });

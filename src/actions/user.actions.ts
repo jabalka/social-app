@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
 
 export const getUserWithContent = async (userId: string) => {
   return await prisma.user.findUnique({

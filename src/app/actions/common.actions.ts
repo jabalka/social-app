@@ -1,10 +1,10 @@
 "use server";
 
 import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
 
 import { revalidateTag } from "next/cache";
 
-import prisma from "@/prisma";
 import { connection } from "next/server";
 
 export const isomorphicNow = async () => {

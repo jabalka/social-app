@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { title, description, postcode, latitude, longitude, imageUrls } = body;
+  const { title, description, postcode, latitude, longitude, imageUrls, categories = [] } = body;
 
   try {
     const project = await prisma.project.create({
@@ -21,6 +21,11 @@ export async function POST(req: NextRequest) {
         latitude,
         longitude,
         authorId: session.user.id,
+        categories: {
+          connect: categories.slice(0, 3).map((id: string) => {
+            return { id };
+          }), //only 3 allowed
+        },
         images: {
           create:
             imageUrls?.map((url: string) => ({
@@ -30,6 +35,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         images: true,
+        categories: true,
       },
     });
 
@@ -37,5 +43,24 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[PROJECT_CREATE_ERROR]", err);
     return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const projects = await prisma.project.findMany({
+      include: {
+        categories: true,
+        images: true,
+        comments: true,
+        likes: true,
+        author: true,
+      },
+    });
+
+    return NextResponse.json(projects, { status: 200 });
+  } catch (error) {
+    console.error("[PROJECT_GET_ERROR]", error);
+    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
   }
 }

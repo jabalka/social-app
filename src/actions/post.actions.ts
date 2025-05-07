@@ -1,6 +1,7 @@
 "use server";
 
-import prisma from "@/prisma";
+import prisma from "@/lib/prisma";
+
 
 // Create a new post
 const createPost = async (postData: { title: string; content: string; authorId: string }) => {

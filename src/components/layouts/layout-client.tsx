@@ -6,6 +6,7 @@ import React, { PropsWithChildren } from "react";
 import MenuLayout from "./menu-layout";
 import SidebarLayoutClient from "./sidebar-layout-client";
 import WelcomeLayout from "./welcome-layout";
+import { UserContext } from "@/context/user-context";
 
 const PATHS_WITH_MENU_LAYOUT = [
   "/dashboard",
@@ -32,19 +33,29 @@ interface Props {
 const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
   const pathname = usePathname();
 
-  if (pathname === "/") {
-    return <WelcomeLayout>{children}</WelcomeLayout>;
-  }
+  // if (pathname === "/") {
+  //   return <WelcomeLayout>{children}</WelcomeLayout>;
+  // }
 
-  if (PATHS_WITH_MENU_LAYOUT.some((path) => pathname.startsWith(path))) {
-    return <MenuLayout user={user}>{children}</MenuLayout>;
-  }
+  // if (PATHS_WITH_MENU_LAYOUT.some((path) => pathname.startsWith(path))) {
+  //   return <MenuLayout user={user}>{children}</MenuLayout>;
+  // }
 
-  if (PATHS_WITH_SIDEBAR_LAYOUT.some((path) => pathname.startsWith(path))) {
-    return <SidebarLayoutClient user={user}>{children}</SidebarLayoutClient>;
-  }
+  // if (PATHS_WITH_SIDEBAR_LAYOUT.some((path) => pathname.startsWith(path))) {
+  //   return <SidebarLayoutClient user={user}>{children}</SidebarLayoutClient>;
+  // }
 
-  return <>{children}</>;
+  // return <>{children}</>;
+
+
+  return(
+    <UserContext.Provider value={user}>
+    {pathname === "/" && <WelcomeLayout>{children}</WelcomeLayout>}
+    {PATHS_WITH_MENU_LAYOUT.some(path => pathname.startsWith(path)) && <MenuLayout user={user}>{children}</MenuLayout>}
+    {PATHS_WITH_SIDEBAR_LAYOUT.some(path => pathname.startsWith(path)) && <SidebarLayoutClient user={user}>{children}</SidebarLayoutClient>}
+    {!pathname.startsWith("/") && children}
+  </UserContext.Provider>
+  )
 };
 
 export default LayoutClient;
