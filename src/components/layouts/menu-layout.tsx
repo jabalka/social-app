@@ -7,8 +7,8 @@ import { useSidebarContext } from "@/context/sidebar-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import DesktopHeader from "../menu/desktop-header";
-import MobileMenu from "../menu/mobileMenu";
-import StickyHeader from "../menu/sticky-header";
+import MobileMenu from "../menu/mobile-menu";
+import MobileStickyHeader from "../menu/mobile-sticky-header";
 import SiteFooter from "../site-footer/site-footer";
 import { SafeUser } from "./layout-client";
 
@@ -52,7 +52,7 @@ const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
       {isMobile ? (
         <>
           {" "}
-          <StickyHeader
+          <MobileStickyHeader
             theme={theme}
             sidebarExpanded={sidebarExpanded}
             onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}

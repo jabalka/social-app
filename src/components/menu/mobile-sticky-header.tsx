@@ -3,7 +3,7 @@ import React from "react";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import SiteLogoWhite from "../site-logo-white";
-import MenuToggle from "./menuToggle";
+import MobileMenuToggle from "./mobile-menu-toggle";
 import SiteLogoBlack from "../site-logo-black";
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
   theme: string;
 }
 
-const StickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => {
+const MobileStickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => {
   return (
     <header
       className={cn("sticky top-0 z-40 md:hidden border-b-2", {
@@ -30,7 +30,7 @@ const StickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => 
                 <SiteLogoBlack size={130} className="absolute -top-5"/>
               )}
           </div>
-          <MenuToggle active={!sidebarExpanded} onClick={onToggle} />
+          <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} />
         </div>
 
       </div>
@@ -38,5 +38,5 @@ const StickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme }) => 
   );
 };
 
-export default StickyHeader;
+export default MobileStickyHeader;
 

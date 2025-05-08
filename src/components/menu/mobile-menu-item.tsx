@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-export interface MenuItem {
+export interface MobileMenuItem {
   label: string;
   href?: string;
   hasDropdown?: boolean;
@@ -15,15 +15,15 @@ export interface MenuItem {
   icon?: React.ReactNode;
 }
 
-interface MenuItemProps {
-  item: MenuItem;
+interface MobileMenuItemProps {
+  item: MobileMenuItem;
   toggleMenu: () => void;
   isOpen: boolean;
   onToggle: () => void;
   theme: string;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle, theme }) => {
+const MobileMenuItem: React.FC<MobileMenuItemProps> = ({ item, toggleMenu, isOpen, onToggle, theme }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -121,4 +121,4 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, toggleMenu, isOpen, onToggle,
   );
 };
 
-export default MenuItem;
+export default MobileMenuItem;

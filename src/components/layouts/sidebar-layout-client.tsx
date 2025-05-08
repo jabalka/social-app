@@ -6,8 +6,8 @@ import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { usePathname } from "next/navigation";
 import React, { PropsWithChildren, useEffect } from "react";
-import HeaderClient from "../header-client";
-import Sidebar from "../sidebar/sidebar";
+import ProfileHeader from "../menu/profile-header";
+import Sidebar from "../profile-sidebar/sidebar";
 import { SafeUser } from "./layout-client";
 import SiteFooter from "../site-footer/site-footer";
 
@@ -32,13 +32,14 @@ const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, childre
         user={user}
         theme={theme}
         sidebarExpanded={sidebarExpanded}
+        onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}
         className={cn("fixed inset-0 z-10 transition-transform md:static md:min-h-screen md:transition-none", {
           "-translate-x-full md:translate-x-0": !sidebarExpanded,
         })}
       />
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <HeaderClient
+        <ProfileHeader
           user={user}
           onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}
         />

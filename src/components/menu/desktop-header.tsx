@@ -8,7 +8,7 @@ import { SafeUser } from "../layouts/layout-client";
 import SiteLogoBlack from "../site-logo-black";
 import SiteLogoWhite from "../site-logo-white";
 import ThemeToggle from "../theme-toggle";
-import DesktopMenu from "./desktopMenu";
+import DesktopMenu from "./desktop-menu";
 interface DesktopHeaderProps {
   className?: string;
   user: SafeUser | null;

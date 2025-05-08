@@ -5,7 +5,7 @@ import { AuthUser } from "@/models/auth";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface CommentType {
   id: string;
@@ -39,14 +39,14 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const pageSize = 10;
 
-  const fetchComments = async (pageNum: number) => {
+  const fetchComments = useCallback(async (pageNum: number) => {
     setLoading(true);
     const res = await fetch(`/api/projects/${projectId}/comment?page=${pageNum}&pageSize=${pageSize}`);
     const data = await res.json();
     setComments((prev) => [...prev, ...data.comments]);
     setHasMore(data.hasMore);
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     if (open) {
@@ -54,11 +54,11 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
       setPage(1);
       fetchComments(1);
     }
-  }, [open]);
+  }, [open, fetchComments]);
 
   useEffect(() => {
     if (page > 1) fetchComments(page);
-  }, [page]);
+  }, [page, fetchComments]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -70,9 +70,11 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
       { threshold: 1.0 }
     );
 
-    if (observerRef.current) observer.observe(observerRef.current);
+    const currentRef = observerRef.current;
+    if (currentRef) observer.observe(currentRef);
+  
     return () => {
-      if (observerRef.current) observer.unobserve(observerRef.current);
+      if (currentRef) observer.unobserve(currentRef);
     };
   }, [hasMore, loading]);
 

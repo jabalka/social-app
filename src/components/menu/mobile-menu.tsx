@@ -13,9 +13,9 @@ import GithubLogo from "../svg/github-logo";
 import TelegramLogo from "../svg/telegram-logo";
 import XTwitterLogo from "../svg/x-twitter-logo";
 import YoutubeLogo from "../svg/youtube-logo";
-import MenuItem, { type MenuItem as MenuItemType } from "./menu-item";
+import MenuItem, { MobileMenuItem } from "./mobile-menu-item";
 
-const menuItems: MenuItemType[] = [
+const menuItems: MobileMenuItem[] = [
   {
     label: "GET STARTED",
     hasDropdown: true,

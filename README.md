@@ -132,11 +132,26 @@ and to change the project categories (if assigned wrong by creator)., user must 
 
 ## TODO
     -when project is edited
-        -title min lenght and max length
+        - title min lenght and max length
         - details min length and max length
 
         - project progress should not be available to edit bu author but other roles
         - if admin is an author they must be able to edit all data 
         - Save project button does not reflect or update the project
-        - Welcome Header needs to change color with Theme
         - Leaving Comment needs to refreshProjects
+
+    -when project to be created
+        - description must have few sub descriptions such as:
+            - problem
+            - suggestion
+            - benefits
+
+    -when user reply to a reply of a comment this needs to count onto the parent of the reply, not under the second reply... maybe once reply is clicked to reply to sub-reply the name of which the user reply to could be included in the comment for a reference (like FaceBook)!
+
+    -User can receive notifications
+        - when project status is updated
+        - when first 10 comments/likes (from there every 10th or so)
+        - private message from another user
+
+    -News Feed
+        - Mayor and Council can share news that will be marked different from rest

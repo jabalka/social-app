@@ -2,7 +2,7 @@ import React from "react";
 
 import SiteLogoBlack from "../site-logo-black";
 import SiteLogoWhite from "../site-logo-white";
-import WelcomeMenu from "./welcomeMenu";
+import WelcomeMenu from "./welcome-menu";
 import { cn } from "@/utils/cn.utils";
 import { Theme } from "@/types/theme.enum";
 
