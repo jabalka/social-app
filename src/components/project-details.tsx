@@ -12,6 +12,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import CommentCreation from "./create-comment";
 import DragAndDropArea from "./drag-and-drop-area";
 import { Project } from "./map-wrapper-viewer";
+import ProjectAllComments from "./project-all-comments";
 
 interface ProjectDetailsDialogProps {
   user: AuthUser;
@@ -389,15 +390,6 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           </div>
         </div>
 
-        {showCommentModal && (
-          <CommentCreation
-            user={user}
-            projectId={project.id}
-            onClose={() => setShowCommentModal(false)}
-            theme={theme}
-          />
-        )}
-
         <div className="mb-4">
           <h3 className="font-semibold">Status</h3>
           {allowEditStatus ? (
@@ -574,6 +566,27 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {showCommentModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <CommentCreation
+              user={user}
+              projectId={project.id}
+              onClose={() => setShowCommentModal(false)}
+              theme={theme}
+            />
+          </div>
+        )}
+
+        {showAllComments && (
+          <ProjectAllComments
+            projectId={project.id}
+            user={user}
+            open={showAllComments}
+            onClose={() => setShowAllComments(false)}
+            theme={theme}
+          />
         )}
       </DialogContent>
     </Dialog>
