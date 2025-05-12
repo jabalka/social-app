@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import LogoutLoader from "../common/logoutLoader";
-import { SafeUser } from "../layouts/layout-client";
+// import { SafeUser } from "../layouts/layout-client";
 import SidebarLogoBlack from "../site-logo-black";
 import SidebarLogoWhite from "../site-logo-white";
 import GithubLogo from "../svg/github-logo";
@@ -14,6 +14,7 @@ import TelegramLogo from "../svg/telegram-logo";
 import XTwitterLogo from "../svg/x-twitter-logo";
 import YoutubeLogo from "../svg/youtube-logo";
 import MenuItem, { MobileMenuItem } from "./mobile-menu-item";
+import { AuthUser } from "@/models/auth";
 
 const menuItems: MobileMenuItem[] = [
   {
@@ -63,7 +64,7 @@ const menuItems: MobileMenuItem[] = [
 ];
 
 interface MobileMenuProps {
-  user: SafeUser | null;
+  user: AuthUser | null;
   isOpen: boolean;
   toggleMenu: () => void;
   theme: string;

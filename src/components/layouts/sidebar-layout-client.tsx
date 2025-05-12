@@ -7,12 +7,13 @@ import { cn } from "@/utils/cn.utils";
 import { usePathname } from "next/navigation";
 import React, { PropsWithChildren, useEffect } from "react";
 import ProfileHeader from "../menu/profile-header";
-import Sidebar from "../profile-sidebar/sidebar";
-import { SafeUser } from "./layout-client";
+// import { SafeUser } from "./layout-client";
 import SiteFooter from "../site-footer/site-footer";
+import { AuthUser } from "@/models/auth";
+import Sidebar from "../profile-PAGE/sidebar/sidebar";
 
 interface Props {
-  user: SafeUser | null;
+  user: AuthUser | null;
 }
 
 const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
@@ -46,8 +47,10 @@ const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, childre
 
         <main
           className={cn("flex flex-1 flex-col gap-6 p-6", {
-            "bg-gradient-to-br from-slate-200 via-indigo-50 to-slate-200": theme === Theme.LIGHT,
-            "bg-gradient-to-br from-zinc-900 via-indigo-950 to-zinc-900": theme === Theme.DARK,
+       "bg-gradient-to-b from-[#f7f3f1] via-[#f0e3dd] to-[#f7f3f1] text-zinc-700":
+          theme === Theme.LIGHT,
+        "bg-gradient-to-b from-[#121211] via-[#332f2d] to-[#121211] text-zinc-200":
+          theme === Theme.DARK,
           })}
         >
           {children}

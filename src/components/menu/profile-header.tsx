@@ -2,7 +2,8 @@
 
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSidebarContext } from "@/context/sidebar-context";
-import { AuthUser } from "@/models/auth";
+
+import { useSafeUser } from "@/context/user-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { setCookie } from "cookies-next";
@@ -13,13 +14,13 @@ import MobileMenuToggle from "./mobile-menu-toggle";
 import ProfileHeaderDetails from "./profile-header-details";
 
 interface Props {
-  user: AuthUser | null;
   className?: string;
   onToggle: () => void;
 }
 
-const ProfileHeader: React.FC<Props> = ({ user, className, onToggle }) => {
+const ProfileHeader: React.FC<Props> = ({ className, onToggle }) => {
   const { setTheme } = useTheme();
+  const { user } = useSafeUser();
   const { theme } = useSafeThemeContext();
   const { sidebarExpanded } = useSidebarContext();
   const [menuToggleShow, setMenuToggleShow] = useState(true);
@@ -61,7 +62,7 @@ const ProfileHeader: React.FC<Props> = ({ user, className, onToggle }) => {
         <div className="flex items-center gap-4">
           <ThemeToggle theme={theme} onClick={switchTheme} />
 
-          {user && <ProfileHeaderDetails theme={theme} user={user} />}
+          {user && <ProfileHeaderDetails theme={theme} />}
         </div>
       </header>
     </>

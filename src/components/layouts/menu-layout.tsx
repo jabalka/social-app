@@ -10,10 +10,11 @@ import DesktopHeader from "../menu/desktop-header";
 import MobileMenu from "../menu/mobile-menu";
 import MobileStickyHeader from "../menu/mobile-sticky-header";
 import SiteFooter from "../site-footer/site-footer";
-import { SafeUser } from "./layout-client";
+// import { SafeUser } from "./layout-client";
+import { AuthUser } from "@/models/auth";
 
 interface Props {
-  user: SafeUser | null;
+  user: AuthUser | null;
 }
 
 const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {

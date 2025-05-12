@@ -4,14 +4,15 @@ import { cn } from "@/utils/cn.utils";
 import { setCookie } from "cookies-next";
 import { useTheme } from "next-themes";
 import React from "react";
-import { SafeUser } from "../layouts/layout-client";
+// import { SafeUser } from "../layouts/layout-client";
 import SiteLogoBlack from "../site-logo-black";
 import SiteLogoWhite from "../site-logo-white";
 import ThemeToggle from "../theme-toggle";
 import DesktopMenu from "./desktop-menu";
+import { AuthUser } from "@/models/auth";
 interface DesktopHeaderProps {
   className?: string;
-  user: SafeUser | null;
+  user: AuthUser | null;
 }
 
 const DesktopHeader: React.FC<DesktopHeaderProps> = ({ className = "" }) => {

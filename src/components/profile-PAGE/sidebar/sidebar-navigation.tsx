@@ -5,10 +5,11 @@ import { LucideSquareStack, MessageCircleIcon, Settings, User, Users } from "luc
 import { usePathname } from "next/navigation";
 import React from "react";
 import SidebarNavItem from "./sidebar-nav-item";
-import { SafeUser } from "../layouts/layout-client";
+// import { SafeUser } from "../layouts/layout-client";
+import { AuthUser } from "@/models/auth";
 
 interface Props {
-  user: SafeUser | null;
+  user: AuthUser | null;
   theme: string;
   sidebarExpanded: boolean;
   className?: string;

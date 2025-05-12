@@ -20,12 +20,18 @@ export const findUserByIdentifier = async (identifier: string) => {
     select: {
       id: true,
       email: true,
+      username: true,
       name: true,
       image: true,
       posts: true,
       likes: true,
       comments: true,
+      projects: true,
+      role: true,
+      roleId: true,
+      emailVerified: true,
       // can be added any User fields needed
+
     },
   });
 };

@@ -39,7 +39,7 @@ const SidebarNavItem: React.FC<Props> = ({
       <motion.div
         initial={{ width: sidebarExpanded ? "100%" : "2.75rem" }}
         animate={{ width: sidebarExpanded ? "100%" : "2.75rem" }}
-        transition={{ duration: 0.15, ease: "linear" }}
+        transition={{ duration: 0.15, ease: "easeInOut" }}
         className={cn(
           "flex min-w-[2.75rem] items-center gap-2 rounded-lg px-3 py-2 transition-colors",
           {
@@ -54,21 +54,22 @@ const SidebarNavItem: React.FC<Props> = ({
         <div className="relative flex-shrink-0">
           {icon}
 
-          {/* Tooltip: shown only when collapsed + hovered */}
           {!sidebarExpanded && (
-            <div className="pointer-events-none absolute left-full top-1/2 ml-4 -translate-y-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50 shadow-lg">
+            <div className={cn("font-semibold pointer-events-none absolute left-full top-1/2 ml-4 -translate-y-1/2 whitespace-nowrap rounded px-2 py-1 text-xs opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50 shadow-lg", {
+              "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
+              "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
+            })}>
               {label}
             </div>
           )}
         </div>
 
-        {/* Visible label only when expanded */}
         {sidebarExpanded && (
           <motion.span
             initial={{ width: 0 }}
             animate={{ width: "auto" }}
-            transition={{ duration: 0.15, ease: "linear" }}
-            className="overflow-hidden overflow-ellipsis whitespace-nowrap"
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            className={cn("overflow-hidden overflow-ellipsis whitespace-nowrap",)}
           >
             {label}
           </motion.span>

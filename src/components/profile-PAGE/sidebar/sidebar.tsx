@@ -3,13 +3,14 @@
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import React, { useEffect, useState } from "react";
-import { SafeUser } from "../layouts/layout-client";
-import MobileMenuToggle from "../menu/mobile-menu-toggle";
-import SiteLogoWhite from "../site-logo-white";
+
+import MobileMenuToggle from "@/components/menu/mobile-menu-toggle";
+import SiteLogoWhite from "@/components/site-logo-white";
+import { AuthUser } from "@/models/auth";
 import SidebarNavigation from "./sidebar-navigation";
 
 interface SidebarProps {
-  user: SafeUser | null;
+  user: AuthUser | null;
   theme: string;
   sidebarExpanded: boolean;
   className?: string;
@@ -48,11 +49,21 @@ const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, classNa
           "bg-[#2b2725]": theme === Theme.DARK,
         })}
       />
-{menuToggleShow ? (
-  <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} size={32} className="mb-2 flex justify-center p-4" />
-) : (
-  <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} size={48} className="mb-2 flex justify-center p-4" />
-)}
+      {menuToggleShow ? (
+        <MobileMenuToggle
+          active={!sidebarExpanded}
+          onClick={onToggle}
+          size={32}
+          className="mb-2 flex justify-center p-4"
+        />
+      ) : (
+        <MobileMenuToggle
+          active={!sidebarExpanded}
+          onClick={onToggle}
+          size={48}
+          className="mb-2 flex justify-center p-4"
+        />
+      )}
 
       <SiteLogoWhite className="mb-2 flex justify-center p-4" />
 

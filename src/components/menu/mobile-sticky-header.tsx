@@ -30,7 +30,7 @@ const MobileStickyHeader: React.FC<Props> = ({ sidebarExpanded, onToggle, theme 
                 <SiteLogoBlack size={130} className="absolute -top-5"/>
               )}
           </div>
-          <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} />
+          <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} size={48} />
         </div>
 
       </div>
