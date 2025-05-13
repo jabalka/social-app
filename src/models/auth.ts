@@ -12,3 +12,4 @@ export interface AuthUser {
   projects: { id: string; title: string; createdAt: Date }[];
   role: { id: string; name: string } | null;
 }
+

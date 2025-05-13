@@ -3,7 +3,7 @@
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { User } from "next-auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 
 interface CommentModalProps {
@@ -17,6 +17,17 @@ interface CommentModalProps {
 const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose, onCommentAdded, theme }) => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [animationKey, setAnimationKey] = useState<number>(0);
+
+    useEffect(() => {
+      if (animationKey === 0) return;
+  
+      const timeout = setTimeout(() => {
+        setAnimationKey(0);
+      }, 1500); // match animation duration (in ms)
+  
+      return () => clearTimeout(timeout);
+    }, [animationKey]);
 
   const handleSubmit = async () => {
     if (!user?.id || !content.trim()) return;
@@ -59,20 +70,28 @@ const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose
           <button className="px-3 py-1 text-sm text-gray-600 hover:underline" onClick={onClose}>
             Cancel
           </button>
+
+
+      <div className="group relative inline-flex overflow-hidden rounded-full">
           <Button
    
-        className={cn("rounded-full px-8 py-3 font-bold transition duration-300 hover:outline hover:outline-2", {
-          "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
-            theme === Theme.LIGHT,
-          "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
-            theme === Theme.DARK,
+        className={cn(            "relative z-10 rounded-full w-full py-3 font-bold transition duration-300 hover:outline hover:outline-2",
+          {
+            "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
+              theme === Theme.LIGHT,
+            "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
+              theme === Theme.DARK,
         })}
      onClick={handleSubmit}
      disabled={loading}
       >
               {loading ? "Posting..." : "Post Comment"}
+              <span
+            key={animationKey}
+            className="group-hover:animate-snakeBorderHover pointer-events-none absolute inset-0 rounded-full"
+          />
       </Button>
-
+      </div>
         </div>
       </div>
     </div>

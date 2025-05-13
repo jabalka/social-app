@@ -11,13 +11,13 @@ const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({ userName = "the
     <div style={{ fontFamily: "Arial, sans-serif", color: "#1a1a1a", backgroundColor: "#f4f4f4", padding: "40px 0" }}>
       <div style={{ maxWidth: "600px", margin: "0 auto", background: "#ffffff", borderRadius: "8px", overflow: "hidden" }}>
         {/* Header */}
-        <div style={{ background: "linear-gradient(to right, #bda69c, #72645f, #443d3a)", padding: "20px", textAlign: "center" }}>
+        <div style={{ background: "linear-gradient(to right, #bda69c, #72645f, #443d3a)", padding: "4px", textAlign: "center" }}>
    
           <img
-            src="https://your-public-image-url.com/logo.png"
+            src="https://yypaxndddrycnlixcoey.supabase.co/storage/v1/object/public/civil-dev//CivDev%20no%20plants%20graphic%20logo.png"
             alt="CivilDev Logo"
-            width={100}
-            style={{ marginBottom: "10px" }}
+            width={240}
+            style={{ marginBottom: "4px" }}
           />
           <h1 style={{ color: "#ffffff", margin: 0, fontSize: "20px" }}>Reset Your Password</h1>
         </div>
@@ -51,9 +51,9 @@ const ResetPasswordEmail: React.FC<ResetPasswordEmailProps> = ({ userName = "the
         <div style={{ backgroundColor: "#2b2725", padding: "20px", textAlign: "center", color: "#dec7bd", fontSize: "12px" }}>
           <p style={{ margin: "5px 0" }}>© {new Date().getFullYear()} jabalka. All rights reserved.</p>
           <div style={{ marginTop: "10px" }}>
-            <a href="https://twitter.com/starckcrypto" style={{ margin: "0 8px", color: "#dec7bd" }}>Twitter</a>
-            <a href="https://github.com/StarckASIP/Starck" style={{ margin: "0 8px", color: "#dec7bd" }}>GitHub</a>
-            <a href="https://t.me/starckapp" style={{ margin: "0 8px", color: "#dec7bd" }}>Telegram</a>
+            <a href="https://twitter.com/civildev" style={{ margin: "0 8px", color: "#dec7bd" }}>Twitter</a>
+            <a href="https://github.com/civildev" style={{ margin: "0 8px", color: "#dec7bd" }}>GitHub</a>
+            <a href="https://t.me/civildev" style={{ margin: "0 8px", color: "#dec7bd" }}>Telegram</a>
           </div>
         </div>
       </div>

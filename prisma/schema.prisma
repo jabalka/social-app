@@ -95,6 +95,10 @@ model Comment {
   post      Post?     @relation(fields: [postId], references: [id])
   project   Project?  @relation(fields: [projectId], references: [id])
   likes     Like[]
+
+  @@index([parentId, createdAt])
+  isVisible Boolean @default(true)
+  likeCount Int @default(0)
 }
 
 model Like {

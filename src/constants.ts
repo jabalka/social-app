@@ -15,6 +15,10 @@ export const FOURTEEN_DAYS_MS = 14 * DAY_MS;
 export const DEFAULT_THEME = Theme.DARK;
 export const DEFAULT_SIDEBAR_EXPANDED = true;
 
+// Profile Related constants
+export const MAX_NAME_LENGTH = 18;
+export const MAX_USERNAME_LENGTH = 15;
+
 // Project Categories
 // export const PROJECT_CATEGORIES = [
 //   { id: "infrastructure", name: "Infrastructure", icon: "building" },
@@ -52,7 +56,4 @@ export const MESSAGES = {
   SOMETHING_WENT_WRONG: "Something went wrong, please try again later",
   INSUFFICIENT_PERMISSIONS: "Insufficient permissions to perform this action",
 
-  // Withdrawals
-  WITHDRAWAL_REQUEST_SUBMITTED_SUCCESSFULLY: (amount: number) =>
-    `You successfully requested the withdrawal of ${amount.toFixed(2)} STK`,
-};
+}

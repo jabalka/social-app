@@ -5,7 +5,7 @@ import { AuthUser } from "@/models/auth";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CommentCreation from "./create-comment";
 import { Project } from "./map-wrapper-viewer";
 import ProjectDetailsDialog from "./project-details";
@@ -21,10 +21,21 @@ interface ProjectPopupContentProps {
 const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project, refreshProjects, theme }) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [animationKey, setAnimationKey] = useState<number>(0);
+
+  useEffect(() => {
+    if (animationKey === 0) return;
+
+    const timeout = setTimeout(() => {
+      setAnimationKey(0);
+    }, 1500); // match animation duration (in ms)
+
+    return () => clearTimeout(timeout);
+  }, [animationKey]);
 
   return (
     <div
-      className={cn("h-[360px] w-48 flex flex-col justify-between rounded border p-4 shadow", {
+      className={cn("flex h-[360px] w-48 flex-col justify-between rounded border p-4 shadow", {
         "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
         "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
       })}
@@ -73,11 +84,14 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
         })}
       </div>
 
-      <div className="mt-3 h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200 shadow-inner">
+      <div className="relative mt-3 h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200 shadow-inner">
         <div
           className="h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all"
           style={{ width: `${project.progress}%` }}
         />
+        <div className="absolute inset-0 overflow-hidden rounded-full">
+          <div className="animate-progressBarGlow absolute h-full w-full bg-gradient-to-r from-transparent via-white to-transparent" />
+        </div>
       </div>
       <p
         className={cn("mt-1 text-xs text-gray-500", {
@@ -87,20 +101,27 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
       >
         {project.progress}% completed
       </p>
-
-      <Button
-        //  "[#FF5C00]"
-        className={cn("rounded-full px-8 py-3 font-bold transition duration-300 hover:outline hover:outline-2", {
-          "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
-            theme === Theme.LIGHT,
-          "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
-            theme === Theme.DARK,
-        })}
-        onClick={() => setShowDetailsModal(true)}
-      >
-        View Details
-      </Button>
-
+      <div className="group relative inline-flex overflow-hidden rounded-full p-[1px]">
+        <Button
+          className={cn(
+            "relative z-10 rounded-full w-full py-3 font-bold transition duration-300 hover:outline hover:outline-2",
+            {
+              "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
+                theme === Theme.LIGHT,
+              "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
+                theme === Theme.DARK,
+            },
+          )}
+          onClick={() => setShowDetailsModal(true)}
+        >
+          View Details
+          {/* Animated border layer */}
+          <span
+            key={animationKey}
+            className="group-hover:animate-snakeBorderHover pointer-events-none absolute inset-0 rounded-full"
+          />
+        </Button>
+      </div>
       <div
         className={cn("flex justify-between text-sm", {
           "text-zinc-700": theme === Theme.LIGHT,

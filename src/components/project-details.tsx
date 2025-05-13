@@ -4,14 +4,15 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"; // 
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { canEditCategories, canEditProgress, canEditProgressNotes, canEditStatus } from "@/lib/role-permissions";
 import { AuthUser } from "@/models/auth";
+import { Theme } from "@/types/theme.enum";
+import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import CommentCreation from "./create-comment";
 import DragAndDropArea from "./drag-and-drop-area";
 import { Project } from "./map-wrapper-viewer";
-import { cn } from "@/utils/cn.utils";
-import { Theme } from "@/types/theme.enum";
+import ProjectAllComments from "./project-all-comments";
 
 interface ProjectDetailsDialogProps {
   user: AuthUser;
@@ -19,7 +20,7 @@ interface ProjectDetailsDialogProps {
   open: boolean;
   onClose: () => void;
   refreshProjects(): void;
-  theme: string
+  theme: string;
 }
 
 const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
@@ -28,7 +29,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   open,
   onClose,
   refreshProjects,
-  theme
+  theme,
 }) => {
   const isAuthor = user.id === project.author.id;
   const isEditable = project.status === "PROPOSED";
@@ -57,6 +58,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   const [likes, setLikes] = useState(project.likes || []);
   const [isLiking, setIsLiking] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
 
   const fetchLikes = useCallback(async () => {
@@ -96,7 +98,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
     const timeout = setTimeout(() => {
       setAnimationKey(0);
-    }, 1500); // match animation duration (in ms)
+    }, 3000); // match animation duration (in ms)
 
     return () => clearTimeout(timeout);
   }, [animationKey]);
@@ -219,10 +221,12 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className={cn("max-h-[90vh] max-w-2xl overflow-y-auto p-6",{
-                "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
-                "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
-      })}>
+      <DialogContent
+        className={cn("max-h-[90vh] max-w-2xl overflow-y-auto p-6", {
+          "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+          "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+        })}
+      >
         <DialogTitle className="sr-only">Project Details</DialogTitle>
         <div className="mb-4">
           {isAuthor && isEditable && editingTitle ? (
@@ -235,16 +239,23 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
             <h2 className="mb-2 text-2xl font-bold">
               {title}
               {isAuthor && isEditable && !editingTitle && (
-                <button onClick={() => setEditingTitle(true)} className="ml-2 font-medium text-sm text-blue-500 hover:underline">
+                <button
+                  onClick={() => setEditingTitle(true)}
+                  className="ml-2 text-sm font-medium text-blue-500 hover:underline"
+                >
                   Edit
                 </button>
               )}
             </h2>
           )}
-          <p className={cn("text-sm", {
-                      "text-zinc-700": theme === Theme.LIGHT,
-                      "text-zinc-200": theme === Theme.DARK,
-          })}>Postcode: {project.postcode}</p>
+          <p
+            className={cn("text-sm", {
+              "text-zinc-700": theme === Theme.LIGHT,
+              "text-zinc-200": theme === Theme.DARK,
+            })}
+          >
+            Postcode: {project.postcode}
+          </p>
         </div>
 
         {/* Category Icons */}
@@ -256,10 +267,12 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
             return (
               Icon && (
                 <div key={id} className="group relative flex items-center justify-center">
-                  <Icon className={cn("h-5 w-5", {
-                 "text-gray-700 group-hover:text-orange-700": theme === Theme.LIGHT,
-                 "text-zinc-200 group-hover:text-orange-700": theme === Theme.DARK,
-                  } )}/>
+                  <Icon
+                    className={cn("h-5 w-5", {
+                      "text-gray-700 group-hover:text-orange-700": theme === Theme.LIGHT,
+                      "text-zinc-200 group-hover:text-orange-700": theme === Theme.DARK,
+                    })}
+                  />
                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white transition-all group-hover:scale-100">
                     {name}
                   </div>
@@ -305,10 +318,12 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
               className="w-full rounded border p-2"
             />
           ) : (
-            <p className={cn({
+            <p
+              className={cn({
                 "text-zinc-700": theme === Theme.LIGHT,
                 "text-zinc-200": theme === Theme.DARK,
-            })}>
+              })}
+            >
               {description}
               {isAuthor && isEditable && !editingDescription && (
                 <button
@@ -324,35 +339,56 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
         {/* Interaction buttons */}
         <div className="mt-4 flex justify-between gap-2">
-          <div className="relative inline-flex">
-            <button
-              onClick={handleLike}
-              className={`rounded px-3 py-1 text-sm text-white ${
-                likes.some((like) => like.userId === user.id)
-                  ? "bg-green-700 hover:bg-green-900"
-                  : "bg-pink-700 hover:bg-pink-900"
-              }`}
-            >
-              {likes.some((like) => like.userId === user.id) ? "Liked" : "Like"} ({likes.length})
-              {animationKey > 0 && (
+          <div className="relative flex flex-col items-center">
+            <span className="mb-1 text-sm">({likes.length}) Likes</span>
+            <div className="relative inline-flex overflow-hidden rounded-full p-[4px]">
+              <button
+                onClick={handleLike}
+                className={`w-32 rounded-full py-1 text-sm text-white transition duration-300 ${
+                  likes.some((like) => like.userId === user.id)
+                    ? "bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] outline outline-[#359c33]/60 hover:bg-gradient-to-br hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2"
+                    : "bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
+                }`}
+              >
+                {likes.some((like) => like.userId === user.id) ? "Liked" : "Like"}
+                {animationKey > 0 && (
+                  <span
+                    key={animationKey}
+                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full ${
+                      likes.some((like) => like.userId === user.id)
+                        ? "animate-snakeBorderGreen"
+                        : "animate-snakeBorderPink"
+                    }`}
+                  />
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="relative flex flex-col items-center">
+            <div className="mb-1 flex items-center gap-1 text-sm">
+              ({project.comments.length})
+              <button
+                onClick={() => setShowAllComments(true)}
+                className="text-xs text-blue-400 underline hover:text-blue-300"
+              >
+                All Comments
+              </button>
+            </div>
+            {/* from-[#185b17] via-[#2a8829] to-[#185b17] */}
+            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
+              <button
+                onClick={() => setShowCommentModal(true)}
+                className={`w-32 rounded-full bg-gradient-to-br from-[#c879d0] via-[#7c3184] to-[#c879d0] py-1 text-sm text-white outline outline-[#9b52a3]/60 transition duration-300 hover:bg-gradient-to-br hover:from-[#9b52a3] hover:via-[#c879d0] hover:to-[#7c3184] hover:outline-2`}
+              >
+                Comment
                 <span
                   key={animationKey}
-                  className="animate-snakeBorder pointer-events-none absolute -inset-[2px] overflow-hidden rounded-lg"
+                  className={`group-hover:animate-snakeBorderViolet pointer-events-none absolute inset-0 overflow-hidden rounded-full`}
                 />
-              )}
-            </button>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setShowCommentModal(true)}
-            className="rounded bg-purple-500 px-3 py-1 text-sm text-white hover:bg-purple-600"
-          >
-            Comments ({project.comments.length})
-          </button>
         </div>
-
-        {showCommentModal && (
-          <CommentCreation user={user} projectId={project.id} onClose={() => setShowCommentModal(false)} theme={theme} />
-        )}
 
         <div className="mb-4">
           <h3 className="font-semibold">Status</h3>
@@ -368,23 +404,36 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
               <option value="REJECTED">Rejected</option>
             </select>
           ) : (
-            <p>{project.status.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</p>
+            <p>
+              {project.status
+                .replaceAll("_", " ")
+                .toLowerCase()
+                .replace(/\b\w/g, (c) => c.toUpperCase())}
+            </p>
           )}
         </div>
 
         <div className="mb-4">
           <h3 className="font-semibold">Progress</h3>
-          <div className="h-3 w-full rounded-full border-[1px] border-gray-400 bg-gray-200">
-            <div className="h-full  rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800" style={{ width: `${project.progress}%` }} />
+          <div className="relative h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200">
+            <div
+              className="relative h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all duration-300"
+              style={{ width: `${project.progress}%` }}
+            >
+              {/* Glowing shimmer */}
+              <div className="absolute inset-0 overflow-hidden rounded-full">
+                <div className="animate-progressBarGlow absolute h-full w-full bg-gradient-to-r from-transparent via-white to-transparent" />
+              </div>
+            </div>
           </div>
           <p
-        className={cn("mt-1 text-md text-gray-500", {
-          "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
-          "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
-        })}
-      >
-        {project.progress}% completed
-      </p>
+            className={cn("text-md mt-1 text-gray-500", {
+              "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+              "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+            })}
+          >
+            {project.progress}% completed
+          </p>
 
           {allowEditProgress && (
             <input
@@ -517,6 +566,27 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {showCommentModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <CommentCreation
+              user={user}
+              projectId={project.id}
+              onClose={() => setShowCommentModal(false)}
+              theme={theme}
+            />
+          </div>
+        )}
+
+        {showAllComments && (
+          <ProjectAllComments
+            projectId={project.id}
+            user={user}
+            open={showAllComments}
+            onClose={() => setShowAllComments(false)}
+            theme={theme}
+          />
         )}
       </DialogContent>
     </Dialog>

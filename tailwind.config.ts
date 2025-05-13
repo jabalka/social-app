@@ -75,18 +75,154 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        snakeBorder: {
+        progressBarGlow: {
+          '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          '25%': { opacity: '0.7' }, // how intense to appear - higher value more intense
+          '50%': { transform: 'translateX(100%)', opacity: '0' },
+          '75%': { opacity: '0.7' },
+          '100%': { transform: 'translateX(-100%)', opacity: '0' },
+        },
+        snakeBorderGreen: {
           "0%": {
             // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
             boxShadow: "inset 0 0 0 2px transparent",
-//             Top-left: `0 0`
-//             Top-right: `100% 0`
-//             Bottom-right: `100% 100%`
-//             Bottom-left: `0 100%`
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
             clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
           },
           "10%": {
             boxShadow: "inset 0 0 0 2px #0ccd08, 0 0 10px 2px #0ccd08",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+        snakeBorderPink: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #d82206, 0 0 10px 2px #d82206",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+        snakeBorderViolet: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #c74cd4, 0 0 10px 2px #c74cd4",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+        snakeBorderHover: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #ffffff, 0 0 10px 2px #ffffff",
             clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
           },
           "20%": {
@@ -178,7 +314,11 @@ export default {
         },
       },
       animation: {
-        snakeBorder: "snakeBorder 2s ease-in-out forwards",
+        progressBarGlow: "progressBarGlow 3s ease-in-out infinite",
+        snakeBorderGreen: "snakeBorderGreen 3s ease-in-out forwards",
+        snakeBorderPink: "snakeBorderPink 3s ease-in-out forwards",
+        snakeBorderViolet: "snakeBorderViolet 1s ease-in-out infinite",
+        snakeBorderHover: "snakeBorderHover 1.5s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         rippleEffect: "rippleEffect 600ms linear",

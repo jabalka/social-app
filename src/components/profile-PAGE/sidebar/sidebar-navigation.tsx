@@ -1,14 +1,15 @@
 "use client";
 
 import { cn } from "@/utils/cn.utils";
-import { BarChart3, Coins, FileText, Flame, LayoutDashboard, Newspaper, Settings, Users } from "lucide-react";
+import { LucideSquareStack, MessageCircleIcon, Settings, User, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 import SidebarNavItem from "./sidebar-nav-item";
-import { SafeUser } from "../layouts/layout-client";
+// import { SafeUser } from "../layouts/layout-client";
+import { AuthUser } from "@/models/auth";
 
 interface Props {
-  user: SafeUser | null;
+  user: AuthUser | null;
   theme: string;
   sidebarExpanded: boolean;
   className?: string;
@@ -21,14 +22,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { icon: <LayoutDashboard className="h-5 w-5" />, label: "Dashboard", href: "/platform/dashboard" },
-  { icon: <Coins className="h-5 w-5" />, label: "Staking", href: "/platform/staking" },
-  { icon: <BarChart3 className="h-5 w-5" />, label: "Statuses", href: "/platform/statuses" },
-  { icon: <FileText className="h-5 w-5" />, label: "Information", href: "/platform/information" },
-  { icon: <Newspaper className="h-5 w-5" />, label: "News", href: "/platform/news" },
-  { icon: <Flame className="h-5 w-5" />, label: "Burn", href: "/platform/burn" },
-  { icon: <Users className="h-5 w-5" />, label: "My referrals", href: "/platform/referrals" },
-  { icon: <Settings className="h-5 w-5" />, label: "Settings", href: "/platform/settings" },
+  { icon: <User className="h-5 w-5" />, label: "Profile", href: "/profile/dashboard" },
+  { icon: <LucideSquareStack className="h-5 w-5" />, label: "My Projects", href: "/profile/projects" },
+  { icon: <MessageCircleIcon className="h-5 w-5" />, label: "Messages", href: "/profile/messages" },
+  { icon: <Users className="h-5 w-5" />, label: "Collaborations", href: "/profile/collaborations" },
+  { icon: <Settings className="h-5 w-5" />, label: "Settings", href: "/profile/settings" },
 ];
 
 const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className }) => {
