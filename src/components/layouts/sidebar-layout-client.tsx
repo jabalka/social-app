@@ -9,14 +9,9 @@ import React, { PropsWithChildren, useEffect } from "react";
 import ProfileHeader from "../menu/profile-header";
 // import { SafeUser } from "./layout-client";
 import SiteFooter from "../site-footer/site-footer";
-import { AuthUser } from "@/models/auth";
 import Sidebar from "../profile-PAGE/sidebar/sidebar";
 
-interface Props {
-  user: AuthUser | null;
-}
-
-const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
+const SidebarLayoutClient: React.FC<PropsWithChildren> = ({  children }) => {
   const { theme } = useSafeThemeContext();
   const { sidebarExpanded, setSidebarExpanded } = useSidebarContext();
   const pathname = usePathname();
@@ -30,7 +25,6 @@ const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, childre
   return (
     <div className="flex">
       <Sidebar
-        user={user}
         theme={theme}
         sidebarExpanded={sidebarExpanded}
         onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}
@@ -41,7 +35,6 @@ const SidebarLayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, childre
 
       <div className="flex min-h-screen flex-1 flex-col">
         <ProfileHeader
-          user={user}
           onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}
         />
 

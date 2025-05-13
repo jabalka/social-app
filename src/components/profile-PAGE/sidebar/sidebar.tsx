@@ -6,19 +6,20 @@ import React, { useEffect, useState } from "react";
 
 import MobileMenuToggle from "@/components/menu/mobile-menu-toggle";
 import SiteLogoWhite from "@/components/site-logo-white";
-import { AuthUser } from "@/models/auth";
 import SidebarNavigation from "./sidebar-navigation";
+import { useSafeUser } from "@/context/user-context";
 
 interface SidebarProps {
-  user: AuthUser | null;
+
   theme: string;
   sidebarExpanded: boolean;
   className?: string;
   onToggle: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ user, theme, sidebarExpanded, className, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ theme, sidebarExpanded, className, onToggle }) => {
   const [menuToggleShow, setMenuToggleShow] = useState(false);
+  const {user} = useSafeUser()
   // const [mobileScreen, setMobileScreen] = useState(false)
 
   useEffect(() => {

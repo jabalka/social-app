@@ -1,4 +1,5 @@
 "use client";
+import { MAX_NAME_LENGTH, MAX_USERNAME_LENGTH } from "@/constants";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
 import { USER_ROLES } from "@/lib/user-roles";
@@ -24,6 +25,9 @@ const ProfileDashboard: React.FC = () => {
   const [nameInput, setNameInput] = useState(user?.name ?? "");
   const [usernameInput, setUsernameInput] = useState(user?.username ?? "");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   const [projectLikeCount, setProjectLikeCount] = useState<number>(0);
   const [commentLikeCount, setCommentLikeCount] = useState<number>(0);
@@ -64,8 +68,24 @@ const ProfileDashboard: React.FC = () => {
 
   useEffect(() => {
     const imageChanged = !!selectedImage;
-    setHasUnsavedChanges(hasUnsavedChanges || imageChanged);
-  }, [hasUnsavedChanges, selectedImage]);
+    const nameChanged = nameInput.trim() !== initialUserRef.current?.name?.trim();
+    const usernameChanged = usernameInput.trim() !== initialUserRef.current?.username?.trim();
+    setHasUnsavedChanges(nameChanged || usernameChanged || imageChanged);
+  }, [nameInput, usernameInput, selectedImage]);
+
+  const validateName = (value: string) => {
+    const cleaned = value.replace(/\s+/g, " ").trim();
+    const wordCount = cleaned.split(" ").filter(Boolean).length;
+    if (cleaned.length > MAX_NAME_LENGTH) return "Name must be ≤ 18 characters.";
+    if (wordCount > 2) return "Only 2 words allowed.";
+    return null;
+  };
+
+  const validateUsername = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed.length > MAX_USERNAME_LENGTH) return "Username must be ≤ 15 characters.";
+    return null;
+  };
 
   const uploadImageAndGetUrl = async (file: File): Promise<string | null> => {
     const formData = new FormData();
@@ -86,6 +106,12 @@ const ProfileDashboard: React.FC = () => {
   };
 
   const handleSave = async () => {
+    const nameValidation = validateName(nameInput);
+    const usernameValidation = validateUsername(usernameInput);
+    setNameError(nameValidation);
+    setUsernameError(usernameValidation);
+    if (nameValidation || usernameValidation) return;
+
     try {
       let imageUrl = user?.image;
 
@@ -110,16 +136,10 @@ const ProfileDashboard: React.FC = () => {
       setUser(updated);
       initialUserRef.current = updated;
 
-      //   if (updatedUser) {
-      //     const updated = {
-      //       ...updatedUser,
-      //       name: nameInput,
-      //       username: usernameInput,
-      //       image: imageUrl ?? null,
-      //     };
-      //   }
       setHasUnsavedChanges(false);
       setSelectedImage(null);
+      setEditName(false);
+      setEditUsername(false);
 
       // Optionally: toast("Saved!") instead of reload
     } catch (err) {
@@ -127,6 +147,8 @@ const ProfileDashboard: React.FC = () => {
       alert("Update failed. Try again.");
     }
   };
+
+  const disableSave = !!validateName(nameInput) || !!validateUsername(usernameInput);
 
   console.log("user info:  ", user);
   return (
@@ -188,21 +210,53 @@ const ProfileDashboard: React.FC = () => {
           />
 
           {/* Right Column */}
-          <div className="flex w-full flex-col gap-4">
+          <div className="flex w-full flex-col gap-4 max-w-52">
             {/* Name */}
             <div className="flex flex-col md:flex-row md:items-center md:gap-2">
               <label className="text-sm font-medium">Name:</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 max-w-52">
                 {editName ? (
-                  <input
-                    value={nameInput}
-                    onChange={(e) => {
-                      setNameInput(e.target.value);
-                    }}
-                    className="rounded border px-2 py-1 text-sm"
-                  />
+                  <>
+                    <div className="group relative">
+                      <input
+                        value={nameInput}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\s{2,}/g, " ");
+                          setNameInput(value);
+                          setNameError(validateName(value));
+                        }}
+                        className="group rounded border px-2 py-1 text-sm max-w-40"
+                      />
+                      {nameError && (
+                        <div
+                          className={cn(
+                            "absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs font-semibold transition-all duration-200",
+                            {
+                              "scale-100 opacity-100": !!nameError,
+                              "scale-0 opacity-0": !nameError,
+                              "bg-[#dbccc5] text-red-500": theme === Theme.LIGHT,
+                              "bg-[#5e5753] text-red-500": theme === Theme.DARK,
+                            },
+                          )}
+                        >
+                          {nameError}
+                        </div>
+                      )}
+                    </div>
+                  </>
                 ) : (
-                  <span>{nameInput || "Not set"}</span>
+                  <span>
+                    {nameInput || (
+                      <span
+                        className={cn({
+                          "text-zinc-300": theme === Theme.LIGHT,
+                          "text-zinc-700": theme === Theme.DARK,
+                        })}
+                      >
+                        -- N/A --
+                      </span>
+                    )}
+                  </span>
                 )}
                 {editName ? (
                   <>
@@ -210,20 +264,23 @@ const ProfileDashboard: React.FC = () => {
                       onClick={() => {
                         setEditName(false);
                         setNameInput(initialUserRef?.current?.name ?? "");
+                        setNameError(null);
                       }}
                     >
                       <X className="h-6 w-6 cursor-pointer text-red-600 hover:text-red-700" />
                     </button>
-                    <button
-                      onClick={() => {
-                        setEditName(false);
-                        if (nameInput !== initialUserRef.current?.name) {
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                    >
-                      <Check className="h-6 w-6 cursor-pointer text-green-600 hover:text-green-700" />
-                    </button>
+                    {nameInput !== initialUserRef.current?.name && !nameError && (
+                      <button
+                        onClick={() => {
+                          setEditName(false);
+                          if (nameInput !== initialUserRef.current?.name) {
+                            setHasUnsavedChanges(true);
+                          }
+                        }}
+                      >
+                        <Check className="h-6 w-6 cursor-pointer text-green-600 hover:text-green-700" />
+                      </button>
+                    )}
                   </>
                 ) : (
                   <div className="group relative">
@@ -250,17 +307,38 @@ const ProfileDashboard: React.FC = () => {
             </div>
 
             {/* Username */}
-            <div className="flex flex-col md:flex-row md:items-center md:gap-2">
+            <div className="flex flex-col md:flex-row md:items-center md:gap-2 ">
               <label className="text-sm font-medium">Username:</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2  max-w-52">
                 {editUsername ? (
-                  <input
-                    value={usernameInput}
-                    onChange={(e) => {
-                      setUsernameInput(e.target.value);
-                    }}
-                    className="rounded border px-2 py-1 text-sm"
-                  />
+                  <>
+                    <div className="group relative">
+                      <input
+                        value={usernameInput}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setUsernameInput(value);
+                          setUsernameError(validateUsername(value));
+                        }}
+                        className="group rounded border px-2 py-1 text-sm max-w-40"
+                      />
+                      {usernameError && (
+                        <div
+                          className={cn(
+                            "absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs font-semibold transition-all duration-200",
+                            {
+                              "scale-100 opacity-100": !!usernameError,
+                              "scale-0 opacity-0": !usernameError,
+                              "bg-[#dbccc5] text-red-500": theme === Theme.LIGHT,
+                              "bg-[#5e5753] text-red-500": theme === Theme.DARK,
+                            },
+                          )}
+                        >
+                          {usernameError}
+                        </div>
+                      )}
+                    </div>
+                  </>
                 ) : (
                   <span>
                     {usernameInput || (
@@ -279,23 +357,25 @@ const ProfileDashboard: React.FC = () => {
                   <>
                     <button
                       onClick={() => {
-                        const hasChanges = usernameInput !== initialUserRef.current?.username;
-                        setEditUsername(hasChanges);
+                        setEditUsername(false);
                         setUsernameInput(initialUserRef?.current?.username ?? "");
+                        setUsernameError(null);
                       }}
                     >
                       <X className="h-6 w-6 cursor-pointer text-red-600 hover:text-red-700" />
                     </button>
-                    <button
-                      onClick={() => {
-                        setEditUsername(false);
-                        if (usernameInput !== initialUserRef.current?.username) {
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                    >
-                      <Check className="h-6 w-6 cursor-pointer text-green-600 hover:text-green-700" />
-                    </button>
+                    {usernameInput !== initialUserRef.current?.username && !usernameError && (
+                      <button
+                        onClick={() => {
+                          setEditUsername(false);
+                          if (usernameInput !== initialUserRef.current?.username) {
+                            setHasUnsavedChanges(true);
+                          }
+                        }}
+                      >
+                        <Check className="h-6 w-6 cursor-pointer text-green-600 hover:text-green-700" />
+                      </button>
+                    )}
                   </>
                 ) : (
                   <div className="group relative">
@@ -361,10 +441,10 @@ const ProfileDashboard: React.FC = () => {
                     },
                   )}
                 >
-                  <p className="mb-1 font-semibold">{matchedRole!.name} – your assigned role.</p>
+                  <p className="mb-1 font-semibold">{matchedRole?.name} – your assigned role.</p>
                   <p className="mb-1">Other roles:</p>
                   <ul className="ml-2 list-disc">
-                    {USER_ROLES.filter((r) => r.id !== matchedRole!.id).map((r) => (
+                    {USER_ROLES.filter((r) => r.id !== matchedRole?.id).map((r) => (
                       <li key={r.id}>
                         {r.name} <r.icon />
                       </li>
@@ -408,7 +488,11 @@ const ProfileDashboard: React.FC = () => {
 
       {hasUnsavedChanges && (
         <div className="mt-6 flex gap-4">
-          <button onClick={handleSave} className="rounded bg-green-600 px-4 py-1 text-white hover:bg-green-700">
+          <button
+            onClick={handleSave}
+            disabled={disableSave}
+            className="rounded bg-green-600 px-4 py-1 text-white hover:bg-green-700"
+          >
             SAVE
           </button>
           <button
@@ -419,6 +503,8 @@ const ProfileDashboard: React.FC = () => {
               setEditName(false);
               setEditUsername(false);
               setHasUnsavedChanges(false);
+              setNameError(null);
+              setUsernameError(null);
             }}
             className="rounded bg-red-500 px-4 py-1 text-white hover:bg-red-600"
           >

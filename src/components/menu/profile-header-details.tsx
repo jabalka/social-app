@@ -13,9 +13,10 @@ import DropdownItem from "../menu-dropdown-item";
 interface Props {
   theme: string;
   className?: string;
+  forceClickDropdown?: boolean;
 }
 
-const ProfileHeaderDetails: React.FC<Props> = ({ theme, className }) => {
+const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDropdown }) => {
   const isDark = theme === Theme.DARK;
   const { user } = useSafeUser();
 
@@ -40,42 +41,67 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className }) => {
         setDropdownOpen(false);
       }
     };
-
-    if (dropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
+  
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setDropdownOpen(false);
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("resize", handleResize);
+  
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleResize);
     };
-  }, [dropdownOpen]);
+  }, [forceClickDropdown]);
 
   const handleLogout = () => {
+    setDropdownOpen(false);
     signOut();
   };
 
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-3",
-        {
-          "text-zinc-400": theme === Theme.DARK,
-        },
-        className,
-      )}
-    >
-      <span className="hidden md:block">{user?.name ?? user?.email ?? user?.username}</span>
+  const displayName = user?.name?.trim() || user?.username?.trim() || user?.email;
 
-      {/* Avatar trigger */}
-      <div ref={dropdownRef} className="relative flex cursor-pointer items-center space-x-1">
-        <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
-          <button
-            onClick={() => setDropdownOpen((prev) => !prev)}
+  return (
+    <div ref={dropdownRef} className={cn("flex items-center gap-3", { "text-zinc-400": isDark }, className)}>
+      <span className="hidden md:block">{displayName}</span>
+
+      <div
+        className={cn("group relative flex items-center space-x-1 cursor-pointer")}
+        onClick={() => {
+          if (forceClickDropdown) {
+            setDropdownOpen((prev) => !prev);
+          }
+        }}
+        onMouseEnter={() => {
+          if (!forceClickDropdown) {
+            setDropdownOpen(true);
+          }
+        }}
+        onMouseLeave={() => {
+          if (!forceClickDropdown) {
+            setDropdownOpen(false);
+          }
+        }}
+      >
+        {/* Avatar */}
+        <div className="relative inline-flex overflow-hidden rounded-full p-[4px]">
+          <div
             className={cn(
-              "relative rounded-full outline outline-2 outline-offset-[2px] outline-white transition-all duration-300 hover:outline hover:outline-2",
+              "relative rounded-full outline outline-2 outline-offset-[2px] outline-white transition-all duration-300",
               isDark ? "bg-[#6f6561c4] hover:outline-[#3c2f27]" : "bg-[#bda69c66] hover:outline-[#3c2f27]",
+              {
+                // DESKTOP hover effect
+                "bg-[#6f6561c4] hover:outline-[#3c2f27]": isDark && !forceClickDropdown,
+                "bg-[#bda69c66] hover:outline-[#3c2f27]": !isDark && !forceClickDropdown,
+              },
+              {
+                // MOBILE clicked effect
+                "bg-[#6f6561c4] outline-[#3c2f27]": isDark && forceClickDropdown && dropdownOpen,
+                "bg-[#bda69c66] outline-[#3c2f27]": !isDark && forceClickDropdown && dropdownOpen,
+                    },
             )}
           >
             <Image
@@ -85,26 +111,26 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className }) => {
               height={40}
               className="h-10 w-10 rounded-full object-cover"
             />
-          </button>
-
-          {/* Glowing animated border */}
-          <span
-            key={animationKey}
-            className="pointer-events-none absolute inset-0 rounded-full group-hover:animate-snakeBorderHover"
-          />
+          </div>
+            <span className={cn(
+      "pointer-events-none absolute inset-0 rounded-full",
+      {
+      // Always allow hover-based animation
+      "group-hover:animate-snakeBorderHover": true,
+      // Add click-based animation for mobile/touch toggle
+      "animate-snakeBorderHover": forceClickDropdown && dropdownOpen,
+      }
+    )} />
         </div>
 
         {/* Dropdown */}
         {dropdownOpen && (
-          <div className="absolute right-0 top-10 z-10">
+          <div className="absolute right-0 top-10 z-10 transition-all duration-200">
             <div
-              className={cn(
-                "flex min-w-[180px] flex-col rounded-md shadow-lg sm:min-w-[130px] md:min-w-[140px] lg:min-w-[180px]",
-                {
-                  "bg-[#443d3a] text-white": theme === Theme.DARK,
-                  "bg-[#eeded7] text-zinc-800": theme === Theme.LIGHT,
-                },
-              )}
+              className={cn("flex min-w-[180px] flex-col rounded-md shadow-lg", {
+                "bg-[#443d3a] text-white": isDark,
+                "bg-[#eeded7] text-zinc-800": !isDark,
+              })}
             >
               <DropdownItem
                 href="/dashboard"
@@ -115,9 +141,8 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className }) => {
               </DropdownItem>
 
               <button
-                onClick={(e) => {
-                  e.currentTarget.blur();
-                  setDropdownOpen(false); // close the dropdown
+                onClick={() => {
+                  setDropdownOpen(false);
                   handleLogout();
                 }}
                 className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"

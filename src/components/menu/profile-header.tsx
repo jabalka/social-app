@@ -62,7 +62,7 @@ const ProfileHeader: React.FC<Props> = ({ className, onToggle }) => {
         <div className="flex items-center gap-4">
           <ThemeToggle theme={theme} onClick={switchTheme} />
 
-          {user && <ProfileHeaderDetails theme={theme} />}
+          {user && <ProfileHeaderDetails theme={theme} forceClickDropdown={menuToggleShow}/>}
         </div>
       </header>
     </>
