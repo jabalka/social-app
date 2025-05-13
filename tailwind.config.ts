@@ -125,7 +125,93 @@ export default {
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
         },
+        snakeBorderGreen1s: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #0ccd08, 0 0 10px 2px #0ccd08",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
         snakeBorderPink: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #d82206, 0 0 10px 2px #d82206",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+        snakeBorderPink1s: {
           "0%": {
             // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
             boxShadow: "inset 0 0 0 2px transparent",
@@ -317,6 +403,8 @@ export default {
         progressBarGlow: "progressBarGlow 3s ease-in-out infinite",
         snakeBorderGreen: "snakeBorderGreen 3s ease-in-out forwards",
         snakeBorderPink: "snakeBorderPink 3s ease-in-out forwards",
+        snakeBorderGreen1s: "snakeBorderGreen1s 1s ease-in-out infinite",
+        snakeBorderPink1s: "snakeBorderPink1s 1s ease-in-out infinite",
         snakeBorderViolet: "snakeBorderViolet 1s ease-in-out infinite",
         snakeBorderHover: "snakeBorderHover 1.5s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
