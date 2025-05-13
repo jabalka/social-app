@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import CommentCreation from "./create-comment";
 import DragAndDropArea from "./drag-and-drop-area";
+import GlowingProgressBar from "./glowing-progress-bar";
 import { Project } from "./map-wrapper-viewer";
 import ProjectAllComments from "./project-all-comments";
 
@@ -383,7 +384,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
                 Comment
                 <span
                   key={animationKey}
-                  className={`group-hover:animate-snakeBorderViolet pointer-events-none absolute inset-0 overflow-hidden rounded-full`}
+                  className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderViolet`}
                 />
               </button>
             </div>
@@ -415,17 +416,8 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
         <div className="mb-4">
           <h3 className="font-semibold">Progress</h3>
-          <div className="relative h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200">
-            <div
-              className="relative h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all duration-300"
-              style={{ width: `${project.progress}%` }}
-            >
-              {/* Glowing shimmer */}
-              <div className="absolute inset-0 overflow-hidden rounded-full">
-                <div className="animate-progressBarGlow absolute h-full w-full bg-gradient-to-r from-transparent via-white to-transparent" />
-              </div>
-            </div>
-          </div>
+          <GlowingProgressBar project={project} className="h-3 w-full border-[1px] border-gray-400 bg-gray-200" />
+
           <p
             className={cn("text-md mt-1 text-gray-500", {
               "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,

@@ -154,4 +154,6 @@ and to change the project categories (if assigned wrong by creator)., user must 
         - private message from another user
 
     -News Feed
-        - Mayor and Council can share news that will be marked different from rest
+        - Mayor and Council can share news that will be marked different from re
+
+    -When Project is viewed on the map and details opened the Images must be bigger and maybe swiper?

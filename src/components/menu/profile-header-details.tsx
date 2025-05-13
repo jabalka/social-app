@@ -41,16 +41,16 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
         setDropdownOpen(false);
       }
     };
-  
+
     const handleResize = () => {
       if (window.innerWidth > 768) {
         setDropdownOpen(false);
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("resize", handleResize);
-  
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
@@ -69,7 +69,7 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
       <span className="hidden md:block">{displayName}</span>
 
       <div
-        className={cn("group relative flex items-center space-x-1 cursor-pointer")}
+        className={cn("group relative flex cursor-pointer items-center space-x-1")}
         onClick={() => {
           if (forceClickDropdown) {
             setDropdownOpen((prev) => !prev);
@@ -101,7 +101,7 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
                 // MOBILE clicked effect
                 "bg-[#6f6561c4] outline-[#3c2f27]": isDark && forceClickDropdown && dropdownOpen,
                 "bg-[#bda69c66] outline-[#3c2f27]": !isDark && forceClickDropdown && dropdownOpen,
-                    },
+              },
             )}
           >
             <Image
@@ -112,15 +112,13 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
               className="h-10 w-10 rounded-full object-cover"
             />
           </div>
-            <span className={cn(
-      "pointer-events-none absolute inset-0 rounded-full",
-      {
-      // Always allow hover-based animation
-      "group-hover:animate-snakeBorderHover": true,
-      // Add click-based animation for mobile/touch toggle
-      "animate-snakeBorderHover": forceClickDropdown && dropdownOpen,
-      }
-    )} />
+          <span
+            className={cn("pointer-events-none absolute inset-0 rounded-full", {
+              "group-hover:animate-snakeBorderHover": true,
+              // click animation for mobile
+              "animate-snakeBorderHover": forceClickDropdown && dropdownOpen,
+            })}
+          />
         </div>
 
         {/* Dropdown */}

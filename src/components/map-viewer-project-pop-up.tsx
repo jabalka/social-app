@@ -7,6 +7,7 @@ import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CommentCreation from "./create-comment";
+import GlowingProgressBar from "./glowing-progress-bar";
 import { Project } from "./map-wrapper-viewer";
 import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
@@ -84,15 +85,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
         })}
       </div>
 
-      <div className="relative mt-3 h-3 w-full overflow-hidden rounded-full border-[1px] border-gray-400 bg-gray-200 shadow-inner">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-green-400 via-green-600 to-green-800 transition-all"
-          style={{ width: `${project.progress}%` }}
-        />
-        <div className="absolute inset-0 overflow-hidden rounded-full">
-          <div className="animate-progressBarGlow absolute h-full w-full bg-gradient-to-r from-transparent via-white to-transparent" />
-        </div>
-      </div>
+      <GlowingProgressBar project={project} className="mt-3 h-3 w-full border-[1px] border-gray-400 bg-gray-200" />
       <p
         className={cn("mt-1 text-xs text-gray-500", {
           "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
@@ -104,7 +97,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
       <div className="group relative inline-flex overflow-hidden rounded-full p-[1px]">
         <Button
           className={cn(
-            "relative z-10 rounded-full w-full py-3 font-bold transition duration-300 hover:outline hover:outline-2",
+            "relative z-10 w-full rounded-full py-3 font-bold transition duration-300 hover:outline hover:outline-2",
             {
               "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
                 theme === Theme.LIGHT,
@@ -118,7 +111,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
           {/* Animated border layer */}
           <span
             key={animationKey}
-            className="group-hover:animate-snakeBorderHover pointer-events-none absolute inset-0 rounded-full"
+            className="pointer-events-none absolute inset-0 rounded-full group-hover:animate-snakeBorderHover"
           />
         </Button>
       </div>

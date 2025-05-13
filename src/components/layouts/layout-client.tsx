@@ -12,7 +12,10 @@ import WelcomeLayout from "./welcome-layout";
 
 const PATHS_WITH_MENU_LAYOUT = ["/dashboard", "/create-project"];
 
-const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard"];
+const PATHS_WITH_SIDEBAR_LAYOUT = [
+  "/profile/dashboard",
+  "/profile/projects"
+];
 
 export type SafeUser = {
   id: string;
@@ -57,7 +60,7 @@ const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) =>
         <MenuLayout user={user}>{children}</MenuLayout>
       )}
       {PATHS_WITH_SIDEBAR_LAYOUT.some((path) => pathname.startsWith(path)) && (
-        <SidebarLayoutClient user={user}>{children}</SidebarLayoutClient>
+        <SidebarLayoutClient>{children}</SidebarLayoutClient>
       )}
       {!pathname.startsWith("/") && children}
     </UserProvider>

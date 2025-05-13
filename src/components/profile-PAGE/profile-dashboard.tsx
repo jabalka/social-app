@@ -153,47 +153,57 @@ const ProfileDashboard: React.FC = () => {
   console.log("user info:  ", user);
   return (
     <>
-      <div className="mx-auto mt-8 flex max-w-7xl flex-col items-center gap-6 px-4">
-        <h1 className="text-2xl font-bold">Profile Details</h1>
+      <div className="mx-auto mt-8 rounded-3xl border-2 border-zinc-400/10 bg-[#f0e3dd] px-24 py-8 shadow-2xl backdrop-blur-md dark:border-zinc-700/40 dark:bg-[#f0e3dd]/10 md:max-w-2xl md:px-48 md:py-28 lg:max-w-4xl xl:max-w-5xl">
+        <div className="relative -mt-2 pb-4 text-center md:-mt-20 md:pb-16">
+          <h1 className="text-2xl font-bold">Profile Details</h1>
+        </div>
 
         <div className="flex w-full flex-col items-center justify-between gap-8 md:flex-row md:items-start">
           {/* Profile Image */}
-          <div
-            className={cn(
-              "group relative h-48 w-32 overflow-hidden rounded-full border-2 transition-transform duration-300 hover:scale-105 md:flex-shrink-0",
-              {
-                "border-zinc-700": theme === Theme.LIGHT,
-                "border-zinc-200": theme === Theme.DARK,
-              },
-            )}
-          >
-            <Image
-              src={user?.image ?? DefaultAvatar}
-              alt="Profile"
-              width={320}
-              height={320}
-              className="h-full w-full object-cover"
-              priority
-            />
-          </div>
-          <div className="group relative">
-            <button
-              onClick={() => fileImageInputRef.current?.click()}
-              className="absolute right-36 top-48 text-xs text-blue-500 transition-all duration-300 group-hover:text-orange-700"
-            >
-              <Pencil className="h-4 w-4" />
+          <div className="relative rounded-full p-[1px]">
+            <div className="group">
               <div
                 className={cn(
-                  "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
+                  "relative h-48 w-32 overflow-hidden rounded-full outline-2 outline-offset-[2px] transition-transform duration-300 hover:scale-105 md:flex-shrink-0",
                   {
-                    "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                    "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
+                    "bg-[#bda69c66] hover:outline-[#3c2f27]": theme === Theme.LIGHT,
+                    "bg-[#6f6561c4] hover:outline-[#3c2f27]": theme === Theme.DARK,
                   },
                 )}
               >
-                Change Image
+                <Image
+                  src={user?.image ?? DefaultAvatar}
+                  alt="Profile"
+                  width={320}
+                  height={320}
+                  className="h-full w-full object-cover"
+                  priority
+                />
               </div>
-            </button>
+              <span
+                className={cn("pointer-events-none absolute -inset-[5px] rounded-full group-hover:animate-snakeBorderHover")}
+              />
+            </div>
+
+            <div className="group">
+              <button
+                onClick={() => fileImageInputRef.current?.click()}
+                className="absolute -right-4 bottom-0 text-xs text-blue-500 transition-all duration-300 group-hover:text-orange-700 md:right-32 md:top-44"
+              >
+                <Pencil className="h-4 w-4" />
+                <div
+                  className={cn(
+                    "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
+                    {
+                      "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
+                      "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
+                    },
+                  )}
+                >
+                  Change Image
+                </div>
+              </button>
+            </div>
           </div>
 
           <input
@@ -210,11 +220,11 @@ const ProfileDashboard: React.FC = () => {
           />
 
           {/* Right Column */}
-          <div className="flex w-full flex-col gap-4 max-w-52">
+          <div className="flex w-full flex-col gap-4">
             {/* Name */}
             <div className="flex flex-col md:flex-row md:items-center md:gap-2">
               <label className="text-sm font-medium">Name:</label>
-              <div className="flex items-center gap-2 max-w-52">
+              <div className="flex max-w-52 items-center gap-2">
                 {editName ? (
                   <>
                     <div className="group relative">
@@ -225,7 +235,7 @@ const ProfileDashboard: React.FC = () => {
                           setNameInput(value);
                           setNameError(validateName(value));
                         }}
-                        className="group rounded border px-2 py-1 text-sm max-w-40"
+                        className="group max-w-40 rounded border px-2 py-1 text-sm"
                       />
                       {nameError && (
                         <div
@@ -307,9 +317,9 @@ const ProfileDashboard: React.FC = () => {
             </div>
 
             {/* Username */}
-            <div className="flex flex-col md:flex-row md:items-center md:gap-2 ">
+            <div className="flex flex-col md:flex-row md:items-center md:gap-2">
               <label className="text-sm font-medium">Username:</label>
-              <div className="flex items-center gap-2  max-w-52">
+              <div className="flex max-w-52 items-center gap-2">
                 {editUsername ? (
                   <>
                     <div className="group relative">
@@ -320,7 +330,7 @@ const ProfileDashboard: React.FC = () => {
                           setUsernameInput(value);
                           setUsernameError(validateUsername(value));
                         }}
-                        className="group rounded border px-2 py-1 text-sm max-w-40"
+                        className="group max-w-40 rounded border px-2 py-1 text-sm"
                       />
                       {usernameError && (
                         <div
@@ -402,12 +412,13 @@ const ProfileDashboard: React.FC = () => {
             </div>
 
             {/* Role */}
-            <div className="flex flex-col md:flex-row md:items-center md:gap-2">
+            <div className="relative flex flex-row gap-1 md:items-center md:gap-2">
               <label className="text-sm font-medium">Your Role:</label>
+
               {matchedRole && (
-                <div className="group relative flex items-center justify-center">
+                <div className="group relative ml-2 flex items-center justify-center">
                   <matchedRole.icon
-                    className={cn("h-5 w-5 transition-colors", {
+                    className={cn("h-7 w-7 transition-colors", {
                       "text-gray-700 group-hover:text-orange-700": theme === Theme.LIGHT,
                       "text-zinc-200 group-hover:text-orange-700": theme === Theme.DARK,
                     })}
@@ -456,9 +467,9 @@ const ProfileDashboard: React.FC = () => {
 
             {/* Stats Section */}
             <div
-              className={cn("mt-6 flex flex-col gap-2 rounded-md p-4 shadow", {
-                "bg-zinc-100 text-zinc-800": theme === Theme.LIGHT,
-                "bg-zinc-800 text-white": theme === Theme.DARK,
+              className={cn("mt-6 flex flex-col gap-2 rounded-md p-4 shadow md:w-64 lg:w-80", {
+                "bg-[#998a8361] text-zinc-700": theme === Theme.LIGHT,
+                "bg-[#8c817b41] text-zinc-300": theme === Theme.DARK,
               })}
             >
               <div className="relative flex items-center justify-center">
@@ -484,34 +495,45 @@ const ProfileDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+        {hasUnsavedChanges && (
+          <div className="flex justify-center gap-4 pt-8">
+         <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
+            <button
+              onClick={() => {
+                setNameInput(initialUserRef.current?.name ?? "");
+                setUsernameInput(initialUserRef.current?.username ?? "");
+                setSelectedImage(null);
+                setEditName(false);
+                setEditUsername(false);
+                setHasUnsavedChanges(false);
+                setNameError(null);
+                setUsernameError(null);
+              }}
+              className="w-24 h-8 rounded-full text-sm text-white bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
+            >
+              CANCEL
+              <span
+                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderPink1s`}
+                  />
+            </button>
+            </div>
 
-      {hasUnsavedChanges && (
-        <div className="mt-6 flex gap-4">
-          <button
-            onClick={handleSave}
-            disabled={disableSave}
-            className="rounded bg-green-600 px-4 py-1 text-white hover:bg-green-700"
-          >
-            SAVE
-          </button>
-          <button
-            onClick={() => {
-              setNameInput(initialUserRef.current?.name ?? "");
-              setUsernameInput(initialUserRef.current?.username ?? "");
-              setSelectedImage(null);
-              setEditName(false);
-              setEditUsername(false);
-              setHasUnsavedChanges(false);
-              setNameError(null);
-              setUsernameError(null);
-            }}
-            className="rounded bg-red-500 px-4 py-1 text-white hover:bg-red-600"
-          >
-            CANCEL
-          </button>
-        </div>
-      )}
+            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]"> 
+            <button
+              onClick={handleSave}
+              disabled={disableSave}
+              className="w-24 h-8 rounded-full text-sm text-white bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] outline outline-[#359c33]/60 group-hover:bg-gradient-to-br hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2"
+            >
+              SAVE
+              <span
+                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderGreen1s`}
+                  />
+              
+            </button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };
