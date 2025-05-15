@@ -11,6 +11,7 @@ import Image from "next/image";
 import DefaultAvatar from "public/images/default-avatar.png";
 
 import React, { useEffect, useRef, useState } from "react";
+import GlowingGreenButton from "../glow-green-button";
 
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
@@ -181,7 +182,9 @@ const ProfileDashboard: React.FC = () => {
                 />
               </div>
               <span
-                className={cn("pointer-events-none absolute -inset-[5px] rounded-full group-hover:animate-snakeBorderHover")}
+                className={cn(
+                  "pointer-events-none absolute -inset-[5px] rounded-full group-hover:animate-snakeBorderHover",
+                )}
               />
             </div>
 
@@ -497,40 +500,30 @@ const ProfileDashboard: React.FC = () => {
         </div>
         {hasUnsavedChanges && (
           <div className="flex justify-center gap-4 pt-8">
-         <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
-            <button
-              onClick={() => {
-                setNameInput(initialUserRef.current?.name ?? "");
-                setUsernameInput(initialUserRef.current?.username ?? "");
-                setSelectedImage(null);
-                setEditName(false);
-                setEditUsername(false);
-                setHasUnsavedChanges(false);
-                setNameError(null);
-                setUsernameError(null);
-              }}
-              className="w-24 h-8 rounded-full text-sm text-white bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
-            >
-              CANCEL
-              <span
-                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderPink1s`}
-                  />
-            </button>
+            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
+              <button
+                onClick={() => {
+                  setNameInput(initialUserRef.current?.name ?? "");
+                  setUsernameInput(initialUserRef.current?.username ?? "");
+                  setSelectedImage(null);
+                  setEditName(false);
+                  setEditUsername(false);
+                  setHasUnsavedChanges(false);
+                  setNameError(null);
+                  setUsernameError(null);
+                }}
+                className="h-8 w-24 rounded-full bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] text-sm text-white outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
+              >
+                CANCEL
+                <span
+                  className={`group-hover:animate-snakeBorderPink1s pointer-events-none absolute inset-0 overflow-hidden rounded-full`}
+                />
+              </button>
             </div>
 
-            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]"> 
-            <button
-              onClick={handleSave}
-              disabled={disableSave}
-              className="w-24 h-8 rounded-full text-sm text-white bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] outline outline-[#359c33]/60 group-hover:bg-gradient-to-br hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2"
-            >
+            <GlowingGreenButton onClick={handleSave} disabled={disableSave} className="h-8 w-24">
               SAVE
-              <span
-                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderGreen1s`}
-                  />
-              
-            </button>
-            </div>
+            </GlowingGreenButton>
           </div>
         )}
       </div>
