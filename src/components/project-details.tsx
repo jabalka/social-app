@@ -20,7 +20,7 @@ interface ProjectDetailsDialogProps {
   project: Project;
   open: boolean;
   onClose: () => void;
-  refreshProjects(): void;
+  refreshProjects: () => void;
   theme: string;
 }
 

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import DragAndDropArea from "./drag-and-drop-area";
 import MapWrapper from "./map-wrapper";
+import GlowingGreenButton from "./glow-green-button";
 
 interface FormData {
   title: string;
@@ -20,7 +21,11 @@ interface FormData {
   categories: string[];
 }
 
-const CreateProjectForm = () => {
+interface Props {
+  onSuccess?: () => void;
+}
+
+const CreateProjectForm: React.FC<Props> = ({onSuccess}) => {
   const { data: session } = useSession();
   const methods = useForm<FormData>({
     defaultValues: {
@@ -126,6 +131,7 @@ const CreateProjectForm = () => {
 
     console.log("Project and images uploaded successfully!");
     setKey(Date.now());
+    if (onSuccess) onSuccess()
   };
 
   const selected = methods.watch("categories") || [];
@@ -176,9 +182,11 @@ const CreateProjectForm = () => {
           <MapWrapper key={key} position={position} onPick={handleMapClick} />
         </div>
 
-        <button type="submit" className="rounded bg-orange-500 px-4 py-2 text-white">
-          Create Project
-        </button>
+        <GlowingGreenButton type="submit"  className="px-4 py-2">
+        Create Project
+            </GlowingGreenButton>
+
+
       </form>
     </FormProvider>
   );
