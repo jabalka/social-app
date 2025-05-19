@@ -10,14 +10,14 @@ import SidebarNavigation from "./sidebar-navigation";
 import { useSafeUser } from "@/context/user-context";
 
 interface SidebarProps {
-
   theme: string;
   sidebarExpanded: boolean;
   className?: string;
   onToggle: () => void;
+  unreadMessages: number
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ theme, sidebarExpanded, className, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ theme, sidebarExpanded, className, onToggle, unreadMessages }) => {
   const [menuToggleShow, setMenuToggleShow] = useState(false);
   const {user} = useSafeUser()
   // const [mobileScreen, setMobileScreen] = useState(false)
@@ -72,6 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ theme, sidebarExpanded, className, on
         user={user}
         theme={theme}
         sidebarExpanded={sidebarExpanded}
+        unreadMessages={unreadMessages}
         className="my-6 flex flex-col gap-2 px-[1.125rem]"
       />
     </aside>

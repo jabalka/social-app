@@ -13,6 +13,7 @@ interface Props {
   active: boolean;
   sidebarExpanded: boolean;
   className?: string;
+  unreadCount?: number;
 }
 
 const SidebarNavItem: React.FC<Props> = ({
@@ -23,6 +24,7 @@ const SidebarNavItem: React.FC<Props> = ({
   href,
   sidebarExpanded,
   className,
+  unreadCount
 }) => {
   return (
     <Link
@@ -53,6 +55,10 @@ const SidebarNavItem: React.FC<Props> = ({
       >
         <div className="relative flex-shrink-0">
           {icon}
+
+          {unreadCount! > 0 && (
+    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white dark:border-zinc-900" />
+  )}
 
           {!sidebarExpanded && (
             <div className={cn("font-semibold pointer-events-none absolute left-full top-1/2 ml-4 -translate-y-1/2 whitespace-nowrap rounded px-2 py-1 text-xs opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50 shadow-lg", {

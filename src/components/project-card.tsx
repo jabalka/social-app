@@ -12,6 +12,7 @@ import { Button } from "./ui/button";
 import React from "react";
 import { Project } from "./map-wrapper-viewer";
 import { AuthUser } from "@/models/auth";
+import DefaultProjectImage from "../../public/images/project-image-dedfault.png"
 
 type FullProject = Project & {
   categories: ProjectCategory[];
@@ -51,23 +52,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
       })}
     >
-      <h2 className="mb-1 text-sm font-bold">{project.title}</h2>
+     <div className="flex flex-col gap-3 md:flex-row">
+    {/* LEFT COLUMN */}
+    <div className="flex-1">
+      <h2 className="text-sm font-bold mb-1">{project.title}</h2>
+      <p className="text-xs line-clamp-3">{project.description}</p>
 
-      {project.images[0]?.url && (
-        <div className="mb-3 h-24 w-full overflow-hidden rounded">
-          <Image
-            src={project.images[0].url}
-            alt={`${project.title} preview`}
-            width={240}
-            height={240}
-            className="h-full w-full object-cover"
-          />
-        </div>
-      )}
-
-      <p className="line-clamp-2 text-xs">{project.description}</p>
-
-      <div className="mt-2 flex gap-2">
+      {/* Categories */}
+      <div className="mt-2 flex gap-2 flex-wrap">
         {project.categories.map(({ id, name }) => {
           const matched = PROJECT_CATEGORIES.find((cat) => cat.id === id);
           const Icon = matched?.icon;
@@ -89,14 +81,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         })}
       </div>
 
+      {/* Progress */}
       <GlowingProgressBar
         project={project}
         className="mt-3 h-3 w-full border border-gray-400 bg-gray-200"
       />
-
       <p className="mt-1 text-xs text-gray-500">{project.progress}% completed</p>
 
-      <div className="group relative inline-flex overflow-hidden rounded-full p-[1px]">
+      {/* View Details Button */}
+      <div className="w-44 group relative inline-flex overflow-hidden rounded-full p-[1px] mt-2">
         <Button
           className={cn(
             "relative w-full rounded-full py-2 font-bold outline-4 outline-gray-200 hover:outline-8",
@@ -105,7 +98,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 theme === Theme.LIGHT,
               "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
                 theme === Theme.DARK,
-            },
+            }
           )}
           onClick={() => setDetailsModalProjectId(project.id)}
         >
@@ -113,37 +106,64 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           <span className="pointer-events-none absolute -inset-[1px] overflow-hidden rounded-full group-hover:animate-snakeBorderHover" />
         </Button>
       </div>
-
-      <div className="mt-2 flex justify-between text-sm">
-        <div className="flex flex-col items-center">
-          <span>❤️ {project.likes.length}</span>
-          <span className="text-xs">Likes</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <span>💬 {project.comments.length}</span>
-          <span className="text-xs">Comments</span>
-        </div>
-      </div>
-
-      {showCommentModal && (
-        <CommentCreation
-          user={user}
-          projectId={project.id}
-          onClose={() => setCommentModalProjectId(project.id)}
-          theme={theme}
-        />
-      )}
-      {showDetailsModal && (
-        <ProjectDetailsDialog
-          user={user}
-          project={project}
-          open={true}
-          onClose={() => setDetailsModalProjectId(null)}
-          refreshProjects={refreshProjects}
-          theme={theme}
-        />
-      )}
     </div>
+
+    {/* RIGHT COLUMN (Image) */}
+    {project.images[0]?.url? (
+      <div className="md:ml-6 md:w-1/3 h-32 md:h-auto overflow-hidden rounded-2xl">
+        <Image
+          src={project.images[0].url}
+          alt={`${project.title} preview`}
+          width={240}
+          height={240}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    ) :  (
+        <div className="md:ml-6 md:w-1/3 h-32 md:h-auto overflow-hidden rounded-2xl">
+        <Image
+          src={DefaultProjectImage}
+          alt={`${project.title} preview`}
+          width={240}
+          height={240}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    )}
+  </div>
+
+  {/* Bottom row: Likes & Comments */}
+  <div className="mt-4 flex justify-between text-sm">
+    <div className="flex flex-col items-center">
+      <span>❤️ {project.likes.length}</span>
+      <span className="text-xs">Likes</span>
+    </div>
+    <div className="flex flex-col items-center">
+      <span>💬 {project.comments.length}</span>
+      <span className="text-xs">Comments</span>
+    </div>
+  </div>
+
+  {/* Modals */}
+  {showCommentModal && (
+    <CommentCreation
+      user={user}
+      projectId={project.id}
+      onClose={() => setCommentModalProjectId(project.id)}
+      theme={theme}
+    />
+  )}
+  {showDetailsModal && (
+    <ProjectDetailsDialog
+      user={user}
+      project={project}
+      open={true}
+      onClose={() => setDetailsModalProjectId(null)}
+      refreshProjects={refreshProjects}
+      theme={theme}
+    />
+  )}
+  </div>
   );
 };
 
