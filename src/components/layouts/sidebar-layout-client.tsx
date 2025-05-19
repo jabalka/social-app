@@ -10,11 +10,37 @@ import ProfileHeader from "../menu/profile-header";
 // import { SafeUser } from "./layout-client";
 import SiteFooter from "../site-footer/site-footer";
 import Sidebar from "../profile-PAGE/sidebar/sidebar";
+import { ConversationWithUnread } from "@/models/message";
 
 const SidebarLayoutClient: React.FC<PropsWithChildren> = ({  children }) => {
   const { theme } = useSafeThemeContext();
   const { sidebarExpanded, setSidebarExpanded } = useSidebarContext();
   const pathname = usePathname();
+
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [hasMounted, setHasMounted] = React.useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/conversations");
+        const data: ConversationWithUnread[] = await res.json();
+        const total = data.reduce(
+          (sum, c) => sum + (c.unreadCount || 0),
+          0
+        );
+        setUnreadCount(total);
+      } catch (error) {
+        console.error("Failed to fetch unread count", error);
+      }
+    };
+  
+    fetchUnread();
+  }, []);
 
   useEffect(() => {
     if (window.innerWidth <= 768) {
@@ -22,11 +48,14 @@ const SidebarLayoutClient: React.FC<PropsWithChildren> = ({  children }) => {
     }
   }, [pathname, setSidebarExpanded]);
 
+  if (!hasMounted) return null;
+
   return (
     <div className="flex">
       <Sidebar
         theme={theme}
         sidebarExpanded={sidebarExpanded}
+        unreadMessages={unreadCount}
         onToggle={() => setSidebarExpanded((currentSidebarExpanded) => !currentSidebarExpanded)}
         className={cn("fixed inset-0 z-10 transition-transform md:static md:min-h-screen md:transition-none", {
           "-translate-x-full md:translate-x-0": !sidebarExpanded,

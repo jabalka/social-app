@@ -44,19 +44,16 @@ NeonPostSQL - for DB in AWS
         3rd party Providers API
         Interface Library
         Real Time notification = web sockets
+## WebSockets server
+    -the WebSocket server via Socket.IO enforces NextAuth based user authentication and listens for custom events like message:send. It is initialized once and works on /api/socket route!
 
--ToDO
-
-` \*Giving some issue when assigning categories to a project when created so when to visualize the categories gives an empty array []
-
-    * Create a Profile SidebarMenu with toggle to show Logout, Edit Profile etc.
-
-
-    * Any project has a state - in progress, proposal, completed (with related icon to it)
-    -   This state will be visualized also with a status bar attached to it. (With some animations etc)
-
-
-    * If more than one project has the same location then they must be visualized as a stack on the map
+## API Routes
+    /api/conversations 
+        -GET = List user's conversations
+    /api/conversations/:id/messages
+        -GET = Fetch full thread
+    /api/messages
+        -POST = Send messages (text/files)
 
 ## User Roles with Icons
 
@@ -131,6 +128,19 @@ and to change the project categories (if assigned wrong by creator)., user must 
 
 
 ## TODO
+-ToDO
+
+` \*Giving some issue when assigning categories to a project when created so when to visualize the categories gives an empty array []
+
+    * Create a Profile SidebarMenu with toggle to show Logout, Edit Profile etc.
+
+
+    * Any project has a state - in progress, proposal, completed (with related icon to it)
+    -   This state will be visualized also with a status bar attached to it. (With some animations etc)
+
+
+    * If more than one project has the same location then they must be visualized as a stack on the map
+
     -when project is edited
         - title min lenght and max length
         - details min length and max length
@@ -157,3 +167,34 @@ and to change the project categories (if assigned wrong by creator)., user must 
         - Mayor and Council can share news that will be marked different from re
 
     -When Project is viewed on the map and details opened the Images must be bigger and maybe swiper?
+
+    -When on My Projects - user must be able to view / sort the Completed, In Progress etc...
+
+
+
+
+    -MESSAGES:
+        - Inbox component: shows recent conversations
+        - Chat thread view (ChatRoom): shows messages, scrollable
+        - New message input: text + attachment button
+        - Real-time updates using WebSocket hook (useSocket())
+        \
+
+        *Set up API routes for conversations/messages
+
+        *Add file upload handling (via Supabase or S3)
+
+        *Add a WebSocket or Socket.IO server
+
+
+
+
+        components/
+  messaging/
+    ConversationList.tsx       // All user's conversations
+    ConversationItem.tsx       // A single conversation row
+    ChatWindow.tsx             // Reusable dialog overlay
+    MessageComposer.tsx        // Input + file attach
+    MessageBubble.tsx          // Sent/received message
+  ui/
+    dialog.tsx                 // (reuse your Dialog component)

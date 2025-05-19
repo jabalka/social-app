@@ -13,24 +13,32 @@ interface Props {
   theme: string;
   sidebarExpanded: boolean;
   className?: string;
+  unreadMessages: number;
 }
 
 interface NavItem {
   icon: JSX.Element;
   label: string;
   href: string;
+  unreadCount?: number;
 }
 
-const navItems: NavItem[] = [
-  { icon: <User className="h-5 w-5" />, label: "Profile", href: "/profile/dashboard" },
-  { icon: <LucideSquareStack className="h-5 w-5" />, label: "My Projects", href: "/profile/projects" },
-  { icon: <MessageCircleIcon className="h-5 w-5" />, label: "Messages", href: "/profile/messages" },
-  { icon: <Users className="h-5 w-5" />, label: "Collaborations", href: "/profile/collaborations" },
-  { icon: <Settings className="h-5 w-5" />, label: "Settings", href: "/profile/settings" },
-];
-
-const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className }) => {
+const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className, unreadMessages }) => {
   const pathname = usePathname();
+
+  const navItems: NavItem[] = [
+    { icon: <User className="h-5 w-5" />, label: "Profile", href: "/profile/dashboard" },
+    { icon: <LucideSquareStack className="h-5 w-5" />, label: "My Projects", href: "/profile/projects" },
+    {
+      icon: <MessageCircleIcon className="h-5 w-5" />,
+      label: "Messages",
+      href: "/profile/messages",
+      unreadCount: unreadMessages,
+    },
+    { icon: <Users className="h-5 w-5" />, label: "Collaborations", href: "/profile/collaborations" },
+    { icon: <Settings className="h-5 w-5" />, label: "Settings", href: "/profile/settings" },
+  ];
+
   const items = [...navItems];
 
   return (
@@ -42,8 +50,9 @@ const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className 
           icon={item.icon}
           label={item.label}
           href={item.href}
-          active={pathname.startsWith(item.href)}
+          active={pathname!.startsWith(item.href)}
           sidebarExpanded={sidebarExpanded}
+          unreadCount={unreadMessages > 0 ? unreadMessages : 0}
         />
       ))}
     </nav>

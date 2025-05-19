@@ -10,11 +10,12 @@ import WelcomeLayout from "./welcome-layout";
 
 // import { AuthUser } from "@/models/auth";
 
-const PATHS_WITH_MENU_LAYOUT = ["/dashboard", "/create-project"];
+const PATHS_WITH_MENU_LAYOUT = ["/dashboard", "/create-project", "send-test"];
 
 const PATHS_WITH_SIDEBAR_LAYOUT = [
   "/profile/dashboard",
-  "/profile/projects"
+  "/profile/projects",
+  "/profile/messages",
 ];
 
 export type SafeUser = {
@@ -56,13 +57,13 @@ const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) =>
   return (
     <UserProvider initialUser={user}>
       {pathname === "/" && <WelcomeLayout>{children}</WelcomeLayout>}
-      {PATHS_WITH_MENU_LAYOUT.some((path) => pathname.startsWith(path)) && (
+      {PATHS_WITH_MENU_LAYOUT.some((path) => pathname!.startsWith(path)) && (
         <MenuLayout user={user}>{children}</MenuLayout>
       )}
-      {PATHS_WITH_SIDEBAR_LAYOUT.some((path) => pathname.startsWith(path)) && (
+      {PATHS_WITH_SIDEBAR_LAYOUT.some((path) => pathname!.startsWith(path)) && (
         <SidebarLayoutClient>{children}</SidebarLayoutClient>
       )}
-      {!pathname.startsWith("/") && children}
+      {!pathname!.startsWith("/") && children}
     </UserProvider>
   );
 };
