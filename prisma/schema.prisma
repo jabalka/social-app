@@ -180,10 +180,12 @@ model Message {
   senderId       String
   conversationId String
   createdAt      DateTime  @default(now())
+    updatedAt      DateTime     @updatedAt
   readAt         DateTime?
+    deliveredAt    DateTime?  
 
   sender         User         @relation(fields: [senderId], references: [id])
-  conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
+  conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id],  onDelete: Cascade)
 }
 
 enum ProjectStatus {

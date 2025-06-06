@@ -120,7 +120,14 @@ const callbacks: NextAuthConfig["callbacks"] = {
     return false;
   },
 
-  async jwt({ token, user }) {
+  async jwt({ token, user, account }) {
+    if (account) {
+         if (account.provider === "google") {
+        token.accessToken = account.access_token;
+      }
+    }
+
+  
     if (user) {
       const dbUser = await prisma.user.findUnique({
         where: { email: user.email! },
@@ -153,24 +160,28 @@ const callbacks: NextAuthConfig["callbacks"] = {
   },
 
   async session({ session, token }) {
-    if (session.user && token?.id) {
-      session.user = {
-        id: token.id!,
-        name: token.name ?? null,
-        email: token.email ?? "",
-        username: token.username ?? null,
-        emailVerified: token.emailVerified ?? null,
-        image: token.image ?? null,
-        roleId: token.roleId ?? null,
-        comments: token.comments ?? [],
-        likes: token.likes ?? [],
-        posts: token.posts ?? [],
-        projects: token.projects ?? [],
-        role: token.role ?? null,
-      } as AdapterUser & AuthUser;
-    }
+    session.user = {
+      id: token.id!,
+      name: token.name ?? null,
+      email: token.email ?? "",
+      username: token.username ?? null,
+      emailVerified: token.emailVerified ?? null,
+      image: token.image ?? null,
+      roleId: token.roleId ?? null,
+      comments: token.comments ?? [],
+      likes: token.likes ?? [],
+      posts: token.posts ?? [],
+      projects: token.projects ?? [],
+      role: token.role ?? null,
+    } as AdapterUser & AuthUser;
+
+    session.accessToken = await import("jsonwebtoken").then((jwt) =>
+      jwt.sign({ id: token.id, email: token.email, name: token.name }, process.env.NEXTAUTH_SECRET!)
+    );
 
     return session;
+
+
   },
 };
 

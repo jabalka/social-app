@@ -10,13 +10,18 @@ import WelcomeLayout from "./welcome-layout";
 
 // import { AuthUser } from "@/models/auth";
 
-const PATHS_WITH_MENU_LAYOUT = ["/dashboard", "/create-project", "send-test"];
-
-const PATHS_WITH_SIDEBAR_LAYOUT = [
-  "/profile/dashboard",
-  "/profile/projects",
-  "/profile/messages",
+const PATHS_WITH_MENU_LAYOUT = [
+  "/dashboard",
+  "/create-project", 
+  "/share-idea",
+  "/report", 
+  "send-test",
+  "/about/what-is-it",
+  "/about/faq",
+  "/about/contact"
 ];
+
+const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard", "/profile/projects", "/profile/messages"];
 
 export type SafeUser = {
   id: string;

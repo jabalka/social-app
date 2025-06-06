@@ -1,84 +1,115 @@
-// components/UserInteractionDialog.tsx
+"use client";
 
-import { useState } from "react";
-
-import { Message } from "@prisma/client";
+import { useSocketContext } from "@/context/socket-context";
+import { useUserDialog } from "@/context/user-dialog-context";
+import { useConversations } from "@/hooks/use-Conversations";
+import { initializeSocket } from "@/lib/socket-client";
 import { AuthUser } from "@/models/auth";
-import UserDetailsDialog from "./user-details";
+import { useSession } from "next-auth/react";
+import React, { useEffect, useState } from "react";
 import ChatWindow from "./messaging/chat-window";
+import UserDetailsDialog from "./user-details";
 
 interface UserInteractionDialogProps {
-  userId: string | null;
-  open: boolean;
-  onClose: () => void;
   currentUser: AuthUser;
 }
 
-const UserInteractionDialog: React.FC<UserInteractionDialogProps> = ({
-  userId,
-  open,
-  onClose,
-  currentUser,
-}) => {
+const UserInteractionDialog: React.FC<UserInteractionDialogProps> = ({ currentUser }) => {
   const [showChat, setShowChat] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string>("");
 
-  const handleMessageClick = async () => {
-    setShowChat(true)
-    try {
-        if (!userId) {
-            throw new Error('No user selected');
-          }
-   
-        const res = await fetch(`/api/conversations/with/${userId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-    
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || 'Failed to create or fetch conversation');
-          }
-    
+  const { socket, joinConversation, leaveConversation } = useSocketContext();
+  const { refetch } = useConversations(currentUser?.id);
+  const { status } = useSession();
+  const { selectedUserId: userId, isOpen: open, setIsOpen, setSelectedUserId } = useUserDialog();
+
+  const socketConnected = socket?.connected ?? false;
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setSelectedUserId(null);
+    setShowChat(false);
+    setConversationId("");
+    setTimeout(() => refetch(), 500);
+  };
+
+  useEffect(() => {
+    if (socketConnected) {
+      refetch();
+    }
+  }, [socketConnected, refetch]);
+
+  // Setup socket and join conversation
+  useEffect(() => {
+    const setupSocketAndConversation = async () => {
+      if (status !== "authenticated" || !userId) return;
+
+      const initializedSocket = await initializeSocket();
+
+      if (initializedSocket?.connected) {
+        const res = await fetch(`/api/conversations/with/${userId}`, { method: "POST" });
         const data = await res.json();
         setConversationId(data.id);
-        setMessages(data.messages || []);
-        setShowChat(true);
-      } catch (error) {
-        console.error('Error initiating conversation:', error);
-        // Handle error (e.g., show notification to the user)
+        joinConversation(data.id);
       }
-  };
+    };
 
-  const handleChatClose = () => {
-    setShowChat(false);
-  };
+    if (open) {
+      setupSocketAndConversation();
+    }
 
-//   const handleMessageSent = (message: Message) => {
-//     setMessages((prev) => [...prev, message]);
-//   };
+    return () => {
+      if (conversationId) {
+        leaveConversation(conversationId);
+      }
+    };
+  }, [open, userId, status, joinConversation, leaveConversation, conversationId]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleConnect = () => {
+      refetch();
+    };
+
+    const handleDisconnect = () => {
+      // maybe we can add something for UI or not
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [socket, refetch]);
+
+  useEffect(() => {
+    if (!open) {
+      setShowChat(false);
+      setConversationId("");
+    }
+  }, [open]);
 
   return (
     <>
       <UserDetailsDialog
-        userId={userId}
         open={open && !showChat}
-        onClose={onClose}
-        onMessageClick={handleMessageClick}
+        onClose={handleClose}
+        userId={userId}
+        onMessageClick={() => setShowChat(true)}
       />
-  
-  <ChatWindow
-        open={showChat}
-        onClose={handleChatClose}
-        messages={messages}
-        currentUser={currentUser}
-        conversationId={conversationId}
-        onMessageSent={(msg) => setMessages(prev => [...prev, msg])}
-      />
-  
+
+      {userId && conversationId && (
+        <ChatWindow
+          open={showChat}
+          onClose={handleClose}
+          currentUser={currentUser}
+          userId={userId}
+          conversationId={conversationId}
+        />
+      )}
     </>
   );
 };

@@ -5,6 +5,7 @@ import "next-auth/jwt";
 declare module "next-auth" {
   interface Session {
     user: AuthUser;
+    accessToken?: string;
   }
 }
 
@@ -22,6 +23,7 @@ declare module "next-auth/jwt" {
     posts: { id: string; title: string; createdAt: Date }[];
     projects: { id: string; title: string; createdAt: Date }[];
     role: { id: string; name: string } | null;
+    accessToken?: string; 
   }
 
 

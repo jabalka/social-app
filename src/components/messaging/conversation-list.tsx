@@ -1,171 +1,217 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { Message } from "@prisma/client";
-import { initializeSocket } from "@/lib/socket-client";
-import ConversationItem from "./conversation-item";
-import ChatWindow from "./chat-window";
+import { useSocketContext } from "@/context/socket-context";
+import { useUserDialog } from "@/context/user-dialog-context";
+import { useConversations } from "@/hooks/use-Conversations";
 import { AuthUser } from "@/models/auth";
 import { FullConversation } from "@/models/message";
-import { toDate } from "date-fns";
-import { toOptionalDate } from "@/utils/date";
-import { AppSocket } from "@/models/socket";
+import { formatDistanceToNow } from "date-fns";
+import { MessageCircle, Wifi, WifiOff } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import React, { useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
+import UserInteractionDialog from "../user-interaction-dialog";
 
 const ConversationList: React.FC = () => {
   const { data: session } = useSession();
-  const [conversations, setConversations] = useState<FullConversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [newMessageMap, setNewMessageMap] = useState<Record<string, boolean>>({});
-  const [socket, setSocket] = useState<AppSocket | null>(null);
-
   const currentUser = session?.user as AuthUser;
+  const { socket } = useSocketContext();
+  const { conversations, loading, refetch } = useConversations(currentUser?.id);
+  const { setIsOpen, setSelectedUserId } = useUserDialog();
 
-  useEffect(() => {
-    const setupSocket = async () => {
-      try {
-        const socket = await initializeSocket();
-        setSocket(socket);
-      } catch (error) {
-        console.error("Failed to initialize socket:", error);
-      }
-    };
-
-    setupSocket();
-
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchConversations = async () => {
-      const res = await fetch("/api/conversations");
-      const data: FullConversation[] = await res.json();
-      
-      // Convert string dates to Date objects if needed
-      const processedData = data.map(conversation => ({
-        ...conversation,
-        createdAt: toDate(conversation.createdAt),
-        updatedAt: toDate(conversation.updatedAt),
-        messages: conversation.messages.map(msg => ({
-          ...msg,
-          createdAt: toDate(msg.createdAt),
-          readAt: toOptionalDate(msg.readAt)
-        }))
-      }));
-      
-      setConversations(processedData);
-    };
-
-    fetchConversations();
-  }, []);
+  const socketConnected = socket?.connected ?? false;
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMessage = (msg: Message & { conversationId: string }) => {
-      if (msg.conversationId !== activeConversationId) {
-        setNewMessageMap((prev) => ({ ...prev, [msg.conversationId]: true }));
-      }
-
-      setConversations((prev) => {
-        const updatedConversations = prev.map((conversation) => {
-          if (conversation.id === msg.conversationId) {
-            return {
-              ...conversation,
-              messages: [{
-                ...msg,
-                createdAt: new Date(msg.createdAt),
-                readAt: msg.readAt ? new Date(msg.readAt) : null
-              }, ...(conversation.messages || [])],
-              updatedAt: new Date()
-            };
-          }
-          return conversation;
-        });
-
-        // Sort by updatedAt (newest first)
-        return [...updatedConversations].sort((a, b) => 
-          b.updatedAt.getTime() - a.updatedAt.getTime()
-        );
-      });
+    const handleConnect = () => {
+      console.log("[ConversationList] Socket connected");
+      refetch();
     };
 
-    socket.on("message:new", handleNewMessage);
+    const handleDisconnect = () => {
+      console.log("[ConversationList] Socket disconnected");
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
 
     return () => {
-      socket.off("message:new", handleNewMessage);
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
     };
-  }, [socket, activeConversationId]);
+  }, [socket, refetch]);
 
-  const handleSelectConversation = (id: string) => {
-    setActiveConversationId(id);
-    setNewMessageMap((prev) => ({ ...prev, [id]: false }));
-    
-    if (socket) {
-      socket.emit("join:conversation", id);
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    if (socketConnected) {
+      refetch();
+    }
+  }, [socketConnected, refetch]);
+
+  const handleConversationClick = (conversation: FullConversation) => {
+    const otherUser = conversation.users.find((user: AuthUser) => user.id !== currentUser?.id);
+    if (otherUser) {
+      setSelectedUserId(otherUser.id);
+      setIsOpen(true);
     }
   };
 
-  const handleMessageSent = (message: Message) => {
-    setConversations((prev) => {
-      const updatedConversations = prev.map((conversation) => {
-        if (conversation.id === message.conversationId) {
-          return {
-            ...conversation,
-            messages: [{
-              ...message,
-              createdAt: new Date(message.createdAt),
-              readAt: message.readAt ? new Date(message.readAt) : null
-            }, ...(conversation.messages || [])],
-            updatedAt: new Date()
-          };
-        }
-        return conversation;
-      });
-
-      // Sort by updatedAt (newest first)
-      return [...updatedConversations].sort((a, b) => 
-        b.updatedAt.getTime() - a.updatedAt.getTime()
-      );
-    });
+  const handleRetryConnection = () => {
+    if (socket && !socket.connected) {
+      socket.connect();
+    }
   };
 
-  const activeConversation = conversations.find((c) => c.id === activeConversationId);
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Conversations</h2>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>
-      <div className="flex flex-col gap-2 overflow-y-auto max-h-[80vh]">
-        {conversations.map((conversation) => (
-          <ConversationItem
-            key={conversation.id}
-            conversation={conversation}
-            isActive={conversation.id === activeConversationId}
-            hasNewMessage={!!newMessageMap[conversation.id]}
-            onClick={() => handleSelectConversation(conversation.id)}
-            currentUserId={currentUser?.id || ""}
-          />
-        ))}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Conversations</h2>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              {socket?.connected ? (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Wifi className="h-3 w-3" />
+                  <span className="text-xs">Online</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleRetryConnection}
+                  className="flex items-center space-x-1 text-red-600 hover:text-red-700"
+                >
+                  <WifiOff className="h-3 w-3" />
+                  <span className="text-xs">Offline</span>
+                </button>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" onClick={refetch}>
+              Refresh
+            </Button>
+          </div>
+        </div>
+
+        {!socketConnected && (
+          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950">
+            <div className="flex items-center space-x-2">
+              <WifiOff className="h-4 w-4 text-yellow-600" />
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Real-time messaging is offline. You can still view conversations, but new messages won&apos;t appear
+                automatically.
+              </p>
+              <Button variant="outline" size="sm" onClick={handleRetryConnection}>
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {conversations.length === 0 ? (
+          <div className="py-8 text-center">
+            <MessageCircle className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">No conversations yet</h3>
+            <p className="text-gray-500 dark:text-gray-400">Start a conversation by messaging someone!</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {conversations.map((conversation) => {
+              const otherUser = conversation.users.find((user) => user.id !== currentUser?.id);
+              const lastMessage = conversation.messages[0];
+              const hasUnread = conversation.unreadCount > 0;
+
+              if (!otherUser) return null;
+
+              return (
+                <Card
+                  key={conversation.id}
+                  className={`w-[45vh] cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 md:w-[55vh] lg:w-[75vh] ${
+                    hasUnread ? "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950" : ""
+                  }`}
+                  onClick={() => handleConversationClick(conversation)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={otherUser.image || ""} alt={otherUser.name || ""} />
+                          <AvatarFallback>
+                            <Image src={otherUser.image || ""} alt={otherUser.name || ""} width={40} height={40} />
+                          </AvatarFallback>
+                        </Avatar>
+                        {hasUnread && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
+                          >
+                            {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className={`truncate text-sm ${hasUnread ? "font-semibold" : "font-medium"}`}>
+                            {otherUser.name || otherUser.username}
+                          </p>
+                          {lastMessage && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })}
+                            </span>
+                          )}
+                        </div>
+
+                        {lastMessage ? (
+                          <p
+                            className={`truncate text-sm ${
+                              hasUnread ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"
+                            }`}
+                          >
+                            {lastMessage.senderId === currentUser?.id ? "You: " : ""}
+                            {lastMessage.content || "📎 Attachment"}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">No messages yet</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {activeConversation && currentUser && (
-        <ChatWindow
-          open={!!activeConversationId}
-          onClose={() => {
-            if (socket && activeConversationId) {
-              socket.emit("leave:conversation", activeConversationId);
-            }
-            setActiveConversationId(null);
-          }}
-          messages={activeConversation.messages || []}
-          currentUser={currentUser}
-          conversationId={activeConversation.id}
-          onMessageSent={handleMessageSent}
-        />
-      )}
+      {currentUser && <UserInteractionDialog currentUser={currentUser} />}
     </>
   );
 };

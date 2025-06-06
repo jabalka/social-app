@@ -19,7 +19,12 @@ interface ProjectPopupContentProps {
   theme: string;
 }
 
-const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project, refreshProjects, theme }) => {
+const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
+  user,
+  project,
+  refreshProjects,
+  theme,
+}) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
@@ -29,7 +34,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
 
     const timeout = setTimeout(() => {
       setAnimationKey(0);
-    }, 1500); // match animation duration (in ms)
+    }, 1500); // match style animation duration (in ms)
 
     return () => clearTimeout(timeout);
   }, [animationKey]);

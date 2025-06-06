@@ -1,12 +1,12 @@
 "use client";
 
+import type { AuthUser } from "@/models/auth";
 import { cn } from "@/utils/cn.utils";
-import { LucideSquareStack, MessageCircleIcon, Settings, User, Users } from "lucide-react";
+import { LucideSquareStack, MessageCircleIcon, Settings, User, Users, Home } from "lucide-react";
 import { usePathname } from "next/navigation";
-import React from "react";
+import type React from "react";
+import type { JSX } from "react/jsx-runtime";
 import SidebarNavItem from "./sidebar-nav-item";
-// import { SafeUser } from "../layouts/layout-client";
-import { AuthUser } from "@/models/auth";
 
 interface Props {
   user: AuthUser | null;
@@ -20,30 +20,29 @@ interface NavItem {
   icon: JSX.Element;
   label: string;
   href: string;
-  unreadCount?: number;
+  showUnreadCount?: boolean;
 }
 
 const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className, unreadMessages }) => {
   const pathname = usePathname();
 
   const navItems: NavItem[] = [
+    { icon: <Home className="h-5 w-5" />, label: "Home", href: "/dashboard" },
     { icon: <User className="h-5 w-5" />, label: "Profile", href: "/profile/dashboard" },
     { icon: <LucideSquareStack className="h-5 w-5" />, label: "My Projects", href: "/profile/projects" },
     {
       icon: <MessageCircleIcon className="h-5 w-5" />,
       label: "Messages",
       href: "/profile/messages",
-      unreadCount: unreadMessages,
+      showUnreadCount: true,
     },
     { icon: <Users className="h-5 w-5" />, label: "Collaborations", href: "/profile/collaborations" },
     { icon: <Settings className="h-5 w-5" />, label: "Settings", href: "/profile/settings" },
   ];
 
-  const items = [...navItems];
-
   return (
     <nav className={cn(className)}>
-      {items.map((item) => (
+      {navItems.map((item) => (
         <SidebarNavItem
           theme={theme}
           key={item.href}
@@ -52,7 +51,7 @@ const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className,
           href={item.href}
           active={pathname!.startsWith(item.href)}
           sidebarExpanded={sidebarExpanded}
-          unreadCount={unreadMessages > 0 ? unreadMessages : 0}
+          unreadCount={item.showUnreadCount ? unreadMessages : 0}
         />
       ))}
     </nav>
