@@ -54,7 +54,21 @@ export async function GET() {
         images: true,
         comments: true,
         likes: true,
-        author: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
+          },
+        },
       },
     });
 

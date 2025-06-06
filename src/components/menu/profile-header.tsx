@@ -53,16 +53,18 @@ const ProfileHeader: React.FC<Props> = ({ className, onToggle }) => {
           className,
         )}
       >
-        <div className="flex items-center">
-          {menuToggleShow && <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} size={48} />}
-        </div>
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center">
+            {menuToggleShow && <MobileMenuToggle active={!sidebarExpanded} onClick={onToggle} size={48} />}
+          </div>
 
-        {/* <ProfileMenu theme={theme} /> */}
+          {/* <ProfileMenu theme={theme} /> */}
 
-        <div className="flex items-center gap-4">
-          <ThemeToggle theme={theme} onClick={switchTheme} />
+          <div className="flex items-center gap-4">
+            <ThemeToggle theme={theme} onClick={switchTheme} />
 
-          {user && <ProfileHeaderDetails theme={theme} forceClickDropdown={menuToggleShow}/>}
+            {user && <ProfileHeaderDetails theme={theme} forceClickDropdown={menuToggleShow} variant="profile" />}
+          </div>
         </div>
       </header>
     </>

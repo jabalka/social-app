@@ -55,6 +55,10 @@ NeonPostSQL - for DB in AWS
     /api/messages
         -POST = Send messages (text/files)
 
+    /api/conversations/with/${userId} 
+        -GET get the conversation ID
+    /api/conversations/${convoId}/messages 
+        -GET fetch ALL messages
 ## User Roles with Icons
 
 - Each User will have its own role in the app with meaningful icon
@@ -105,7 +109,10 @@ NeonPostSQL - for DB in AWS
     -npx prisma db seed  - needs to populate essential data (roles, categories to DB) needs to be ran any first time etc.
     - npx prisma migrate reset - this will automatically run the seed, reset DB and apply migrations
 
-    -npx prisma studio   - run the prisma studio
+    -npx prisma studio   - run the prisma 
+    
+## WebSocke IO launch:
+ -node --loader ts-node/esm src/server/index.ts
 
 ## Access the user via user-context everywhere on client side
 
@@ -186,15 +193,6 @@ and to change the project categories (if assigned wrong by creator)., user must 
 
         *Add a WebSocket or Socket.IO server
 
+        If one chat is open and user types new messages and the receipter is inside the profile/messages but without the chat window open, thenn new messages do not arrive!
 
-
-
-        components/
-  messaging/
-    ConversationList.tsx       // All user's conversations
-    ConversationItem.tsx       // A single conversation row
-    ChatWindow.tsx             // Reusable dialog overlay
-    MessageComposer.tsx        // Input + file attach
-    MessageBubble.tsx          // Sent/received message
-  ui/
-    dialog.tsx                 // (reuse your Dialog component)
+    -ENCRYPT THE MESSAGES!!

@@ -1,13 +1,14 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useUserDialog } from "@/context/user-dialog-context";
 import { AuthUser } from "@/models/auth";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 // import UserDetailsDialog from "./user-details";
-import UserInteractionDialog from "./user-interaction-dialog";
+// import UserInteractionDialog from "./user-interaction-dialog";
 
 interface CommentType {
   id: string;
@@ -33,12 +34,12 @@ interface ProjectAllCommentsProps {
 }
 
 const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user, open, onClose, theme }) => {
+  const { setSelectedUserId, setIsOpen } = useUserDialog();
+
   const [comments, setComments] = useState<CommentType[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
   const [replyContent, setReplyContent] = useState<Record<string, string>>({});
   const pageSize = 10;
@@ -116,9 +117,9 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
     }
   };
 
-  const openUserDetails = (userId: string) => {
-    setSelectedUserId(userId);
-    setIsUserDialogOpen(true);
+  const openUserDetails = (selectedUserId: string) => {
+    setSelectedUserId(selectedUserId);
+    setIsOpen(true);
   };
 
   const renderComment = (comment: CommentType, depth = 0) => (
@@ -212,15 +213,15 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
         </DialogContent>
       </Dialog>
 
-      <UserInteractionDialog
-  userId={selectedUserId}
-  open={isUserDialogOpen}
-  onClose={() => {
-    setIsUserDialogOpen(false)
-    setSelectedUserId(null)}
-  }
-  currentUser={user}
-/>
+      {/* <UserInteractionDialog
+        open={setIsUserDialogOpen(true)}
+        userId={selectedUserId}
+        onClose={() => {
+          setIsUserDialogOpen(false);
+          setSelectedUserId(null);
+        }}
+        currentUser={user}
+      /> */}
     </>
   );
 };

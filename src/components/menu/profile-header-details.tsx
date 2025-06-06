@@ -3,7 +3,7 @@
 import { useSafeUser } from "@/context/user-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { Home, LogOut } from "lucide-react";
+import { Home, List, LogOut, User } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import DefaultAvatar from "public/images/default-avatar.png";
@@ -14,11 +14,13 @@ interface Props {
   theme: string;
   className?: string;
   forceClickDropdown?: boolean;
+  variant?: "desktop" | "profile";
 }
 
-const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDropdown }) => {
+const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDropdown, variant }) => {
   const isDark = theme === Theme.DARK;
   const { user } = useSafeUser();
+
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -130,6 +132,26 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
                 "bg-[#eeded7] text-zinc-800": !isDark,
               })}
             >
+              {variant === "desktop" ? (
+                <>
+              <DropdownItem
+                href="/profile/dashboard"
+                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+              >
+                <User className="h-5 w-5" />
+                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">PROFILE</span>
+              </DropdownItem>
+
+              <DropdownItem
+                href="/dashboard"
+                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+              >
+                <List className="h-5 w-5" />
+                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">YOUR LISTS</span>
+              </DropdownItem>
+                </>
+              ) : (
+                <>
               <DropdownItem
                 href="/dashboard"
                 className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
@@ -137,6 +159,9 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
                 <Home className="h-5 w-5" />
                 <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">BACK HOME</span>
               </DropdownItem>
+                </>
+              )}
+
 
               <button
                 onClick={() => {

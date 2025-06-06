@@ -5,6 +5,13 @@ import {
   ALLOWED_ROLES_FOR_PROJECT_STATUS,
 } from "@/constants";
 
+const ROLES = [  ALLOWED_ROLES_FOR_PROGRESS,
+  ALLOWED_ROLES_FOR_PROGRESS_NOTES,
+  ALLOWED_ROLES_FOR_PROJECT_CATEGORIES,
+  ALLOWED_ROLES_FOR_PROJECT_STATUS,]
+
+export type RoleName = keyof typeof ROLES
+
 export const canEditProgressNotes = (roleId: string | null | undefined) =>
   !!roleId && ALLOWED_ROLES_FOR_PROGRESS_NOTES.includes(roleId);
 
@@ -16,3 +23,17 @@ export const canEditStatus = (roleId: string | null | undefined) =>
 
 export const canEditCategories = (roleId: string | null | undefined) =>
   !!roleId && ALLOWED_ROLES_FOR_PROJECT_CATEGORIES.includes(roleId);
+
+
+export function hasPermission(userRole: string | null | undefined, allowedRoles: string[]): boolean {
+  if (!userRole) return false
+  return allowedRoles.includes(userRole)
+}
+
+// Check if a role has at least the required level
+export function hasRoleLevel(userRole: string | null | undefined, minimumRole: RoleName): boolean {
+  if (!userRole) return false
+  const userLevel = ROLES[userRole as RoleName] || 0
+  const requiredLevel = ROLES[minimumRole]
+  return userLevel >= requiredLevel
+}

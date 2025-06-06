@@ -1,10 +1,11 @@
-import { logout } from "@/app/actions/auth-actions";
+"use client";
+
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { ChevronDown, List, LogOut, User } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React from "react";
+import { usePathname } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 import DropdownItem from "../menu-dropdown-item";
 
 interface Props {
@@ -12,14 +13,53 @@ interface Props {
 }
 
 const DesktopMenu: React.FC<Props> = ({ theme }) => {
-  // const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
+  const pathname = usePathname();
 
-  const handleLogout = async () => {
-    await logout();
-    // setIsLoggingOut(false);
+  useEffect(() => {
+    console.log("pathname:", pathname);
+  }, [pathname]);
 
-    router.push("/");
+  const isPathMatch = (menuKey: string): boolean => {
+    const pathMap: Record<string, string[]> = {
+      home: ["/dashboard"],
+      getStarted: ["/create-project", "/share-idea", "/report"],
+      about: ["/about", "/about/what-is-it", "/about/faq", "/about/contact"],
+      // Add more if needed
+    };
+    const paths = pathMap[menuKey] || [];
+    return paths.some((p) => pathname.startsWith(p));
+  };
+  // const handleLogout = async () => {
+  //   await logout();
+  //   router.push("/");
+  // };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const getLabelStyle = (menuKey: string) =>{
+    const base =
+      "text-sm font-medium transition-colors duration-200 sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg";
+  
+    const isActive = openMenu === menuKey || isPathMatch(menuKey);
+  
+    const active = "text-[#FF5C00]";
+    const inactive =
+      theme === Theme.LIGHT
+        ? "text-zinc-700 group-hover:text-[#FF5C00]"
+        : "text-zinc-200 group-hover:text-[#FF5C00]";
+  
+    return cn(base, isActive ? active : inactive);
   };
 
   return (
@@ -29,208 +69,150 @@ const DesktopMenu: React.FC<Props> = ({ theme }) => {
         "text-zinc-200": theme === Theme.DARK,
       })}
     >
-      <ul className="flex items-center justify-center whitespace-nowrap">
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="/" className="group relative flex items-center space-x-2">
-            <span className="text-sm font-medium transition-colors duration-200 group-hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              GET STARTED
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:rotate-180 group-hover:text-[#FF5C00]" />
-          </Link>
-          <div className="pointer-events-none absolute top-8 z-[1] opacity-0 transition-all duration-200 focus-within:pointer-events-auto focus-within:top-8 focus-within:opacity-100 group-hover:pointer-events-auto group-hover:top-8 group-hover:opacity-100 sm:top-4 sm:focus-within:top-4 sm:group-hover:top-4 md:top-6 md:focus-within:top-6 md:group-hover:top-6 lg:top-10 lg:focus-within:top-10 lg:group-hover:top-10 xl:top-14 xl:focus-within:top-16 xl:group-hover:top-16">
-            <div
-              className={cn("flex flex-col rounded-md shadow-lg", {
-                "bg-[#443d3a]": theme === Theme.DARK,
-                "bg-[#eeded7]": theme === Theme.LIGHT,
-              })}
-            >
-              {/* min-w-[200px] sm:min-w-[180px] lg:min-w-[220px] */}
-              <DropdownItem href="/create-project" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">CREATE PROJECT</span>
-              </DropdownItem>
-
-              <DropdownItem href="/share-idea" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">SHARE IDEA</span>
-              </DropdownItem>
-
-              <DropdownItem href="/report" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">REPORT ISSUE</span>
-              </DropdownItem>
-            </div>
-          </div>
-        </li>
-
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="/asip-by-starck" className="group relative flex items-center">
-            <span className="text-sm font-medium transition-colors duration-200 hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              ASIP BY STARCK
-            </span>
+      <ul
+        className="flex items-center justify-center gap-x-5 whitespace-nowrap md:gap-x-5 lg:gap-x-6 xl:gap-x-7"
+        ref={menuRef}
+      >
+        {/* HOME (non-dropdown) */}
+        <li className="group relative">
+          <Link href="/dashboard" className="group relative flex items-center">
+            <span className={getLabelStyle("home")}>HOME</span>
           </Link>
         </li>
 
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="/stake-starck" className="group relative flex items-center">
-            <span className="text-sm font-medium transition-colors duration-200 group-hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              STAKE STARCK
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:rotate-180 group-hover:text-[#FF5C00]" />
-          </Link>
-
-          <div className="pointer-events-none absolute top-8 z-[1] opacity-0 transition-all duration-200 focus-within:pointer-events-auto focus-within:top-8 focus-within:opacity-100 group-hover:pointer-events-auto group-hover:top-8 group-hover:opacity-100 sm:top-4 sm:focus-within:top-4 sm:group-hover:top-4 md:top-6 md:focus-within:top-6 md:group-hover:top-6 lg:top-10 lg:focus-within:top-10 lg:group-hover:top-10 xl:top-14 xl:focus-within:top-16 xl:group-hover:top-16">
-            <div
-              className={cn("flex flex-col rounded-md shadow-lg", {
-                "bg-[#443d3a]": theme === Theme.DARK,
-                "bg-[#eeded7]": theme === Theme.LIGHT,
-              })}
-            >
-              <DropdownItem href="/stake-packages" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">STAKE PACKAGES</span>
-              </DropdownItem>
-            </div>
-          </div>
-        </li>
-
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="/documents" className="group relative flex items-center">
-            <span className="text-sm font-medium transition-colors duration-200 group-hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              DOCUMENTS
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:rotate-180 group-hover:text-[#FF5C00]" />
-          </Link>
-          <div className="pointer-events-none absolute top-8 z-[1] opacity-0 transition-all duration-200 focus-within:pointer-events-auto focus-within:top-8 focus-within:opacity-100 group-hover:pointer-events-auto group-hover:top-8 group-hover:opacity-100 sm:top-4 sm:focus-within:top-4 sm:group-hover:top-4 md:top-6 md:focus-within:top-6 md:group-hover:top-6 lg:top-10 lg:focus-within:top-10 lg:group-hover:top-10 xl:top-14 xl:focus-within:top-16 xl:group-hover:top-16">
-            <div
-              className={cn("flex flex-col rounded-md shadow-lg", {
-                "bg-[#443d3a]": theme === Theme.DARK,
-                "bg-[#eeded7]": theme === Theme.LIGHT,
-              })}
-            >
-              <DropdownItem href="https://starck.gitbook.io/starck-whitepaper-v.3.0" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">WHITEPAPER</span>
-              </DropdownItem>
-
-              <DropdownItem href="/#roadmap" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">ROADMAP</span>
-              </DropdownItem>
-
-              <DropdownItem
-                href="https://bscscan.com/address/0xa35b5c783117e107644056f5d39faa468e9d8d47#code"
-                className="px-3 py-1.5"
-              >
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">SMART CONTRACT</span>
-              </DropdownItem>
-
-              <DropdownItem href="/audits" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">AUDITS</span>
-              </DropdownItem>
-            </div>
-          </div>
-        </li>
-
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="" className="group relative flex items-center">
-            <span className="text-sm font-medium transition-colors duration-200 group-hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              PROGRAM
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:rotate-180 group-hover:text-[#FF5C00]" />
-          </Link>
-
-          <div className="pointer-events-none absolute top-8 z-[1] opacity-0 transition-all duration-200 focus-within:pointer-events-auto focus-within:top-8 focus-within:opacity-100 group-hover:pointer-events-auto group-hover:top-8 group-hover:opacity-100 sm:top-4 sm:focus-within:top-4 sm:group-hover:top-4 md:top-6 md:focus-within:top-6 md:group-hover:top-6 lg:top-10 lg:focus-within:top-10 lg:group-hover:top-10 xl:top-14 xl:focus-within:top-16 xl:group-hover:top-16">
-            <div
-              className={cn("flex flex-col rounded-md shadow-lg", {
-                "bg-[#443d3a]": theme === Theme.DARK,
-                "bg-[#eeded7]": theme === Theme.LIGHT,
-              })}
-            >
-              <DropdownItem href="/ambassador" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">AMBASSADOR</span>
-              </DropdownItem>
-
-              <DropdownItem href="/affiliate" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">AFFILIATE</span>
-              </DropdownItem>
-
-              <DropdownItem href="/partners" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">PARTNERS</span>
-              </DropdownItem>
-            </div>
-          </div>
-        </li>
-
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="/news" className="group relative flex items-center">
-            <span className="text-sm font-medium transition-colors duration-200 group-hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              ABOUT
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:rotate-180 group-hover:text-[#FF5C00]" />
-          </Link>
-
-          <div className="pointer-events-none absolute top-8 z-[1] opacity-0 transition-all duration-200 focus-within:pointer-events-auto focus-within:top-8 focus-within:opacity-100 group-hover:pointer-events-auto group-hover:top-8 group-hover:opacity-100 sm:top-4 sm:focus-within:top-4 sm:group-hover:top-4 md:top-6 md:focus-within:top-6 md:group-hover:top-6 lg:top-10 lg:focus-within:top-10 lg:group-hover:top-10 xl:top-14 xl:focus-within:top-16 xl:group-hover:top-16">
-            <div
-              className={cn("flex flex-col rounded-md shadow-lg", {
-                "bg-[#443d3a]": theme === Theme.DARK,
-                "bg-[#eeded7]": theme === Theme.LIGHT,
-              })}
-            >
-              <DropdownItem href="/media" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">What is CivilDev</span>
-              </DropdownItem>
-
-              <DropdownItem href="/media" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">FAQ</span>
-              </DropdownItem>
-
-              <DropdownItem href="/media" className="px-3 py-1.5">
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">CONTACT</span>
-              </DropdownItem>
-            </div>
-          </div>
-        </li>
-
-        <li className="group relative p-1 sm:p-0.5 md:p-1 lg:p-4 xl:p-5">
-          <Link href="/profile" className="group relative flex items-center">
-            <span className="text-sm font-medium transition-colors duration-200 group-hover:text-[#FF5C00] sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">
-              PROFILE
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:rotate-180 group-hover:text-[#FF5C00]" />
-          </Link>
-          <div
-            className={cn(
-              "pointer-events-none absolute top-8 z-[1] opacity-0 transition-all duration-200 focus-within:pointer-events-auto focus-within:top-8 focus-within:opacity-100 group-hover:pointer-events-auto group-hover:top-8 group-hover:opacity-100 sm:top-4 sm:focus-within:top-4 sm:group-hover:top-4 md:top-6 md:focus-within:top-6 md:group-hover:top-6 lg:top-10 lg:focus-within:top-10 lg:group-hover:top-10 xl:top-14 xl:focus-within:top-16 xl:group-hover:top-16",
-              "right-0",
-            )}
+        {/* GET STARTED */}
+        <li
+          className="group relative"
+          onMouseEnter={() => setOpenMenu("getStarted")}
+          onMouseLeave={() => setOpenMenu(null)}
+        >
+          <button
+            onClick={() => setOpenMenu((prev) => (prev === "getStarted" ? null : "getStarted"))}
+            className="group relative flex items-center space-x-[2px] focus:outline-none"
           >
-            <div
-              className={cn("flex flex-col rounded-md shadow-lg", {
-                "bg-[#443d3a]": theme === Theme.DARK,
-                "bg-[#eeded7]": theme === Theme.LIGHT,
+            <span className={getLabelStyle("getStarted")}>GET STARTED</span>
+            <ChevronDown
+              className={cn("ml-2 h-4 w-4 transition-transform duration-300", {
+                "rotate-180 text-[#FF5C00]": openMenu === "getStarted",
+                "text-zinc-700 group-hover:text-[#FF5C00]": openMenu !== "getStarted" && theme === Theme.LIGHT,
+                "text-zinc-200 group-hover:text-[#FF5C00]": openMenu !== "getStarted" && theme === Theme.DARK,
               })}
-            >
-              <DropdownItem href="/profile/dashboard" className="flex items-center justify-between px-4 py-2">
-                <User className="mr-2 h-5 w-5" />
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">ACCOUNT</span>
-              </DropdownItem>
+            />
+          </button>
 
-              <DropdownItem
-                href="/your-list"
-                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+          {openMenu === "getStarted" && (
+            <div className="absolute top-1 z-[1] sm:top-1 md:top-4 lg:top-5 xl:top-6">
+              <div
+                className={cn("flex flex-col rounded-md shadow-lg", {
+                  "bg-[#443d3a]": theme === Theme.DARK,
+                  "bg-[#eeded7]": theme === Theme.LIGHT,
+                })}
               >
-                <List className="mr-2 h-5 w-5" />
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">YOUR LISTS</span>
-              </DropdownItem>
-
-              <button
-                onClick={(e) => {
-                  e.currentTarget.blur();
-                  handleLogout();
-                }}
-                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
-              >
-                <LogOut className="ml-1 mr-2 h-5 w-5" />
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">SIGN OUT</span>
-              </button>
+                <DropdownItem href="/create-project" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">CREATE PROJECT</span>
+                </DropdownItem>
+                <DropdownItem href="/share-idea" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">SHARE IDEA</span>
+                </DropdownItem>
+                <DropdownItem href="/report" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">REPORT ISSUE</span>
+                </DropdownItem>
+              </div>
             </div>
-          </div>
+          )}
         </li>
+
+        {/* ABOUT */}
+        <li className="group relative" onMouseEnter={() => setOpenMenu("about")} onMouseLeave={() => setOpenMenu(null)}>
+          <button
+            onClick={() => setOpenMenu((prev) => (prev === "about" ? null : "about"))}
+            className="group relative flex items-center space-x-[2px] focus:outline-none"
+          >
+            <span className={getLabelStyle("about")}>ABOUT</span>
+            <ChevronDown
+              className={cn("ml-2 h-4 w-4 transition-transform duration-300", {
+                "rotate-180 text-[#FF5C00]": openMenu === "about",
+                "text-zinc-700 group-hover:text-[#FF5C00]": openMenu !== "about" && theme === Theme.LIGHT,
+                "text-zinc-200 group-hover:text-[#FF5C00]": openMenu !== "about" && theme === Theme.DARK,
+              })}
+            />
+          </button>
+
+          {openMenu === "about" && (
+            <div className="absolute top-5 z-[1] sm:top-1 md:top-4 lg:top-5 xl:top-6">
+              <div
+                className={cn("flex flex-col rounded-md shadow-lg", {
+                  "bg-[#443d3a]": theme === Theme.DARK,
+                  "bg-[#eeded7]": theme === Theme.LIGHT,
+                })}
+              >
+                <DropdownItem href="/about/what-is-it" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">What is CivilDev</span>
+                </DropdownItem>
+                <DropdownItem href="/about/faq" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">FAQ</span>
+                </DropdownItem>
+                <DropdownItem href="/about/contact" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">CONTACT</span>
+                </DropdownItem>
+              </div>
+            </div>
+          )}
+        </li>
+
+        {/* PROFILE
+        <li
+          className="group relative "
+          onMouseEnter={() => setOpenMenu("profile")}
+          onMouseLeave={() => setOpenMenu(null)}
+        >
+          <button
+            onClick={() => setOpenMenu((prev) => (prev === "profile" ? null : "profile"))}
+            className="group relative flex items-center space-x-[2px] focus:outline-none"
+          >
+            <span className={getLabelStyle("profile")}>PROFILE</span>
+            <ChevronDown
+              className={cn("ml-2 h-4 w-4 transition-transform duration-300", {
+                "rotate-180 text-[#FF5C00]": openMenu === "profile",
+                "text-zinc-700 group-hover:text-[#FF5C00]": openMenu !== "profile" && theme === Theme.LIGHT,
+                "text-zinc-200 group-hover:text-[#FF5C00]": openMenu !== "profile" && theme === Theme.DARK,
+              })}
+            />
+          </button>
+
+          {openMenu === "profile" && (
+            <div className="absolute right-0 top-5 z-[1] sm:top-1 md:top-4 lg:top-5 xl:top-6">
+              <div
+                className={cn("flex flex-col rounded-md shadow-lg", {
+                  "bg-[#443d3a]": theme === Theme.DARK,
+                  "bg-[#eeded7]": theme === Theme.LIGHT,
+                })}
+              >
+                <DropdownItem href="/profile/dashboard" className="flex items-center justify-between px-4 py-2">
+                  <User className="mr-2 h-5 w-5" />
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">ACCOUNT</span>
+                </DropdownItem>
+                <DropdownItem
+                  href="/your-list"
+                  className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+                >
+                  <List className="mr-2 h-5 w-5" />
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">YOUR LISTS</span>
+                </DropdownItem>
+                <button
+                  onClick={(e) => {
+                    e.currentTarget.blur();
+                    handleLogout();
+                  }}
+                  className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+                >
+                  <LogOut className="ml-1 mr-2 h-5 w-5" />
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">SIGN OUT</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </li> */}
       </ul>
     </nav>
   );

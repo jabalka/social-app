@@ -22,6 +22,7 @@ interface ProjectDetailsDialogProps {
   onClose: () => void;
   refreshProjects: () => void;
   theme: string;
+
 }
 
 const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
@@ -31,6 +32,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   onClose,
   refreshProjects,
   theme,
+
 }) => {
   const isAuthor = user.id === project.author.id;
   const isEditable = project.status === "PROPOSED";

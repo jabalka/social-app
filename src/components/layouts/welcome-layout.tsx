@@ -9,6 +9,7 @@ const WelcomeLayout: React.FC<PropsWithChildren> = ({ children }) => {
 
   return (
     <>
+
       <div className="flex min-h-screen flex-col">
         <WelcomeHeader theme={theme} />
 
