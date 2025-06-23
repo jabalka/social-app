@@ -2,13 +2,14 @@
 
 import { useSocketContext } from "@/context/socket-context";
 import { useUserDialog } from "@/context/user-dialog-context";
-import { useConversations } from "@/hooks/use-Conversations";
 import { initializeSocket } from "@/lib/socket-client";
 import { AuthUser } from "@/models/auth";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import ChatWindow from "./messaging/chat-window";
 import UserDetailsDialog from "./user-details";
+import { useConversations } from "@/hooks/use-conversations";
+
 
 interface UserInteractionDialogProps {
   currentUser: AuthUser;

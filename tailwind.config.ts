@@ -297,7 +297,7 @@ export default {
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
         },
-        snakeBorderHover: {
+        snakeBorderHoverDark: {
           "0%": {
             // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
             boxShadow: "inset 0 0 0 2px transparent",
@@ -340,6 +340,50 @@ export default {
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
         },
+        snakeBorderHoverLight: {
+          "0%": {
+            // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
+            boxShadow: "inset 0 0 0 2px transparent",
+            //             Top-left: `0 0`
+            //             Top-right: `100% 0`
+            //             Bottom-right: `100% 100%`
+            //             Bottom-left: `0 100%`
+            clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+          },
+          "10%": {
+            boxShadow: "inset 0 0 0 2px #ffffff, 0 0 10px 2px #ffffff",
+            clipPath: "polygon(0 0, 30% 0, 0 0, 0 0)",
+          },
+          "20%": {
+            clipPath: "polygon(0 0, 100% 0, 0 0, 0 0)",
+          },
+          "30%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)",
+          },
+          "40%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 0)",
+          },
+          "50%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "60%": {
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "70%": {
+            clipPath: "polygon(100% 0, 100% 0, 100% 100%, 0 100%)",
+          },
+          "80%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
+          },
+          "90%": {
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+          "100%": {
+            boxShadow: "inset 0 0 0 2px transparent",
+            clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+          },
+        },
+
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -406,7 +450,8 @@ export default {
         snakeBorderGreen1s: "snakeBorderGreen1s 1s ease-in-out infinite",
         snakeBorderPink1s: "snakeBorderPink1s 1s ease-in-out infinite",
         snakeBorderViolet: "snakeBorderViolet 1s ease-in-out infinite",
-        snakeBorderHover: "snakeBorderHover 1.5s ease-in-out infinite",
+        snakeBorderHoverDark: "snakeBorderHoverDark 1.5s ease-in-out infinite",
+        snakeBorderHoverLight: "snakeBorderHoverLight 1.5s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         rippleEffect: "rippleEffect 600ms linear",

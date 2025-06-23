@@ -114,11 +114,18 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
               className="h-10 w-10 rounded-full object-cover"
             />
           </div>
+          {/* 
+          {
+                "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+                "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+              }
+               */}
           <span
-            className={cn("pointer-events-none absolute inset-0 rounded-full", {
-              "group-hover:animate-snakeBorderHover": true,
-              // click animation for mobile
-              "animate-snakeBorderHover": forceClickDropdown && dropdownOpen,
+            className={cn("pointer-events-none absolute inset-0 rounded-full",     {
+              "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+              "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+              "animate-snakeBorderHoverLight": forceClickDropdown && dropdownOpen && theme === Theme.LIGHT,
+              "animate-snakeBorderHoverDark": forceClickDropdown && dropdownOpen && theme === Theme.DARK,
             })}
           />
         </div>

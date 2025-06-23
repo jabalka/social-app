@@ -54,7 +54,10 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, the
         </div>
         <span
           key={animationKey}
-          className="pointer-events-none absolute -inset-[2px] rounded-3xl group-hover:animate-snakeBorderHover"
+          className={cn("pointer-events-none absolute -inset-[2px] rounded-3xl", {
+            "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+            "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+          })}
         />
       </motion.div>
     </motion.div>

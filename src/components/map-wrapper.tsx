@@ -5,7 +5,6 @@ import type React from "react"
 import { useEffect, useState } from "react"
 
 // Import types only
-import type { FC } from "react"
 
 interface MapWrapperProps {
   position: [number, number]
@@ -13,7 +12,7 @@ interface MapWrapperProps {
 }
 
 // This component is a wrapper that ensures the map is only loaded client-side
-const MapWrapper: FC<MapWrapperProps> = (props) => {
+const MapWrapper: React.FC<MapWrapperProps> = (props) => {
   const [isMounted, setIsMounted] = useState(false)
   const [MapComponent, setMapComponent] = useState<React.ComponentType<MapWrapperProps> | null>(null)
 

@@ -2,6 +2,7 @@
 
 import FeatureCard from "@/components/PAGE-what-is-it/feature-card";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
+import { Theme } from "@/types/theme.enum";
 import { BarChart3, Bell, FileText, Landmark, Lightbulb, MapPin, MessageCircle, Users } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -103,7 +104,12 @@ const WhatIsIt: React.FC = () => {
           </p>
           <span
             key={animationKey}
-            className="pointer-events-none absolute -inset-[0px] animate-snakeBorderHover rounded-3xl"
+            className={
+              `pointer-events-none absolute -inset-[0px] rounded-3xl ` +
+              (theme === Theme.LIGHT
+                ? "animate-snakeBorderHoverLight ring-2 ring-gray-300" // Tailwind gray-300
+                : "animate-snakeBorderHoverDark")
+            }
           />
         </div>
       </div>

@@ -112,7 +112,7 @@ NeonPostSQL - for DB in AWS
     -npx prisma studio   - run the prisma 
     
 ## WebSocke IO launch:
- -node --loader ts-node/esm src/server/index.ts
+ node --loader ts-node/esm src/server/index.ts
 
 ## Access the user via user-context everywhere on client side
 
