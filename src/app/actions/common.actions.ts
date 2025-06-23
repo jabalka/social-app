@@ -23,7 +23,7 @@ export const findUserByIdentifier = async (identifier: string) => {
       username: true,
       name: true,
       image: true,
-      posts: true,
+      ideas: true,
       likes: true,
       comments: true,
       projects: true,

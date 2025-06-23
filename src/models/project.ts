@@ -7,5 +7,7 @@ export interface ProjectUpdateInput {
   progress?: number;
   progressNotes?: string;
   status?: string;
-  categories?: { set: { id: string }[] };
+  categories?: string[]; 
+  newImageUrls?: string[];
+  deletedImageUrls?: string[];
 }

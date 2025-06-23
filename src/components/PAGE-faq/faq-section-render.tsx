@@ -41,7 +41,8 @@ const FAQSectionComponent: React.FC = () => {
         items.forEach((item, index) => {
           const title = item.querySelector("h3");
           const button = item.querySelector("button");
-          const content = item.nextElementSibling as HTMLElement;
+          const content = item.querySelector(".faq-answer") as HTMLElement;
+
 
           setTimeout(() => {
             content?.querySelectorAll("a")?.forEach((link) => {

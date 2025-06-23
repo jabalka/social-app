@@ -41,6 +41,7 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({
   user,
   projects,
   refreshProjects,
+
 }) => {
   const containerId = useId(); // generates unique ID per component instance
   const mapRef = useRef<L.Map | null>(null);

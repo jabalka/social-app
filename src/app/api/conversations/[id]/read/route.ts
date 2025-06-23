@@ -1,37 +1,16 @@
-// src/app/api/conversations/[id]/read/route.ts
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { markConversationAsRead } from "@/api";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
   request: Request,
-  context: { params: Promise<{ id: string }> } // Note the Promise wrapper
+  context: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { id } = await context.params;
+  const result = await markConversationAsRead(id);
+
+  if (result.error) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const { id } = await context.params; // Await the params
-
-  try {
-    const updated = await prisma.message.updateMany({
-      where: {
-        conversationId: id, // Use the awaited id
-        senderId: { not: session.user.id },
-        readAt: null,
-      },
-      data: {
-        readAt: new Date(),
-      },
-    });
-
-    return NextResponse.json({ updated: updated.count });
-  } catch (error) {
-    console.error("[PATCH_READ_CONVERSATION_ERROR]", error);
-    return NextResponse.json(
-      { error: "Failed to mark as read" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(result.data, { status: result.status });
 }

@@ -2,7 +2,7 @@
 
 import { useSocketContext } from "@/context/socket-context";
 import { useUserDialog } from "@/context/user-dialog-context";
-import { useConversations } from "@/hooks/use-Conversations";
+import { useConversations } from "@/hooks/use-conversations";
 import { AuthUser } from "@/models/auth";
 import { FullConversation } from "@/models/message";
 import { formatDistanceToNow } from "date-fns";

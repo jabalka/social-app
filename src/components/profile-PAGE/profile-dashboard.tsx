@@ -16,7 +16,9 @@ import GlowingGreenButton from "../glow-green-button";
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
   const { user, setUser } = useSafeUser();
-  const initialUserRef = useRef(user);
+
+  const initialUserRef = useRef<typeof user | null>(null);
+const [hasInitialized, setHasInitialized] = useState(false);
 
   const matchedRole = USER_ROLES.find((r) => r.id === user?.role?.id);
 
@@ -68,11 +70,34 @@ const ProfileDashboard: React.FC = () => {
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
+    if (user && !hasInitialized) {
+      initialUserRef.current = user;
+      setNameInput(user.name ?? "");
+      setUsernameInput(user.username ?? "");
+      setHasInitialized(true);
+    }
+  }, [user, hasInitialized]);
+
+  useEffect(() => {
+    if (!hasInitialized || !initialUserRef.current) return;
+  
+    const nameChanged = nameInput.trim() !== (initialUserRef.current.name ?? "").trim();
+    const usernameChanged = usernameInput.trim() !== (initialUserRef.current.username ?? "").trim();
     const imageChanged = !!selectedImage;
-    const nameChanged = nameInput.trim() !== initialUserRef.current?.name?.trim();
-    const usernameChanged = usernameInput.trim() !== initialUserRef.current?.username?.trim();
+  
     setHasUnsavedChanges(nameChanged || usernameChanged || imageChanged);
-  }, [nameInput, usernameInput, selectedImage]);
+  }, [nameInput, usernameInput, selectedImage, hasInitialized]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const validateName = (value: string) => {
     const cleaned = value.replace(/\s+/g, " ").trim();
@@ -183,7 +208,10 @@ const ProfileDashboard: React.FC = () => {
               </div>
               <span
                 className={cn(
-                  "pointer-events-none absolute -inset-[5px] rounded-full group-hover:animate-snakeBorderHover",
+                  "pointer-events-none absolute -inset-[5px] rounded-full",{
+                    "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+                    "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+                  }
                 )}
               />
             </div>
@@ -498,7 +526,7 @@ const ProfileDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        {hasUnsavedChanges && (
+        {hasInitialized && hasUnsavedChanges && (
           <div className="flex justify-center gap-4 pt-8">
             <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
               <button

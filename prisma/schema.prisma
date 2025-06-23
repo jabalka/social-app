@@ -8,10 +8,10 @@ datasource db {
 }
 
 model User {
-  id                      String    @id @default(cuid())
+  id                      String              @id @default(cuid())
   name                    String?
-  email                   String?   @unique
-  username                String?   @unique
+  email                   String?             @unique
+  username                String?             @unique
   hashedPassword          String?
   emailVerified           DateTime?
   verificationToken       String?
@@ -19,19 +19,41 @@ model User {
   resetToken              String?
   resetTokenExpiry        DateTime?
   image                   String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
   roleId                  String?
   accounts                Account[]
-  comments                Comment[] @relation("UserComments")
-  likes                   Like[]    @relation("UserLikes")
-  posts                   Post[]    @relation("UserPosts")
-  projects                Project[] @relation("UserProjects")
+  comments                Comment[]           @relation("UserComments")
+  likes                   Like[]              @relation("UserLikes")
+  ideas                   Idea[]              @relation("UserIdeas")
+  projects                Project[]           @relation("UserProjects")
   sessions                Session[]
-  role                    Role?     @relation(fields: [roleId], references: [id])
-
+  role                    Role?               @relation(fields: [roleId], references: [id])
   conversations           Conversation[]
-  messages                Message[] 
+  messages                Message[]
+  ideaCollaborations      IdeaCollaboration[]
+}
+
+model Idea {
+  id            String              @id @default(cuid())
+  title         String
+  content       String
+  authorId      String
+  author        User                @relation("UserIdeas", fields: [authorId], references: [id])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  comments      Comment[]           @relation("IdeaComments")
+  likes         Like[]              @relation("IdeaLikes")
+  collaborators IdeaCollaboration[]
+  allowCollab   Boolean             @default(true)
+  isConverted   Boolean             @default(false)
+  projectId     String?             @unique
+  project       Project?            @relation(fields: [projectId], references: [id])
+    postcode      String?
+  latitude      Float?
+  longitude     Float?
+  what3words    String?
+  categories    Category[]          @relation("IdeaCategories")
 }
 
 model Project {
@@ -52,42 +74,34 @@ model Project {
   author        User           @relation("UserProjects", fields: [authorId], references: [id])
   images        ProjectImage[] @relation("ProjectImages")
   categories    Category[]     @relation("ProjectCategories")
+  idea          Idea? // Optional Idea association
+  what3words    String? 
 }
 
-model Category {
-  id       String    @id
-  name     String    @unique
-  icon     String
-  projects Project[] @relation("ProjectCategories")
+model IdeaCollaboration {
+  id        String              @id @default(cuid())
+  ideaId    String
+  userId    String
+  status    CollaborationStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
 }
 
-model ProjectImage {
-  id        String   @id @default(cuid())
-  url       String
-  projectId String
-  createdAt DateTime @default(now())
-  project   Project  @relation("ProjectImages", fields: [projectId], references: [id], onDelete: Cascade)
-}
-
-model Post {
-  id        String    @id @default(cuid())
-  title     String
-  content   String
-  authorId  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  comments  Comment[]
-  likes     Like[]
-  author    User      @relation("UserPosts", fields: [authorId], references: [id])
-
-  @@index([createdAt])
+enum CollaborationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Comment {
   id        String    @id @default(cuid())
   content   String
   authorId  String
-  postId    String?
+  ideaId    String?
   projectId String?
   parentId  String?
   createdAt DateTime  @default(now())
@@ -95,33 +109,51 @@ model Comment {
   author    User      @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("CommentReplies")
-  post      Post?     @relation(fields: [postId], references: [id])
   project   Project?  @relation(fields: [projectId], references: [id])
+  idea      Idea?     @relation("IdeaComments", fields: [ideaId], references: [id])
   likes     Like[]
+  isVisible Boolean   @default(true)
+  likeCount Int       @default(0)
 
   @@index([parentId, createdAt])
-  isVisible Boolean @default(true)
-  likeCount Int @default(0)
 }
 
 model Like {
   id        String   @id @default(cuid())
-  postId    String?
+  ideaId    String?
   projectId String?
   commentId String?
   userId    String
   createdAt DateTime @default(now())
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  post      Post?    @relation(fields: [postId], references: [id])
-  project   Project? @relation(fields: [projectId], references: [id])
-  user      User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([postId, userId])
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  idea    Idea?    @relation("IdeaLikes", fields: [ideaId], references: [id], onDelete: Cascade)
+  user    User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
   @@unique([projectId, userId])
   @@unique([commentId, userId])
-  @@index([postId])
+  @@index([ideaId])
   @@index([projectId])
   @@index([commentId])
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  url       String
+  projectId String
+  createdAt DateTime @default(now())
+
+  project Project @relation("ProjectImages", fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id       String    @id
+  name     String    @unique
+  icon     String
+  projects Project[] @relation("ProjectCategories")
+  ideas    Idea[]    @relation("IdeaCategories")
 }
 
 model Account {
@@ -167,7 +199,7 @@ model VerificationToken {
 
 model Conversation {
   id        String    @id @default(cuid())
-  users     User[]   
+  users     User[]
   messages  Message[] @relation("ConversationMessages")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -180,12 +212,12 @@ model Message {
   senderId       String
   conversationId String
   createdAt      DateTime  @default(now())
-    updatedAt      DateTime     @updatedAt
+  updatedAt      DateTime  @updatedAt
   readAt         DateTime?
-    deliveredAt    DateTime?  
+  deliveredAt    DateTime?
 
-  sender         User         @relation(fields: [senderId], references: [id])
-  conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id],  onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+  conversation Conversation @relation("ConversationMessages", fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
 enum ProjectStatus {

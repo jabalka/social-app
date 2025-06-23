@@ -1,36 +1,12 @@
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { updateUserProfile } from "@/api";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const result = await updateUserProfile(req);
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (result.error) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const { name, username, imageUrl } = await req.json();
-
-  try {
-    const updatedUser = await prisma.user.update({
-  where: { id: session.user.id },
-  data: {
-    name: name ?? undefined,
-    username: username ?? undefined,
-    image: imageUrl ?? undefined,
-  },
-  include: {
-    comments: true,
-    likes: true,
-    posts: true,
-    projects: true,
-    role: true,
-  },
-    });
-
-    return NextResponse.json(updatedUser);
-  } catch (error) {
-    console.error("[USER_UPDATE_ERROR]", error);
-    return NextResponse.json({ error: "Profile update failed" }, { status: 500 });
-  }
+  return NextResponse.json(result.data, { status: result.status });
 }

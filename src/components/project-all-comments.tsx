@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useUserDialog } from "@/context/user-dialog-context";
+import {  useUserDialog } from "@/context/user-dialog-context";
 import { AuthUser } from "@/models/auth";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
@@ -138,7 +138,10 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
         )}
         <div className="flex-1">
           <div className="text-sm font-semibold">
-            <button onClick={() => openUserDetails(comment.author.id)} className="text-blue-600 hover:underline">
+            <button onClick={() => {
+              console.log("project-all-comments ln142., button WORKS!")
+              openUserDetails(comment.author.id)}
+              } className="text-blue-600 hover:underline">
               {comment.author?.name || comment.author?.email || "Unknown User"}
             </button>
           </div>
@@ -171,6 +174,7 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
 
   return (
     <>
+
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent
           className={cn("max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6", {
@@ -222,6 +226,7 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
         }}
         currentUser={user}
       /> */}
+
     </>
   );
 };
