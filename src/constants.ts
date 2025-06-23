@@ -57,3 +57,12 @@ export const MESSAGES = {
   INSUFFICIENT_PERMISSIONS: "Insufficient permissions to perform this action",
 
 }
+
+
+export const radiusOptions = [
+  { label: "5 miles", value: 5 * 1609 },         // 8045 meters
+  { label: "10–25 miles", value: 25 * 1609 },          // 40225 meters
+  { label: "50 miles", value: 50 * 1609 },       // 80450 meters
+  { label: "+50 miles", value: 100 * 1609 },       // 160900 meters
+];
+

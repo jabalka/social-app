@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CollaborationStatus } from "@prisma/client";
+import { supabase } from "../supabase";
 
 type IdeaIdRow = { id: string }
 
@@ -84,6 +85,30 @@ export async function createIdea(
       what3words,
     },
   });
+}
+
+export async function uploadIdeaImage(formData: FormData, userId: string) {
+  const file = formData.get("image") as File;
+  if (!file) {
+    return { error: "Missing image or ideaId", status: 400 };
+  }
+
+  const ideaId = formData.get("ideaId")?.toString();
+  if (!ideaId) {
+    return { error: "Missing ideaId", status: 400 };
+  }
+
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}.${fileExt}`;
+  const filePath = `user-${userId}/idea-${ideaId}/${fileName}`;
+
+  const { error } = await supabase.storage.from("ideas-images").upload(filePath, file);
+  if (error) {
+    return { error: error.message, status: 500 };
+  }
+
+  const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ideas-images/${filePath}`;
+  return { data: { url: imageUrl }, status: 200 };
 }
 
 export async function updateIdea(

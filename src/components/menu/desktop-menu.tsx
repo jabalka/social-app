@@ -26,8 +26,9 @@ const DesktopMenu: React.FC<Props> = ({ theme }) => {
     const pathMap: Record<string, string[]> = {
       home: ["/dashboard"],
       getStarted: ["/create-project", "/share-idea", "/report"],
+      browse: ["/browse/projects-list", "/browse/ideas-list", "/browse/issues-list"],
       about: ["/about", "/about/what-is-it", "/about/faq", "/about/contact"],
-      // Add more if needed
+
     };
     const paths = pathMap[menuKey] || [];
     return paths.some((p) => pathname.startsWith(p));
@@ -116,6 +117,48 @@ const DesktopMenu: React.FC<Props> = ({ theme }) => {
                 </DropdownItem>
                 <DropdownItem href="/report" className="px-3 py-1.5">
                   <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">REPORT ISSUE</span>
+                </DropdownItem>
+              </div>
+            </div>
+          )}
+        </li>
+
+                {/* BROWSE */}
+                <li
+          className="group relative"
+          onMouseEnter={() => setOpenMenu("browse")}
+          onMouseLeave={() => setOpenMenu(null)}
+        >
+          <button
+            onClick={() => setOpenMenu((prev) => (prev === "browse" ? null : "browse"))}
+            className="group relative flex items-center space-x-[2px] focus:outline-none"
+          >
+            <span className={getLabelStyle("browse")}>BROWSE</span>
+            <ChevronDown
+              className={cn("ml-2 h-4 w-4 transition-transform duration-300", {
+                "rotate-180 text-[#FF5C00]": openMenu === "browse",
+                "text-zinc-700 group-hover:text-[#FF5C00]": openMenu !== "browse" && theme === Theme.LIGHT,
+                "text-zinc-200 group-hover:text-[#FF5C00]": openMenu !== "browse" && theme === Theme.DARK,
+              })}
+            />
+          </button>
+
+          {openMenu === "browse" && (
+            <div className="absolute top-1 z-[1] sm:top-1 md:top-4 lg:top-5 xl:top-6">
+              <div
+                className={cn("flex flex-col rounded-md shadow-lg", {
+                  "bg-[#443d3a]": theme === Theme.DARK,
+                  "bg-[#eeded7]": theme === Theme.LIGHT,
+                })}
+              >
+                <DropdownItem href="/browse/projects-list" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">PROJECTS LIST</span>
+                </DropdownItem>
+                <DropdownItem href="/browse/ideas-list" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">SHARED IDEAS</span>
+                </DropdownItem>
+                <DropdownItem href="/browse/issues-list" className="px-3 py-1.5">
+                  <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">REPORTED ISSUES</span>
                 </DropdownItem>
               </div>
             </div>

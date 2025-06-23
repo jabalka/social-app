@@ -6,19 +6,20 @@ import { USER_ROLES } from "@/lib/user-roles";
 import { CommentWithLikes, Reply } from "@/models/comment";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { ChartColumn, Check, Info, Pencil, X } from "lucide-react";
+import { ChartColumn, Check, Pencil, X } from "lucide-react";
 import Image from "next/image";
 import DefaultAvatar from "public/images/default-avatar.png";
 
 import React, { useEffect, useRef, useState } from "react";
 import GlowingGreenButton from "../glow-green-button";
+import InfoWithTooltip from "../info-with-tooltip";
 
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
   const { user, setUser } = useSafeUser();
 
   const initialUserRef = useRef<typeof user | null>(null);
-const [hasInitialized, setHasInitialized] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const matchedRole = USER_ROLES.find((r) => r.id === user?.role?.id);
 
@@ -80,11 +81,11 @@ const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
     if (!hasInitialized || !initialUserRef.current) return;
-  
+
     const nameChanged = nameInput.trim() !== (initialUserRef.current.name ?? "").trim();
     const usernameChanged = usernameInput.trim() !== (initialUserRef.current.username ?? "").trim();
     const imageChanged = !!selectedImage;
-  
+
     setHasUnsavedChanges(nameChanged || usernameChanged || imageChanged);
   }, [nameInput, usernameInput, selectedImage, hasInitialized]);
 
@@ -207,34 +208,21 @@ const [hasInitialized, setHasInitialized] = useState(false);
                 />
               </div>
               <span
-                className={cn(
-                  "pointer-events-none absolute -inset-[5px] rounded-full",{
-                    "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-                    "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
-                  }
-                )}
+                className={cn("pointer-events-none absolute -inset-[5px] rounded-full", {
+                  "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+                  "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+                })}
               />
             </div>
 
-            <div className="group">
-              <button
-                onClick={() => fileImageInputRef.current?.click()}
-                className="absolute -right-4 bottom-0 text-xs text-blue-500 transition-all duration-300 group-hover:text-orange-700 md:right-32 md:top-44"
-              >
-                <Pencil className="h-4 w-4" />
-                <div
-                  className={cn(
-                    "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                    {
-                      "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                      "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                    },
-                  )}
-                >
-                  Change Image
-                </div>
-              </button>
-            </div>
+            <InfoWithTooltip
+              id="edit-image"
+              icon={Pencil}
+              content="Change Image"
+              theme={theme}
+              iconClassName="text-blue-500 h-4 w-4"
+              onClick={() => fileImageInputRef.current?.click()}
+            />
           </div>
 
           <input
@@ -324,25 +312,14 @@ const [hasInitialized, setHasInitialized] = useState(false);
                     )}
                   </>
                 ) : (
-                  <div className="group relative">
-                    <button
-                      onClick={() => setEditName(true)}
-                      className="text-xs text-blue-500 transition-all duration-300 group-hover:text-orange-700"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <div
-                        className={cn(
-                          "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                          {
-                            "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                            "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                          },
-                        )}
-                      >
-                        Edit Name
-                      </div>
-                    </button>
-                  </div>
+                  <InfoWithTooltip
+                    id="edit-name"
+                    icon={Pencil}
+                    content="Edit Name"
+                    theme={theme}
+                    iconClassName="text-blue-500 h-4 w-4"
+                    onClick={() => setEditName(true)}
+                  />
                 )}
               </div>
             </div>
@@ -419,25 +396,14 @@ const [hasInitialized, setHasInitialized] = useState(false);
                     )}
                   </>
                 ) : (
-                  <div className="group relative">
-                    <button
-                      onClick={() => setEditUsername(true)}
-                      className="text-xs text-blue-500 transition-all duration-300 group-hover:text-orange-700"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <div
-                        className={cn(
-                          "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                          {
-                            "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                            "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                          },
-                        )}
-                      >
-                        Edit Username
-                      </div>
-                    </button>
-                  </div>
+                  <InfoWithTooltip
+                    id="edit-username"
+                    icon={Pencil}
+                    content="Edit Username"
+                    theme={theme}
+                    iconClassName="text-blue-500 h-4 w-4"
+                    onClick={() => setEditUsername(true)}
+                  />
                 )}
               </div>
             </div>
@@ -447,53 +413,34 @@ const [hasInitialized, setHasInitialized] = useState(false);
               <label className="text-sm font-medium">Your Role:</label>
 
               {matchedRole && (
-                <div className="group relative ml-2 flex items-center justify-center">
-                  <matchedRole.icon
-                    className={cn("h-7 w-7 transition-colors", {
-                      "text-gray-700 group-hover:text-orange-700": theme === Theme.LIGHT,
-                      "text-zinc-200 group-hover:text-orange-700": theme === Theme.DARK,
-                    })}
-                  />
-                  <div
-                    className={cn(
-                      "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                      {
-                        "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                        "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                      },
-                    )}
-                  >
-                    {matchedRole.name}
-                  </div>
-                </div>
-              )}
-              <div className="group relative">
-                <Info
-                  className={cn("h-4 w-4 cursor-pointer", {
-                    "text-gray-600 group-hover:text-orange-700": theme === Theme.LIGHT,
-                    "text-zinc-300 group-hover:text-orange-500": theme === Theme.DARK,
-                  })}
+                <InfoWithTooltip
+                  id="your-role"
+                  theme={theme}
+                  icon={matchedRole?.icon}
+                  iconClassName="h-7 w-7"
+                  content={matchedRole?.name}
                 />
-                <div
-                  className={cn(
-                    "absolute left-6 top-1/2 z-20 w-60 -translate-y-1/2 scale-0 rounded px-3 py-2 text-xs shadow-md transition-all group-hover:scale-100",
-                    {
-                      "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                      "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                    },
-                  )}
-                >
-                  <p className="mb-1 font-semibold">{matchedRole?.name} – your assigned role.</p>
-                  <p className="mb-1">Other roles:</p>
-                  <ul className="ml-2 list-disc">
-                    {USER_ROLES.filter((r) => r.id !== matchedRole?.id).map((r) => (
-                      <li key={r.id}>
-                        {r.name} <r.icon />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              )}
+
+              <InfoWithTooltip
+                id="info-roles"
+                theme={theme}
+                iconClassName="h-4 w-4"
+                tooltipPlacement="left"
+                content={
+                  <>
+                    <p className="mb-1 font-semibold">{matchedRole?.name} – your assigned role.</p>
+                    <p className="mb-1">Other roles:</p>
+                    <ul className="ml-6 list-disc">
+                      {USER_ROLES.filter((r) => r.id !== matchedRole?.id).map((r) => (
+                        <li key={r.id}>
+                          {r.name} <r.icon />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                }
+              />
             </div>
 
             {/* Stats Section */}
@@ -503,22 +450,14 @@ const [hasInitialized, setHasInitialized] = useState(false);
                 "bg-[#8c817b41] text-zinc-300": theme === Theme.DARK,
               })}
             >
-              <div className="relative flex items-center justify-center">
-                <div className="group relative flex flex-col items-center">
-                  <ChartColumn className="h-6 w-6 transition-all duration-300 group-hover:text-orange-700" />
-                  <div
-                    className={cn(
-                      "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                      {
-                        "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                        "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                      },
-                    )}
-                  >
-                    Personal Statistic
-                  </div>
-                </div>
-              </div>
+              <InfoWithTooltip
+                id="your-statistic"
+                className="flex items-center justify-center"
+                theme={theme}
+                icon={ChartColumn}
+                iconClassName="h-6 w-6"
+                content="Personal Statistic"
+              />
               <p>Total Projects: {user?.projects.length}</p>
               <p>Total Comments: {user?.comments.length}</p>
               <p>Total Likes on Projects: {projectLikeCount}</p>
@@ -544,7 +483,7 @@ const [hasInitialized, setHasInitialized] = useState(false);
               >
                 CANCEL
                 <span
-                  className={`group-hover:animate-snakeBorderPink1s pointer-events-none absolute inset-0 overflow-hidden rounded-full`}
+                  className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderPink1s`}
                 />
               </button>
             </div>

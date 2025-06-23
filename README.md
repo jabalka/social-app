@@ -196,3 +196,6 @@ and to change the project categories (if assigned wrong by creator)., user must 
         If one chat is open and user types new messages and the receipter is inside the profile/messages but without the chat window open, thenn new messages do not arrive!
 
     -ENCRYPT THE MESSAGES!!
+
+
+** It needs to have another Page /directory where we can search for all Projects/ideas/ reports (by location, newest, rating etc...)
