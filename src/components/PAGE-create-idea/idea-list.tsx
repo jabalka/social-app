@@ -1,9 +1,10 @@
 // components/PAGE-create-idea/idea-list.tsx
 "use client";
+import { radiusOptions } from "@/constants";
 import { Idea } from "@/models/idea";
 import { useEffect, useState } from "react";
-import IdeaCard from "./idea-card";
 import LeafletMapModal from "../leaflet-map-modal";
+import IdeaCard from "./idea-card";
 
 export interface IdeaListProps {
   open?: boolean;
@@ -13,11 +14,7 @@ export interface IdeaListProps {
 
 type SortType = "newest" | "oldest" | "top";
 
-const IdeaList: React.FC<IdeaListProps> = ({
-  open = true,
-  onClose,
-  onIdeaSelected,
-}) => {
+const IdeaList: React.FC<IdeaListProps> = ({ open = true, onClose, onIdeaSelected }) => {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [sort, setSort] = useState<SortType>("newest");
   const [radius, setRadius] = useState(5000);
@@ -57,8 +54,7 @@ const IdeaList: React.FC<IdeaListProps> = ({
 
   const sortedIdeas = [...ideas].sort((a, b) => {
     if (sort === "top") return b.likes.length - a.likes.length;
-    if (sort === "oldest")
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
@@ -67,36 +63,26 @@ const IdeaList: React.FC<IdeaListProps> = ({
   return (
     <>
       <div className="relative">
-        <div className="mb-2 flex gap-2">
-          <input
-            type="number"
-            min={100}
-            max={20000}
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-24 rounded border p-1"
-            placeholder="Radius (m)"
-          />
-          <button
-            onClick={fetchNearby}
-            className="rounded bg-blue-500 px-2 py-1 text-white"
-          >
+        <div className="mb-2 flex items-center gap-2">
+          <label className="font-medium">Search Radius:</label>
+          <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="rounded border p-1">
+            {radiusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-gray-600">(miles)</span>
+          <button onClick={fetchNearby} className="rounded bg-blue-500 px-2 py-1 text-white">
             Near Me
           </button>
-          <button
-            onClick={() => setShowMap(true)}
-            className="rounded bg-purple-600 px-2 py-1 text-white"
-          >
+          <button onClick={() => setShowMap(true)} className="rounded bg-purple-600 px-2 py-1 text-white">
             Pick Location
           </button>
         </div>
         <div className="mb-4 flex items-center gap-2">
           <label className="font-medium">Sort:</label>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortType)}
-            className="rounded border p-1"
-          >
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortType)} className="rounded border p-1">
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
             <option value="top">Top Rated</option>
@@ -127,11 +113,7 @@ const IdeaList: React.FC<IdeaListProps> = ({
           </div>
         )}
       </div>
-      <LeafletMapModal
-  open={showMap}
-  onPick={handleMapPick}
-  onClose={() => setShowMap(false)}
-/>
+      <LeafletMapModal open={showMap} onPick={handleMapPick} onClose={() => setShowMap(false)} />
     </>
   );
 };
