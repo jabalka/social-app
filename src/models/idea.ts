@@ -26,3 +26,23 @@ export type Idea = {
   categories?: Category[];
   // ...may need more fields to be added
 };
+
+
+export type IdeaDraft = {
+  // Form fields
+  title: string;
+  content: string;
+  allowCollab: boolean;
+  postcode: string;
+  categories: string[];
+  images: File[];
+
+  // (UI) fields
+  lat?: number | null;
+  lng?: number | null;
+  what3words?: string | null;
+  addressLines?: string[];
+  addressCoords?: string;
+  previewUrls?: string[];
+};
+
