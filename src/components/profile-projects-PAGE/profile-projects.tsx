@@ -10,7 +10,7 @@ import { cn } from "@/utils/cn.utils";
 import React, { useEffect, useState } from "react";
 
 import CreateProjectModal from "../create-project-modal";
-import GlowingGreenButton from "../glow-green-button";
+import GlowingGreenButton from "../glowing-green-button";
 
 import { Project } from "../map-wrapper-viewer";
 

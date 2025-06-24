@@ -6,7 +6,7 @@ interface Props {
   idea: Idea;
 }
 
-const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY;
+// const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY;
 
 const IdeaCard: React.FC<Props> = ({ idea }) => {
   const [showComments, setShowComments] = useState(false);
@@ -21,22 +21,23 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
     }
     const fetchAddress = async () => {
       try {
-        if (idea.what3words && !idea.postcode) {
-          // Get coords from w3w, then fetch address/postcode
-          const w3wRes = await fetch(
-            `https://api.what3words.com/v3/convert-to-coordinates?words=${idea.what3words}&key=${what3wordsApiKey}`
-          );
-          const w3wData = await w3wRes.json();
-          if (w3wData.coordinates) {
-            const { lat, lng } = w3wData.coordinates;
-            // Get postcode from coords (using UK postcodes.io, or fallback)
-            const postRes = await fetch(`https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}`);
-            const postData = await postRes.json();
-            const postcode = postData.result?.[0]?.postcode;
-            if (postcode) setDisplayAddress(postcode);
-            else setDisplayAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-          }
-        } else if (idea.latitude && idea.longitude) {
+        // if (idea.what3words && !idea.postcode) {
+        //   // Get coords from w3w, then fetch address/postcode
+        //   const w3wRes = await fetch(
+        //     `https://api.what3words.com/v3/convert-to-coordinates?words=${idea.what3words}&key=${what3wordsApiKey}`
+        //   );
+        //   const w3wData = await w3wRes.json();
+        //   if (w3wData.coordinates) {
+        //     const { lat, lng } = w3wData.coordinates;
+        //     // Get postcode from coords (using UK postcodes.io, or fallback)
+        //     const postRes = await fetch(`https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}`);
+        //     const postData = await postRes.json();
+        //     const postcode = postData.result?.[0]?.postcode;
+        //     if (postcode) setDisplayAddress(postcode);
+        //     else setDisplayAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        //   }
+        // } 
+         if (idea.latitude && idea.longitude) {
           // No w3w, but have coords
           const postRes = await fetch(`https://api.postcodes.io/postcodes?lon=${idea.longitude}&lat=${idea.latitude}`);
           const postData = await postRes.json();
@@ -50,7 +51,6 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
       }
     };
     fetchAddress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idea.postcode, idea.what3words, idea.latitude, idea.longitude]);
 
   const requestCollab = async () => {

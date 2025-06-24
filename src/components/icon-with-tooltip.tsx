@@ -1,6 +1,7 @@
 "use client";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
+import { formatTooltipContent } from "@/utils/formatContent";
 import { Info } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
@@ -49,7 +50,7 @@ const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
       case "left":
         return "right-full top-1/2 -translate-y-1/2 mr-2";
       default: // top
-        return "-top-7 left-1/2 -translate-x-1/2";
+        return "bottom-full left-1/2 -translate-x-1/2 mb-1";
     }
   })();
 
@@ -99,7 +100,7 @@ const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
           tooltipClassName,
         )}
       >
-        {content}
+        {formatTooltipContent(content)}
         <span
           key={animationKey}
           className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-md", {

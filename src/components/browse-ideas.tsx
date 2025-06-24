@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { radiusOptions } from "@/constants";
 import Link from "next/link";
 import IdeaCard from "./PAGE-create-idea/idea-card";
-import GlowingGreenButton from "./glow-green-button";
+import GlowingGreenButton from "./glowing-green-button";
 import LeafletMapModal from "./leaflet-map-modal";
 import Pagination from "./pagination";
 
@@ -175,7 +175,7 @@ const BrowseIdeas: React.FC = () => {
           ))}
         </div>
       )}
-      <LeafletMapModal open={showMap} onPick={handleMapPick} onClose={() => setShowMap(false)} />
+      <LeafletMapModal open={showMap} theme={theme} onPick={handleMapPick} onClose={() => setShowMap(false)} />
     </div>
   );
 };
