@@ -1,5 +1,6 @@
 "use client";
 
+import TooltipBubble from "@/components/tooltip-bubble";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { motion } from "framer-motion";
@@ -58,7 +59,17 @@ const SidebarNavItem: React.FC<Props> = ({
           )}
 
           {!sidebarExpanded && (
-            <div
+            <>
+    {!sidebarExpanded && (
+      <TooltipBubble
+        theme={theme}
+        content={label}
+        placement="right"
+        className="pointer-events-none group-hover:pointer-events-auto" // Ensures tooltip is interactive if needed
+      />
+    )}
+
+            {/* <div
               className={cn(
                 "pointer-events-none absolute left-full top-1/2 z-50 ml-4 -translate-y-1/2 whitespace-nowrap rounded px-2 py-1 text-xs font-semibold opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100",
                 {
@@ -68,7 +79,8 @@ const SidebarNavItem: React.FC<Props> = ({
               )}
             >
               {label}
-            </div>
+            </div> */}
+            </>
           )}
         </div>
 

@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import DragAndDropArea from "../drag-and-drop-area";
 import LeafletMapModal from "../leaflet-map-modal";
-import { Info } from "lucide-react";
-import InfoWithTooltip from "../info-with-tooltip";
+import IconWithTooltip from "../icon-with-tooltip";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
+import { useSafeThemeContext } from "@/context/safe-theme-context";
 
 const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY!;
 
@@ -41,6 +41,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
   onClose,
   onIdeaCreated,
 }) => {
+    const { theme } = useSafeThemeContext();
+
   const methods = useForm<IdeaFormFields>({ defaultValues });
   const { handleSubmit, control, setValue, watch, reset } = methods;
 
@@ -58,8 +60,6 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
   // Drag-and-drop state
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-  // Tooltips state for touch/click
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   // Handle postcode entry
   const handlePostcodeChange = async (
@@ -204,7 +204,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="font-semibold text-sm">Idea Title</label>
-            <InfoWithTooltip
+            <IconWithTooltip
+              theme={theme}
               id="title"
               content="A short, descriptive title for your idea. E.g. 'New Playground in Riverside Park'."
             />
@@ -219,7 +220,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="font-semibold text-sm">Description</label>
-            <InfoWithTooltip
+            <IconWithTooltip
+              theme={theme}
               id="desc"
               content="Briefly explain your idea. What problem does it solve? Why is it important?"
             />
@@ -235,8 +237,9 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="font-semibold text-sm">Location (Postcode or pick on map)</label>
-            <InfoWithTooltip
+            <IconWithTooltip
               id="postcode"
+              theme={theme}
               content={
                 <>
                   Enter a UK postcode or select a point on the map. <br />
@@ -277,8 +280,9 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="font-semibold text-sm">Categories</label>
-            <InfoWithTooltip
+            <IconWithTooltip
               id="categories"
+              theme={theme}
               content="Select all categories that fit your idea."
             />
           </div>
@@ -312,7 +316,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="font-semibold text-sm">Idea Images</label>
-            <InfoWithTooltip
+            <IconWithTooltip
+              theme={theme}
               id="images"
               content="Attach up to 10 images that help explain your idea. Drag and drop or click to browse."
             />
@@ -333,7 +338,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         <label className="flex items-center gap-2">
           <input type="checkbox" {...methods.register("allowCollab")} />
           Allow collaboration requests
-          <InfoWithTooltip
+          <IconWithTooltip
+            theme={theme}
             id="collab"
             content="If enabled, others can request to join and help with your idea."
           />
