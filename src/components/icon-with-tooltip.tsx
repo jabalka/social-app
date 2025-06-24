@@ -16,7 +16,7 @@ interface InfoWithTooltipProps {
   onClick?: () => void;
 }
 
-const InfoWithTooltip: React.FC<InfoWithTooltipProps> = ({
+const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
   id,
   content,
   className,
@@ -62,14 +62,12 @@ const InfoWithTooltip: React.FC<InfoWithTooltipProps> = ({
   };
 
   return (
-
     <div
       className={`group relative ${className ?? ""}`}
       tabIndex={0}
       onMouseLeave={() => setActiveTooltip(null)}
       onBlur={() => setActiveTooltip(null)}
     >
-   
       <button
         type="button"
         tabIndex={-1}
@@ -90,10 +88,9 @@ const InfoWithTooltip: React.FC<InfoWithTooltipProps> = ({
         />
       </button>
 
-
       <div
         className={cn(
-          `overflow-hidden absolute scale-0 whitespace-nowrap rounded-md px-2 py-1 text-xs transition-all group-hover:scale-100 ${activeTooltip === id ? "pointer-events-auto scale-100" : ""}`,
+          `absolute scale-0 overflow-hidden whitespace-nowrap rounded-md px-2 py-1 text-xs transition-all group-hover:scale-100 ${activeTooltip === id ? "pointer-events-auto scale-100" : ""}`,
           placement,
           {
             "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
@@ -105,16 +102,20 @@ const InfoWithTooltip: React.FC<InfoWithTooltipProps> = ({
         {content}
         <span
           key={animationKey}
-          className={cn("pointer-events-none absolute -inset-[0px] rounded-md", {
+          className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-md", {
             "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
             "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
           })}
         />
+        <span
+          className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-md border-[2px]", {
+            "border-zinc-700": theme === Theme.LIGHT,
+            "border-zinc-500": theme === Theme.DARK,
+          })}
+        />
       </div>
-   
     </div>
-
   );
 };
 
-export default InfoWithTooltip;
+export default IconWithTooltip;

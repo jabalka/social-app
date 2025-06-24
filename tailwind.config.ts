@@ -300,7 +300,7 @@ export default {
         snakeBorderHoverDark: {
           "0%": {
             // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
-            boxShadow: "inset 0 0 0 2px transparent",
+            boxShadow: "inset 0 0 0 2px #ffffff, 0 0 8px 2px #ffffff",
             //             Top-left: `0 0`
             //             Top-right: `100% 0`
             //             Bottom-right: `100% 100%`
@@ -336,14 +336,14 @@ export default {
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
           "100%": {
-            boxShadow: "inset 0 0 0 2px transparent",
+            boxShadow: "inset 0 0 0 2px #ffffff88, 0 0 8px 2px #ffffff88",
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
         },
         snakeBorderHoverLight: {
           "0%": {
             // boxShadow: "[inset] x-offset y-offset blur-radius spread-radius color"
-            boxShadow: "inset 0 0 0 2px transparent",
+            boxShadow: "inset 0 0 0 2px #ffffff, 0 0 8px 2px #ffffff",
             //             Top-left: `0 0`
             //             Top-right: `100% 0`
             //             Bottom-right: `100% 100%`
@@ -376,10 +376,11 @@ export default {
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 0 100%)",
           },
           "90%": {
+            boxShadow: "inset 0 0 0 2px #ffffff, 0 0 8px 2px #ffffff",
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
           "100%": {
-            boxShadow: "inset 0 0 0 2px transparent",
+            boxShadow: "inset 0 0 0 2px #ffffff88, 0 0 8px 2px #ffffff44",
             clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
           },
         },

@@ -12,7 +12,7 @@ import DefaultAvatar from "public/images/default-avatar.png";
 
 import React, { useEffect, useRef, useState } from "react";
 import GlowingGreenButton from "../glow-green-button";
-import InfoWithTooltip from "../info-with-tooltip";
+import IconWithTooltip from "../icon-with-tooltip";
 
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
@@ -215,7 +215,7 @@ const ProfileDashboard: React.FC = () => {
               />
             </div>
 
-            <InfoWithTooltip
+            <IconWithTooltip
               id="edit-image"
               icon={Pencil}
               content="Change Image"
@@ -312,7 +312,7 @@ const ProfileDashboard: React.FC = () => {
                     )}
                   </>
                 ) : (
-                  <InfoWithTooltip
+                  <IconWithTooltip
                     id="edit-name"
                     icon={Pencil}
                     content="Edit Name"
@@ -396,7 +396,7 @@ const ProfileDashboard: React.FC = () => {
                     )}
                   </>
                 ) : (
-                  <InfoWithTooltip
+                  <IconWithTooltip
                     id="edit-username"
                     icon={Pencil}
                     content="Edit Username"
@@ -413,7 +413,7 @@ const ProfileDashboard: React.FC = () => {
               <label className="text-sm font-medium">Your Role:</label>
 
               {matchedRole && (
-                <InfoWithTooltip
+                <IconWithTooltip
                   id="your-role"
                   theme={theme}
                   icon={matchedRole?.icon}
@@ -422,7 +422,7 @@ const ProfileDashboard: React.FC = () => {
                 />
               )}
 
-              <InfoWithTooltip
+              <IconWithTooltip
                 id="info-roles"
                 theme={theme}
                 iconClassName="h-4 w-4"
@@ -450,7 +450,7 @@ const ProfileDashboard: React.FC = () => {
                 "bg-[#8c817b41] text-zinc-300": theme === Theme.DARK,
               })}
             >
-              <InfoWithTooltip
+              <IconWithTooltip
                 id="your-statistic"
                 className="flex items-center justify-center"
                 theme={theme}
