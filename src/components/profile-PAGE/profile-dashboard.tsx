@@ -11,7 +11,8 @@ import Image from "next/image";
 import DefaultAvatar from "public/images/default-avatar.png";
 
 import React, { useEffect, useRef, useState } from "react";
-import GlowingGreenButton from "../glow-green-button";
+import GlowingGreenButton from "../glowing-green-button";
+import GlowingPinkButton from "../glowing-pink-button";
 import IconWithTooltip from "../icon-with-tooltip";
 
 const ProfileDashboard: React.FC = () => {
@@ -467,26 +468,21 @@ const ProfileDashboard: React.FC = () => {
         </div>
         {hasInitialized && hasUnsavedChanges && (
           <div className="flex justify-center gap-4 pt-8">
-            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
-              <button
-                onClick={() => {
-                  setNameInput(initialUserRef.current?.name ?? "");
-                  setUsernameInput(initialUserRef.current?.username ?? "");
-                  setSelectedImage(null);
-                  setEditName(false);
-                  setEditUsername(false);
-                  setHasUnsavedChanges(false);
-                  setNameError(null);
-                  setUsernameError(null);
-                }}
-                className="h-8 w-24 rounded-full bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] text-sm text-white outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
-              >
-                CANCEL
-                <span
-                  className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderPink1s`}
-                />
-              </button>
-            </div>
+            <GlowingPinkButton
+              onClick={() => {
+                setNameInput(initialUserRef.current?.name ?? "");
+                setUsernameInput(initialUserRef.current?.username ?? "");
+                setSelectedImage(null);
+                setEditName(false);
+                setEditUsername(false);
+                setHasUnsavedChanges(false);
+                setNameError(null);
+                setUsernameError(null);
+              }}
+              className="h-8 w-24"
+            >
+              CANCEL
+            </GlowingPinkButton>
 
             <GlowingGreenButton onClick={handleSave} disabled={disableSave} className="h-8 w-24">
               SAVE

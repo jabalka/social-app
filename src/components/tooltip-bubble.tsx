@@ -1,6 +1,7 @@
 "use client";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
+import { formatTooltipContent } from "@/utils/formatContent";
 
 import React, { useEffect, useState } from "react";
 
@@ -35,14 +36,15 @@ const TooltipBubble: React.FC<TooltipBubbleProps> = ({
   const place = {
     right: "left-full top-1/2 -translate-y-1/2 ml-4",
     left: "right-full top-1/2 -translate-y-1/2 mr-4",
-    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
+    top: "bottom-full left-1/2 -translate-x-1/2 mb-1",
     bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
   }[placement];
 
   return (
     <div
       className={cn(
-        "overflow-hidden pointer-events-none absolute z-50 whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100",
+        "pointer-events-none absolute z-50 scale-0 overflow-hidden rounded-md px-2 py-1 text-xs font-semibold opacity-0 shadow-lg transition-all duration-200 group-hover:scale-100 group-hover:opacity-100",
+"max-w-[320px] break-words",
         place,
         {
           "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
@@ -51,20 +53,20 @@ const TooltipBubble: React.FC<TooltipBubbleProps> = ({
         className,
       )}
     >
-      {content}
-              <span
-                key={animationKey}
-                className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-md", {
-                  "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-                  "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
-                })}
-              />
-              <span
-                className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-md border-[2px]", {
-                  "border-zinc-700": theme === Theme.LIGHT,
-                  "border-zinc-500": theme === Theme.DARK,
-                })}
-              />
+      {formatTooltipContent(content)}
+      <span
+        key={animationKey}
+        className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-md", {
+          "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+          "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+        })}
+      />
+      <span
+        className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-md border-[2px]", {
+          "border-zinc-700": theme === Theme.LIGHT,
+          "border-zinc-500": theme === Theme.DARK,
+        })}
+      />
     </div>
   );
 };

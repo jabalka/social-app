@@ -7,8 +7,9 @@ import LeafletMapModal from "../leaflet-map-modal";
 import IconWithTooltip from "../icon-with-tooltip";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
+import GlowingGreenButton from "../glowing-green-button";
 
-const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY!;
+// const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY!;
 
 const CATEGORIES = PROJECT_CATEGORIES;
 
@@ -84,11 +85,11 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         setAddressCoords(`${latitude?.toFixed(5)}, ${longitude?.toFixed(5)}`);
 
         // Get W3W in background
-        const w3wRes = await fetch(
-          `https://api.what3words.com/v3/convert-to-3wa?coordinates=${latitude},${longitude}&key=${what3wordsApiKey}`,
-        );
-        const w3wData = await w3wRes.json();
-        setWhat3words(w3wData.words || "");
+        // const w3wRes = await fetch(
+        //   `https://api.what3words.com/v3/convert-to-3wa?coordinates=${latitude},${longitude}&key=${what3wordsApiKey}`,
+        // );
+        // const w3wData = await w3wRes.json();
+        // setWhat3words(w3wData.words || "");
       } catch {
         setAddressLines([]);
         setLat(null);
@@ -112,13 +113,13 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
     setShowMap(false);
 
     // Get what3words in background
-    try {
-      const w3wRes = await fetch(
-        `https://api.what3words.com/v3/convert-to-3wa?coordinates=${lat},${lng}&key=${what3wordsApiKey}`,
-      );
-      const w3wData = await w3wRes.json();
-      setWhat3words(w3wData.words || "");
-    } catch { /* Ignore */ }
+    // try {
+    //   const w3wRes = await fetch(
+    //     `https://api.what3words.com/v3/convert-to-3wa?coordinates=${lat},${lng}&key=${what3wordsApiKey}`,
+    //   );
+    //   const w3wData = await w3wRes.json();
+    //   setWhat3words(w3wData.words || "");
+    // } catch { /* Ignore */ }
 
     // Optionally, get postcode/address via postcodes.io
     try {
@@ -346,13 +347,10 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
         </label>
         {/* Buttons */}
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-            disabled={loading}
-          >
-            {loading ? "Submitting..." : "Share Idea"}
-          </button>
+        <GlowingGreenButton type="submit" disabled={loading} className="px-4 py-2">
+        {loading ? "Submitting..." : "Share Idea"}
+            </GlowingGreenButton>
+
           {onClose && (
             <button
               type="button"
@@ -366,6 +364,7 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
       </form>
       <LeafletMapModal
         open={showMap}
+        theme={theme}
         onPick={handleMapPick}
         onClose={() => setShowMap(false)}
         defaultPosition={lat && lng ? [lat, lng] : [51.505, -0.09]}

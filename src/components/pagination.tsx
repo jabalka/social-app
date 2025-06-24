@@ -1,8 +1,8 @@
 "use client";
 
-import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import TooltipBubble from "./tooltip-bubble";
 
 interface PaginationProps {
   currentPage: number;
@@ -12,13 +12,7 @@ interface PaginationProps {
   theme: string;
 }
 
-const Pagination: React.FC<PaginationProps> = ({
-  currentPage,
-  totalCount,
-  pageSize,
-  onPageChange,
-  theme,
-}) => {
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalCount, pageSize, onPageChange, theme }) => {
   const totalPages = Math.ceil(totalCount / pageSize);
   if (totalPages <= 1) return null;
 
@@ -31,28 +25,16 @@ const Pagination: React.FC<PaginationProps> = ({
 
       {/* Controls */}
       <div className="flex items-center gap-4">
-      <div className="group relative flex flex-col items-center">
-        <button
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
-          className="rounded px-3 py-1 font-semibold disabled:opacity-40"
-        >
-                       <ChevronLeft />
-        </button>
-                          {currentPage !== 1 && (
-                            <div
-                              className={cn(
-                                "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                                {
-                                  "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                                  "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                                },
-                              )}
-                            >
-                              Previous
-                            </div>
-                          )}
-    </div>
+        <div className="group relative flex flex-col items-center">
+          <button
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="rounded px-3 py-1 font-semibold disabled:opacity-40"
+          >
+            <ChevronLeft />
+          </button>
+          {currentPage !== 1 && <TooltipBubble theme={theme} content="Previous" placement="top" />}
+        </div>
         <div className="flex items-center gap-2">
           {Array.from({ length: totalPages }).map((_, idx) => {
             const page = idx + 1;
@@ -70,51 +52,28 @@ const Pagination: React.FC<PaginationProps> = ({
                     disabled={page === currentPage}
                     className={cn(
                       "relative z-10 h-[10px] w-[10px] rounded-full",
-                      page === currentPage
-                        ? "bg-green-600"
-                        : "bg-gray-400 opacity-50 hover:opacity-100"
+                      page === currentPage ? "bg-green-600" : "bg-gray-400 opacity-50 hover:opacity-100",
                     )}
                   />
                 </div>
 
                 {/* Tooltip */}
-                <div
-                  className={cn(
-                    "absolute -top-9 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                    {
-                      "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                      "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                    }
-                  )}
-                >
-                  Page {page}
-                </div>
+
+                <TooltipBubble theme={theme} content={`Page ${page}`} placement="top" />
               </div>
             );
           })}
         </div>
         <div className="group relative flex flex-col items-center">
-        <button
-          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
-          className="rounded px-3 py-1 font-semibold disabled:opacity-40"
-        >
-              <ChevronRight />
-        </button>
-                      {currentPage !== totalPages && (
-                            <div
-                              className={cn(
-                                "absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded px-2 py-1 text-xs transition-all group-hover:scale-100",
-                                {
-                                  "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-                                  "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-                                },
-                              )}
-                            >
-                              Next
-                            </div>
-                          )}
-                          </div>
+          <button
+            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded px-3 py-1 font-semibold disabled:opacity-40"
+          >
+            <ChevronRight />
+          </button>
+          {currentPage !== totalPages && <TooltipBubble theme={theme} content="Next" placement="top" />}
+        </div>
       </div>
     </div>
   );

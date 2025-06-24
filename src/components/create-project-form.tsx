@@ -9,7 +9,7 @@ import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import DragAndDropArea from "./drag-and-drop-area";
 import MapWrapper from "./map-wrapper";
-import GlowingGreenButton from "./glow-green-button";
+import GlowingGreenButton from "./glowing-green-button";
 
 interface FormData {
   title: string;
