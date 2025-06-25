@@ -1,11 +1,14 @@
 "use client";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
+import { useConfirmation } from "@/hooks/use-confirmation.hook";
+import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navigation";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { IdeaDraft } from "@/models/idea";
 import { clearIdeaDraft, loadIdeaDraft, saveIdeaDraft } from "@/utils/idea-draft";
+import { showCustomToast } from "@/utils/show-custom-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import DragAndDropArea from "../drag-and-drop-area";
 import GlowingGreenButton from "../glowing-green-button";
@@ -13,10 +16,6 @@ import GlowingPinkButton from "../glowing-pink-button";
 import IconWithTooltip from "../icon-with-tooltip";
 import LeafletMapModal from "../leaflet-map-modal";
 import LeaveDraftModal from "../prompt-modal";
-import { showCustomToast } from "@/utils/show-custom-toast";
-import { useConfirmation } from "@/hooks/use-confirmation.hook";
-import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navigation";
-
 
 const CATEGORIES = PROJECT_CATEGORIES;
 
@@ -44,17 +43,14 @@ const defaultValues: IdeaFormFields = {
   images: [],
 };
 
-export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
-  open = true,
-  onClose,
-  onIdeaCreated,
-}) => {
+export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onClose, onIdeaCreated }) => {
   const { theme } = useSafeThemeContext();
   const { confirm } = useConfirmation();
   const router = useRouter();
 
-  const methods = useForm<IdeaFormFields>({ defaultValues });
+  const methods = useForm<IdeaFormFields>({ defaultValues, mode: "onChange" });
   const { handleSubmit, control, setValue, getValues, watch, reset, formState } = methods;
+  const watchedCategories = watch("categories");
 
   const [loading, setLoading] = useState(false);
 
@@ -74,18 +70,35 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const pendingUrlRef = useRef<string | null>(null);
 
+  const isCreateButtonDisabled =
+  loading ||
+  !formState.isValid ||
+  !lat ||
+  !lng ||
+  !watchedCategories ||
+  watchedCategories.length === 0;
+
+  const RequiredStar = () => (
+    <span className="ml-1 text-red-500" title="Required" aria-label="required">
+      *
+    </span>
+  );
+
   // On mount, check for existing draft and optionally load it
   useEffect(() => {
     if (!open) return;
     const draft = loadIdeaDraft?.();
-    if (draft && !isFormEmpty(
-      draft, 
-      draft.lat, 
-      draft.lng, 
-      draft.addressLines ?? [], 
-      draft.addressCoords ?? "", 
-      draft.previewUrls ?? []
-    )) {
+    if (
+      draft &&
+      !isFormEmpty(
+        draft,
+        draft.lat,
+        draft.lng,
+        draft.addressLines ?? [],
+        draft.addressCoords ?? "",
+        draft.previewUrls ?? [],
+      )
+    ) {
       confirm({
         title: "Resume saved draft?",
         description: "You have a saved draft. Would you like to continue where you left off?",
@@ -116,7 +129,14 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
     // eslint-disable-next-line
   }, [open]);
 
-  function isFormEmpty(values: IdeaFormFields, lat: number | null | undefined, lng: number | null | undefined, addressLines: string[], addressCoords: string, previewUrls: string[]): boolean {
+  function isFormEmpty(
+    values: IdeaFormFields,
+    lat: number | null | undefined,
+    lng: number | null | undefined,
+    addressLines: string[],
+    addressCoords: string,
+    previewUrls: string[],
+  ): boolean {
     // Check all form fields and extras
     return (
       !values.title.trim() &&
@@ -124,7 +144,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
       !values.postcode.trim() &&
       (!values.categories || values.categories.length === 0) &&
       (!values.images || values.images.length === 0) &&
-      !lat && !lng &&
+      !lat &&
+      !lng &&
       addressLines.filter(Boolean).length === 0 &&
       !addressCoords &&
       (!previewUrls || previewUrls.length === 0)
@@ -134,9 +155,7 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
   // Save draft state
   const saveDraftState = useCallback(() => {
     const values = getValues();
-    if (
-      isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
-    ) {
+    if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
       clearIdeaDraft();
       return;
     }
@@ -152,34 +171,28 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
     saveIdeaDraft(draft);
   }, [getValues, lat, lng, what3words, addressLines, addressCoords, previewUrls]);
 
-    // Intercept and blocks anchor navigation for <Link> and <a>:
-    useInterceptAnchorNavigation(
-      (href) => {
-        if (loading) return true;
-        const values = getValues();
-        if (
-          !formState.isDirty ||
-          isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
-        ) {
-          clearIdeaDraft();
-          return true;
-        }
-        pendingUrlRef.current = href;
-        return false;
-      },
-      () => setShowLeaveModal(true),
-      open
-    );
+  // Intercept and blocks anchor navigation for <Link> and <a>:
+  useInterceptAnchorNavigation(
+    (href) => {
+      if (loading) return true;
+      const values = getValues();
+      if (!formState.isDirty || isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+        clearIdeaDraft();
+        return true;
+      }
+      pendingUrlRef.current = href;
+      return false;
+    },
+    () => setShowLeaveModal(true),
+    open,
+  );
 
   // Browser tab close/reload
   useEffect(() => {
     const beforeUnload = (e: BeforeUnloadEvent) => {
       if (loading) return;
       const values = getValues();
-      if (
-        !formState.isDirty ||
-        isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
-      ) return;
+      if (!formState.isDirty || isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) return;
       e.preventDefault();
       e.returnValue = "";
       saveDraftState();
@@ -188,7 +201,7 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
     };
     window.addEventListener("beforeunload", beforeUnload);
     return () => window.removeEventListener("beforeunload", beforeUnload);
-        // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [saveDraftState, loading, formState.isDirty]);
 
   // Modal handlers for leave/confirm navigation
@@ -215,7 +228,14 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
     if (value.length >= 5) {
       try {
         const res = await axios.get(`https://api.postcodes.io/postcodes/${value}`);
-        const { latitude, longitude, country, admin_ward: ward, admin_district: district, country: cty } = res.data.result;
+        const {
+          latitude,
+          longitude,
+          country,
+          admin_ward: ward,
+          admin_district: district,
+          country: cty,
+        } = res.data.result;
         setLat(latitude);
         setLng(longitude);
         setAddressLines([
@@ -309,12 +329,9 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
   // "Back" button triggers the same leave modal
   const handleBack = () => {
     const values = getValues();
-    if (
-      !formState.isDirty ||
-      isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
-    ) {
+    if (!formState.isDirty || isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
       clearIdeaDraft();
-      onClose?.(); 
+      onClose?.();
       router.back();
       return;
     }
@@ -331,7 +348,10 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
           {/* Title */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">Idea Title</label>
+              <label className="text-sm font-semibold">
+                Idea Title
+                <RequiredStar />
+              </label>
               <IconWithTooltip
                 theme={theme}
                 id="title"
@@ -347,7 +367,10 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
           {/* Description */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">Description</label>
+              <label className="text-sm font-semibold">
+                Description
+                <RequiredStar />
+              </label>
               <IconWithTooltip
                 theme={theme}
                 id="desc"
@@ -364,11 +387,20 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
           {/* Postcode & map */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">Location (Postcode or pick on map)</label>
+              <label className="text-sm font-semibold">
+                Location (Postcode or pick on map)
+                <RequiredStar />
+              </label>
               <IconWithTooltip
                 id="postcode"
                 theme={theme}
-                content={<>Enter a UK postcode or select a point on the map.<br />This will fill the address and coordinates below.</>}
+                content={
+                  <>
+                    Enter a UK postcode or select a point on the map.
+                    <br />
+                    This will fill the address and coordinates below.
+                  </>
+                }
               />
             </div>
             <div className="mb-2 flex items-center gap-2">
@@ -398,7 +430,10 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
           {/* Categories */}
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">Categories</label>
+              <label className="text-sm font-semibold">
+                Categories
+                <RequiredStar />
+              </label>
               <IconWithTooltip id="categories" theme={theme} content="Select all categories that fit your idea." />
             </div>
             <div className="flex flex-wrap gap-4">
@@ -458,9 +493,13 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
           {/* Buttons */}
           <div className="flex gap-2">
             <GlowingPinkButton onClick={handleBack}>Back</GlowingPinkButton>
-            <GlowingGreenButton type="submit" disabled={loading} className="px-4 py-2">
+            <GlowingGreenButton type="submit" disabled={isCreateButtonDisabled} className="px-4 py-2">
               {loading ? "Submitting..." : "Share Idea"}
             </GlowingGreenButton>
+            <span className="flex items-center text-xs text-gray-500">
+              <RequiredStar />
+              <span className="ml-1">Required fields</span>
+            </span>
             {onClose && (
               <button
                 type="button"
