@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+    DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -13,23 +13,30 @@ import { useConfirmation } from "@/hooks/use-confirmation.hook";
 
 export function ConfirmationModal() {
   const { modalProps } = useConfirmation();
-  const { isOpen, content, onConfirm, onCancel } = modalProps;
+  const {
+    isOpen,
+    content,
+    onConfirm,
+    onCancel,
+    title = "Confirm Action",
+    description = "Please confirm that you want to proceed with this action.",
+    confirmText = "Confirm",
+    cancelText = "Cancel",
+  } = modalProps;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent aria-describedby="confirmation-content">
         <DialogHeader>
-          <DialogTitle>Confirm Action</DialogTitle>
-          <DialogDescription>Please confirm that you want to proceed with this action.</DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="py-4" id="confirmation-content">
-          {content}
-        </div>
+        {content && <div className="py-4" id="confirmation-content">{content}</div>}
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {cancelText}
           </Button>
-          <Button onClick={onConfirm}>Confirm</Button>
+          <Button onClick={onConfirm}>{confirmText}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

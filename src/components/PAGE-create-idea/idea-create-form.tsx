@@ -7,14 +7,15 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import toast from "react-hot-toast";
 import DragAndDropArea from "../drag-and-drop-area";
 import GlowingGreenButton from "../glowing-green-button";
 import GlowingPinkButton from "../glowing-pink-button";
 import IconWithTooltip from "../icon-with-tooltip";
 import LeafletMapModal from "../leaflet-map-modal";
-import { useBlockNavigation } from "@/hooks/use-block-navigation.hook";
 import LeaveDraftModal from "../prompt-modal";
+import { showCustomToast } from "@/utils/show-custom-toast";
+import { useConfirmation } from "@/hooks/use-confirmation.hook";
+import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navigation";
 
 
 const CATEGORIES = PROJECT_CATEGORIES;
@@ -49,6 +50,7 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
   onIdeaCreated,
 }) => {
   const { theme } = useSafeThemeContext();
+  const { confirm } = useConfirmation();
   const router = useRouter();
 
   const methods = useForm<IdeaFormFields>({ defaultValues });
@@ -74,10 +76,24 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
 
   // On mount, check for existing draft and optionally load it
   useEffect(() => {
-    if (open) {
-      const draft = loadIdeaDraft?.();
-      if (draft) {
-        if (window.confirm("You have a saved draft. Would you like to continue where you left off?")) {
+    if (!open) return;
+    const draft = loadIdeaDraft?.();
+    if (draft && !isFormEmpty(
+      draft, 
+      draft.lat, 
+      draft.lng, 
+      draft.addressLines ?? [], 
+      draft.addressCoords ?? "", 
+      draft.previewUrls ?? []
+    )) {
+      confirm({
+        title: "Resume saved draft?",
+        description: "You have a saved draft. Would you like to continue where you left off?",
+        confirmText: "Resume",
+        cancelText: "Discard",
+      }).then((result) => {
+        if (result) {
+          // resume draft
           reset({
             title: draft.title ?? "",
             content: draft.content ?? "",
@@ -92,16 +108,38 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
           setAddressCoords(draft.addressCoords ?? "");
           setPreviewUrls(draft.previewUrls ?? []);
         } else {
+          // discard draft
           clearIdeaDraft?.();
         }
-      }
+      });
     }
     // eslint-disable-next-line
   }, [open]);
 
+  function isFormEmpty(values: IdeaFormFields, lat: number | null | undefined, lng: number | null | undefined, addressLines: string[], addressCoords: string, previewUrls: string[]): boolean {
+    // Check all form fields and extras
+    return (
+      !values.title.trim() &&
+      !values.content.trim() &&
+      !values.postcode.trim() &&
+      (!values.categories || values.categories.length === 0) &&
+      (!values.images || values.images.length === 0) &&
+      !lat && !lng &&
+      addressLines.filter(Boolean).length === 0 &&
+      !addressCoords &&
+      (!previewUrls || previewUrls.length === 0)
+    );
+  }
+
   // Save draft state
   const saveDraftState = useCallback(() => {
     const values = getValues();
+    if (
+      isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
+    ) {
+      clearIdeaDraft();
+      return;
+    }
     const draft: IdeaDraft = {
       ...values,
       lat,
@@ -114,49 +152,50 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
     saveIdeaDraft(draft);
   }, [getValues, lat, lng, what3words, addressLines, addressCoords, previewUrls]);
 
-  // Block navigation using the custom hook
-  useBlockNavigation(
-    (nextUrl) => {
-      if (loading) return true;
-      // Optionally: only block if formState.isDirty, else allow
-      if (!formState.isDirty) return true;
-      pendingUrlRef.current = nextUrl;
-      setShowLeaveModal(true);
-      return false;
-    },
-    open // enabled only if open
-  );
+    // Intercept and blocks anchor navigation for <Link> and <a>:
+    useInterceptAnchorNavigation(
+      (href) => {
+        if (loading) return true;
+        const values = getValues();
+        if (
+          !formState.isDirty ||
+          isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
+        ) {
+          clearIdeaDraft();
+          return true;
+        }
+        pendingUrlRef.current = href;
+        return false;
+      },
+      () => setShowLeaveModal(true),
+      open
+    );
 
   // Browser tab close/reload
   useEffect(() => {
     const beforeUnload = (e: BeforeUnloadEvent) => {
       if (loading) return;
-      if (!formState.isDirty) return;
+      const values = getValues();
+      if (
+        !formState.isDirty ||
+        isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
+      ) return;
       e.preventDefault();
       e.returnValue = "";
       saveDraftState();
-      toast.success("Idea saved as draft. You can resume later.", { id: "draft-toast" });
+      showCustomToast("Idea saved as draft. You can resume later.", "draft-toast");
       return "";
     };
     window.addEventListener("beforeunload", beforeUnload);
     return () => window.removeEventListener("beforeunload", beforeUnload);
+        // eslint-disable-next-line
   }, [saveDraftState, loading, formState.isDirty]);
 
   // Modal handlers for leave/confirm navigation
   const handleConfirmLeave = () => {
     saveDraftState();
     setShowLeaveModal(false);
-    toast.custom((t) => (
-      <div className="bg-[#232324] px-4 py-3 rounded-lg shadow text-white flex items-center gap-2"
-           style={{ minWidth: 320 }}>
-        <span>Idea saved as draft. You can resume later.</span>
-        <button
-          onClick={() => toast.dismiss(t.id)}
-          className="ml-2 text-gray-300 hover:text-gray-100 text-lg"
-          aria-label="Close"
-        >×</button>
-      </div>
-    ), { id: "draft-toast" });
+    showCustomToast("Idea saved as draft. You can resume later.", "draft-toast");
     if (pendingUrlRef.current) {
       router.push(pendingUrlRef.current);
       pendingUrlRef.current = null;
@@ -269,7 +308,17 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({
 
   // "Back" button triggers the same leave modal
   const handleBack = () => {
-    pendingUrlRef.current = null; // means use router.back()
+    const values = getValues();
+    if (
+      !formState.isDirty ||
+      isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)
+    ) {
+      clearIdeaDraft();
+      onClose?.(); 
+      router.back();
+      return;
+    }
+    pendingUrlRef.current = null;
     setShowLeaveModal(true);
   };
 

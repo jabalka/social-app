@@ -7,7 +7,7 @@ import HtmlProviders from "./html-providers";
 import SafeThemeProviders from "./safe-theme-providers";
 import SidebarProviders from "./sidebar-providers";
 import ThemeProviders from "./theme-providers";
-import ToasterProviders from "./toaster-providers";
+import ToasterProvider from "./toaster-provider";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -22,9 +22,9 @@ const Providers: React.FC<ProvidersProps> = ({ children }) => {
             <ThemeProviders>
               <SafeThemeProviders>
                 <ConfirmationProviders>
-                  <ToasterProviders>
+                  <ToasterProvider>
                     <SidebarProviders>{children}</SidebarProviders>
-                  </ToasterProviders>
+                  </ToasterProvider>
                 </ConfirmationProviders>
               </SafeThemeProviders>
             </ThemeProviders>
