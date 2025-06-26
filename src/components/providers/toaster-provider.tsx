@@ -1,5 +1,6 @@
 "use client";
-import { TOASTER_DURATION_MS } from "@/constants";
+import { MESSAGES, TOASTER_DURATION_MS } from "@/constants";
+import { useSessionToast } from "@/hooks/use-session-toast";
 import React, { PropsWithChildren, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -13,6 +14,10 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     window.toast = toast;
   }, []);
+  // Show Idea Draft toast if sessionStorage flag is set.,
+  // only needs to set the flag before navigation e.g. sessionStorage.setItem("showIdeaDraftToast", "true");
+  useSessionToast("showIdeaDraftToast", MESSAGES.IDEA_DRAFT_SAVED, "idea-draft-toast");
+  useSessionToast("showProjectDraftToast", MESSAGES.PROJECT_DRAFT_SAVED, "project-draft-toast");
 
   return (
     <>
