@@ -2,7 +2,7 @@ import { Theme } from "./types/theme.enum";
 
 // Time constants
 export const SWIPER_ANIMATION_DURATION_MS = 300;
-export const TOASTER_DURATION_MS = 6000;
+export const TOASTER_DURATION_MS = 3000;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const MONTH_MS = 30 * DAY_MS;
 export const SIX_MONTHS_MS = 6 * MONTH_MS;
@@ -56,6 +56,9 @@ export const MESSAGES = {
   SOMETHING_WENT_WRONG: "Something went wrong, please try again later",
   INSUFFICIENT_PERMISSIONS: "Insufficient permissions to perform this action",
 
+  //Toast
+  IDEA_DRAFT_SAVED: "Idea saved as draft. You can resume later.",
+  PROJECT_DRAFT_SAVED: "Project saved as draft. You can resume later.",
 }
 
 

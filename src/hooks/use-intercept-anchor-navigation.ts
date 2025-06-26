@@ -1,15 +1,14 @@
 import { useEffect, useRef } from "react";
 
 /**
- * useInterceptAnchorNavigation
- * 
- * Intercepts all <a> and <Link> clicks in the document and allows you to conditionally block navigation.
- * 
- * @param shouldBlockNavigation (href: string) => boolean | Promise<boolean>
- *   - Return true to allow navigation, false to block (and do your own thing).
- * @param onBlockedNavigation (href: string, event: MouseEvent) => void
- *   - Called if navigation is blocked (e.g. show a modal, etc).
- * @param enabled boolean - Whether to enable interception (default: true)
+  
+  Intercepts all <a> and <Link> clicks in the document and allows you to conditionally block navigation.
+
+  @param shouldBlockNavigation (href: string) => boolean | Promise<boolean>
+   - Return true to allow navigation, false to block (and do your own thing).
+  @param onBlockedNavigation (href: string, event: MouseEvent) => void
+    - Called if navigation is blocked (e.g. show a modal, etc).
+  @param enabled boolean - Whether to enable interception (default: true)
  */
 export function useInterceptAnchorNavigation(
   shouldBlockNavigation: (href: string) => boolean | Promise<boolean>,

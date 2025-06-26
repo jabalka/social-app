@@ -2,11 +2,10 @@
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navigation";
+import { useShowToastOnBrowserBack } from "@/hooks/use-show-toast-on-browser-back";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { IdeaDraft } from "@/models/idea";
 import { clearIdeaDraft, loadIdeaDraft, saveIdeaDraft } from "@/utils/idea-draft";
-import { showCustomToast } from "@/utils/show-custom-toast";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
@@ -16,22 +15,15 @@ import GlowingPinkButton from "../glowing-pink-button";
 import IconWithTooltip from "../icon-with-tooltip";
 import LeafletMapModal from "../leaflet-map-modal";
 import LeaveDraftModal from "../prompt-modal";
+import { IdeaFormFields, isFormEmpty } from "@/utils/create-idea-form.utils";
+import { usePostcodeAddress } from "@/hooks/use-postcode-address.hook";
 
 const CATEGORIES = PROJECT_CATEGORIES;
 
-export interface IdeaCreateFormProps {
+interface IdeaCreateFormProps {
   open?: boolean;
   onClose?: () => void;
   onIdeaCreated?: () => void;
-}
-
-interface IdeaFormFields {
-  title: string;
-  content: string;
-  allowCollab: boolean;
-  postcode: string;
-  categories: string[];
-  images: File[];
 }
 
 const defaultValues: IdeaFormFields = {
@@ -50,39 +42,174 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
 
   const methods = useForm<IdeaFormFields>({ defaultValues, mode: "onChange" });
   const { handleSubmit, control, setValue, getValues, watch, reset, formState } = methods;
+  const { lat, lng, addressLines, addressCoords, what3words, updateByPostcode, updateByLatLng,     resetAddressState,
+    setAllAddressState, } = usePostcodeAddress();
   const watchedCategories = watch("categories");
 
   const [loading, setLoading] = useState(false);
-
-  const [lat, setLat] = useState<number | null>(null);
-  const [lng, setLng] = useState<number | null>(null);
-  const [what3words, setWhat3words] = useState("");
   const [showMap, setShowMap] = useState(false);
-
-  // For address formatting
-  const [addressLines, setAddressLines] = useState<string[]>([]);
-  const [addressCoords, setAddressCoords] = useState<string>("");
-
   // Drag-and-drop state
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-
   // Modal state for leave navigation
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const pendingUrlRef = useRef<string | null>(null);
 
+  // Description Content limitation
+  const watchedContent = watch("content", "");
+  const maxContentLength = 15000;
+  const contentLength = watchedContent?.length || 0;
+  const isContentLimitReached = contentLength >= maxContentLength;
+
   const isCreateButtonDisabled =
-  loading ||
-  !formState.isValid ||
-  !lat ||
-  !lng ||
-  !watchedCategories ||
-  watchedCategories.length === 0;
+    loading || !formState.isValid || !lat || !lng || !watchedCategories || watchedCategories.length === 0;
 
   const RequiredStar = () => (
     <span className="ml-1 text-red-500" title="Required" aria-label="required">
       *
     </span>
   );
+
+
+  // Save draft state
+  const saveDraftState = useCallback(() => {
+    const values = getValues();
+    if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+      clearIdeaDraft();
+      return;
+    }
+    const draft: IdeaDraft = {
+      ...values,
+      lat,
+      lng,
+      what3words,
+      addressLines,
+      addressCoords,
+      previewUrls,
+    };
+    saveIdeaDraft(draft);
+  }, [getValues, lat, lng, what3words, addressLines, addressCoords, previewUrls]);
+
+  // Intercept and blocks anchor navigation for <Link> and <a>:
+  useInterceptAnchorNavigation(
+    (href) => {
+      if (loading) return true;
+      const values = getValues();
+      if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+        clearIdeaDraft();
+        return true;
+      }
+      pendingUrlRef.current = href;
+      return false;
+    },
+    () => setShowLeaveModal(true),
+    open,
+  );
+  // Intercepts browser back/forward button:
+  useShowToastOnBrowserBack(
+    () => !isFormEmpty(getValues(), lat, lng, addressLines, addressCoords, previewUrls),
+    () => {
+      saveDraftState();
+      sessionStorage.setItem("showIdeaDraftToast", "true");
+    },
+  );
+
+    // Modal handlers for leave/confirm navigation
+    const handleConfirmLeave = () => {
+      saveDraftState();
+      setShowLeaveModal(false);
+      sessionStorage.setItem("showIdeaDraftToast", "true");
+      if (pendingUrlRef.current) {
+        router.push(pendingUrlRef.current);
+        pendingUrlRef.current = null;
+      } else {
+        router.back();
+      }
+    };
+    const handleCancelLeave = () => {
+      setShowLeaveModal(false);
+      pendingUrlRef.current = null;
+    };
+  
+    // Postcode field handler
+    const handlePostcodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setValue("postcode", value); 
+    
+      await updateByPostcode(value); 
+    };
+  
+    // Map modal handler
+    const handleMapPick = async (lat: number, lng: number) => {
+      setShowMap(false);
+      const data = await updateByLatLng(lat, lng);
+      if (data?.postcode) setValue("postcode", data.postcode, { shouldValidate: true });
+    };
+  
+    // Form submit
+    const onSubmit = async (data: IdeaFormFields) => {
+      setLoading(true);
+      const res = await fetch("/api/ideas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title,
+          content: data.content,
+          allowCollab: data.allowCollab,
+          latitude: lat,
+          longitude: lng,
+          postcode: data.postcode,
+          what3words,
+          categories: data.categories,
+        }),
+      });
+      if (!res.ok) {
+        setLoading(false);
+        return;
+      }
+      const result = await res.json();
+      const ideaId = result.data?.id;
+      if (ideaId && data.images && data.images.length > 0) {
+        for (const file of data.images.slice(0, 10)) {
+          const formData = new FormData();
+          formData.append("image", file);
+          formData.append("ideaId", ideaId);
+          await fetch("/api/ideas/upload-image", { method: "POST", body: formData });
+        }
+      }
+      setLoading(false);
+      reset();
+      resetAddressState();
+      setPreviewUrls([]);
+      clearIdeaDraft();
+      onIdeaCreated?.();
+      onClose?.();
+    };
+  
+    // "Back" button triggers the same leave modal
+    const handleBack = () => {
+      const values = getValues();
+      if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+        clearIdeaDraft();
+        onClose?.();
+        router.back();
+        return;
+      }
+      pendingUrlRef.current = null;
+      setShowLeaveModal(true);
+    };
+
+      // Save draft when form changes
+  useEffect(() => {
+    const subscription = methods.watch(() => {
+      const values = getValues();
+      if (!isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+        saveDraftState();
+        sessionStorage.setItem("showIdeaDraftToast", "true");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [methods, getValues, saveDraftState, lat, lng, addressLines, addressCoords, previewUrls]);
+  
 
   // On mount, check for existing draft and optionally load it
   useEffect(() => {
@@ -115,10 +242,14 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
             categories: draft.categories ?? [],
             images: draft.images ?? [],
           });
-          setLat(draft.lat ?? null);
-          setLng(draft.lng ?? null);
-          setAddressLines(draft.addressLines ?? []);
-          setAddressCoords(draft.addressCoords ?? "");
+          setAllAddressState(
+            draft.lat ?? null,
+            draft.lng ?? null,
+            draft.addressLines ?? [],
+            draft.addressCoords ?? "",
+            draft.postcode ?? "",
+            draft.what3words ?? "",
+          );
           setPreviewUrls(draft.previewUrls ?? []);
         } else {
           // discard draft
@@ -129,74 +260,18 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
     // eslint-disable-next-line
   }, [open]);
 
-  function isFormEmpty(
-    values: IdeaFormFields,
-    lat: number | null | undefined,
-    lng: number | null | undefined,
-    addressLines: string[],
-    addressCoords: string,
-    previewUrls: string[],
-  ): boolean {
-    // Check all form fields and extras
-    return (
-      !values.title.trim() &&
-      !values.content.trim() &&
-      !values.postcode.trim() &&
-      (!values.categories || values.categories.length === 0) &&
-      (!values.images || values.images.length === 0) &&
-      !lat &&
-      !lng &&
-      addressLines.filter(Boolean).length === 0 &&
-      !addressCoords &&
-      (!previewUrls || previewUrls.length === 0)
-    );
-  }
 
-  // Save draft state
-  const saveDraftState = useCallback(() => {
-    const values = getValues();
-    if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
-      clearIdeaDraft();
-      return;
-    }
-    const draft: IdeaDraft = {
-      ...values,
-      lat,
-      lng,
-      what3words,
-      addressLines,
-      addressCoords,
-      previewUrls,
-    };
-    saveIdeaDraft(draft);
-  }, [getValues, lat, lng, what3words, addressLines, addressCoords, previewUrls]);
-
-  // Intercept and blocks anchor navigation for <Link> and <a>:
-  useInterceptAnchorNavigation(
-    (href) => {
-      if (loading) return true;
-      const values = getValues();
-      if (!formState.isDirty || isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
-        clearIdeaDraft();
-        return true;
-      }
-      pendingUrlRef.current = href;
-      return false;
-    },
-    () => setShowLeaveModal(true),
-    open,
-  );
 
   // Browser tab close/reload
   useEffect(() => {
     const beforeUnload = (e: BeforeUnloadEvent) => {
       if (loading) return;
       const values = getValues();
-      if (!formState.isDirty || isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) return;
+      if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) return;
       e.preventDefault();
       e.returnValue = "";
       saveDraftState();
-      showCustomToast("Idea saved as draft. You can resume later.", "draft-toast");
+      sessionStorage.setItem("showIdeaDraftToast", "true");
       return "";
     };
     window.addEventListener("beforeunload", beforeUnload);
@@ -204,142 +279,10 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
     // eslint-disable-next-line
   }, [saveDraftState, loading, formState.isDirty]);
 
-  // Modal handlers for leave/confirm navigation
-  const handleConfirmLeave = () => {
-    saveDraftState();
-    setShowLeaveModal(false);
-    showCustomToast("Idea saved as draft. You can resume later.", "draft-toast");
-    if (pendingUrlRef.current) {
-      router.push(pendingUrlRef.current);
-      pendingUrlRef.current = null;
-    } else {
-      router.back();
-    }
-  };
-  const handleCancelLeave = () => {
-    setShowLeaveModal(false);
-    pendingUrlRef.current = null;
-  };
 
-  // Postcode field handler
-  const handlePostcodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setValue("postcode", value);
-    if (value.length >= 5) {
-      try {
-        const res = await axios.get(`https://api.postcodes.io/postcodes/${value}`);
-        const {
-          latitude,
-          longitude,
-          country,
-          admin_ward: ward,
-          admin_district: district,
-          country: cty,
-        } = res.data.result;
-        setLat(latitude);
-        setLng(longitude);
-        setAddressLines([
-          res.data.result.thoroughfare || res.data.result.street || res.data.result.parish || "",
-          [ward, district].filter(Boolean).join(", "),
-          cty || country || "",
-        ]);
-        setAddressCoords(`${latitude?.toFixed(5)}, ${longitude?.toFixed(5)}`);
-      } catch {
-        setAddressLines([]);
-        setLat(null);
-        setLng(null);
-        setWhat3words("");
-        setAddressCoords("");
-      }
-    } else {
-      setAddressLines([]);
-      setLat(null);
-      setLng(null);
-      setWhat3words("");
-      setAddressCoords("");
-    }
-  };
-
-  // Map modal handler
-  const handleMapPick = async (lat: number, lng: number) => {
-    setLat(lat);
-    setLng(lng);
-    setShowMap(false);
-    try {
-      const res = await axios.get(`https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}`);
-      const pc = res.data.result?.[0]?.postcode;
-      setValue("postcode", pc || "");
-      setAddressLines([
-        res.data.result?.[0]?.thoroughfare || res.data.result?.[0]?.street || res.data.result?.[0]?.parish || "",
-        [res.data.result?.[0]?.admin_ward, res.data.result?.[0]?.admin_district].filter(Boolean).join(", "),
-        res.data.result?.[0]?.country || "",
-      ]);
-      setAddressCoords(lat && lng ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : "");
-    } catch {
-      setValue("postcode", "");
-      setAddressLines([]);
-      setAddressCoords("");
-    }
-  };
-
-  // Form submit
-  const onSubmit = async (data: IdeaFormFields) => {
-    setLoading(true);
-    const res = await fetch("/api/ideas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: data.title,
-        content: data.content,
-        allowCollab: data.allowCollab,
-        latitude: lat,
-        longitude: lng,
-        postcode: data.postcode,
-        what3words,
-        categories: data.categories,
-      }),
-    });
-    if (!res.ok) {
-      setLoading(false);
-      return;
-    }
-    const result = await res.json();
-    const ideaId = result.data?.id;
-    if (ideaId && data.images && data.images.length > 0) {
-      for (const file of data.images.slice(0, 10)) {
-        const formData = new FormData();
-        formData.append("image", file);
-        formData.append("ideaId", ideaId);
-        await fetch("/api/ideas/upload-image", { method: "POST", body: formData });
-      }
-    }
-    setLoading(false);
-    reset();
-    setLat(null);
-    setLng(null);
-    setWhat3words("");
-    setAddressLines([]);
-    setAddressCoords("");
-    setPreviewUrls([]);
-    clearIdeaDraft();
-    onIdeaCreated?.();
-    onClose?.();
-  };
-
-  // "Back" button triggers the same leave modal
-  const handleBack = () => {
-    const values = getValues();
-    if (!formState.isDirty || isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
-      clearIdeaDraft();
-      onClose?.();
-      router.back();
-      return;
-    }
-    pendingUrlRef.current = null;
-    setShowLeaveModal(true);
-  };
 
   if (!open) return null;
+  
 
   return (
     <>
@@ -378,11 +321,17 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
               />
             </div>
             <textarea
-              className="w-full rounded border p-2"
+              className={`w-full rounded border p-2 ${isContentLimitReached ? "border-red-400" : ""}`}
               placeholder="Describe your idea..."
-              {...methods.register("content", { required: true })}
+              {...methods.register("content", { required: true, maxLength: maxContentLength })}
               rows={4}
+              maxLength={maxContentLength}
             />
+            <div className="mt-1 flex justify-end text-xs">
+              <span className={isContentLimitReached ? "font-semibold text-red-500" : "text-gray-500"}>
+                {contentLength}/{maxContentLength}
+              </span>
+            </div>
           </div>
           {/* Postcode & map */}
           <div>
@@ -407,8 +356,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
               <input
                 className="w-full rounded border p-2"
                 placeholder="Enter UK postcode (auto-fills location)"
-                value={watch("postcode")}
-                onChange={handlePostcodeChange}
+                            value={watch("postcode")}
+                            onChange={handlePostcodeChange}
               />
               <button
                 type="button"
