@@ -1,4 +1,5 @@
-import { Theme } from "@/types/theme.enum";
+
+// import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { Button } from "./ui/button";
 
@@ -12,14 +13,14 @@ interface Props {
   theme?: string;
 }
 
-const GlowingGreenButton: React.FC<Props> = ({
+const GlowingVioletButton: React.FC<Props> = ({
   children,
   onClick,
   onClickTwo,
   disabled = false,
   className = "",
   type = "button",
-  theme,
+//   theme,
 }) => {
   const handleClick = () => {
     if (onClick) onClick();
@@ -33,7 +34,7 @@ const GlowingGreenButton: React.FC<Props> = ({
           disabled={disabled}
           type={type}
           className={cn(
-            "rounded-full bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] text-sm text-white outline outline-[#359c33]/60 hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2 group-hover:bg-gradient-to-br",
+            "rounded-full bg-gradient-to-br from-[#c879d0] via-[#7c3184] to-[#c879d0] text-sm text-white outline outline-[#9b52a3]/60 transition duration-300 hover:bg-gradient-to-br hover:from-[#9b52a3] hover:via-[#c879d0] hover:to-[#7c3184] hover:outline-2",
             className,
           )}
         >
@@ -41,9 +42,9 @@ const GlowingGreenButton: React.FC<Props> = ({
         </Button>
         {!disabled && (
           <span
-            className={cn(`pointer-events-none absolute inset-0 overflow-hidden rounded-full`, {
-              "group-hover:animate-snakeBorderGreen1sLight": theme === Theme.LIGHT,
-              "group-hover:animate-snakeBorderGreen1s": !theme || theme === Theme.DARK,
+            className={cn(`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderViolet`, {
+            //   "group-hover:animate-snakeBorderGreen1sLight": theme === Theme.LIGHT,
+            //   "group-hover:animate-snakeBorderGreen1s": !theme || theme === Theme.DARK,
             })}
           />
         )}
@@ -52,4 +53,6 @@ const GlowingGreenButton: React.FC<Props> = ({
   );
 };
 
-export default GlowingGreenButton;
+export default GlowingVioletButton;
+
+
