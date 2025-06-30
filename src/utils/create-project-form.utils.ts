@@ -1,15 +1,16 @@
 
-export interface IdeaFormFields {
+export interface ProjectFormFields {
     title: string;
-    content: string;
-    allowCollab: boolean;
+    description: string;
     postcode: string;
-    categories: string[];
+    latitude: number | null;
+    longitude: number | null;
     images: File[];
+    categories: string[];
   }
 
-export function isIdeaFormEmpty(
-  values: IdeaFormFields,
+export function isProjectFormEmpty(
+  values: ProjectFormFields,
   lat: number | null | undefined,
   lng: number | null | undefined,
   addressLines: string[],
@@ -18,7 +19,7 @@ export function isIdeaFormEmpty(
 ): boolean {
   return (
     !values.title.trim() &&
-    !values.content.trim() &&
+    !values.description.trim() &&
     !values.postcode.trim() &&
     (!values.categories || values.categories.length === 0) &&
     (!values.images || values.images.length === 0) &&
@@ -29,3 +30,5 @@ export function isIdeaFormEmpty(
     (!previewUrls || previewUrls.length === 0)
   );
 }
+
+

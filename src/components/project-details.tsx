@@ -14,6 +14,7 @@ import DragAndDropArea from "./drag-and-drop-area";
 import GlowingProgressBar from "./glowing-progress-bar";
 import { Project } from "./map-wrapper-viewer";
 import ProjectAllComments from "./project-all-comments";
+import GlowingVioletButton from "./glowing-violet-button";
 
 interface ProjectDetailsDialogProps {
   user: AuthUser;
@@ -378,18 +379,10 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
               </button>
             </div>
             {/* from-[#185b17] via-[#2a8829] to-[#185b17] */}
-            <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
-              <button
-                onClick={() => setShowCommentModal(true)}
-                className={`w-32 rounded-full bg-gradient-to-br from-[#c879d0] via-[#7c3184] to-[#c879d0] py-1 text-sm text-white outline outline-[#9b52a3]/60 transition duration-300 hover:bg-gradient-to-br hover:from-[#9b52a3] hover:via-[#c879d0] hover:to-[#7c3184] hover:outline-2`}
-              >
-                Comment
-                <span
-                  key={animationKey}
-                  className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full group-hover:animate-snakeBorderViolet`}
-                />
-              </button>
-            </div>
+
+            <GlowingVioletButton onClick={() => setShowCommentModal(true)} className="w-32">
+            Comment
+              </GlowingVioletButton>
           </div>
         </div>
 

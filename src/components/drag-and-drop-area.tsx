@@ -1,19 +1,23 @@
 "use client";
 
+import { Theme } from "@/types/theme.enum";
+import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import React, { useCallback, useRef } from "react";
 import { useController, useFormContext } from "react-hook-form";
 
-interface DragAndDropAreaProps {
+interface Props {
   name: string;
   previewUrls: string[];
   onPreviewUrlsChange: (urls: string[]) => void;
+  theme?: string;
 }
 
-const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
+const DragAndDropArea: React.FC<Props> = ({
   name,
   previewUrls,
   onPreviewUrlsChange,
+  theme
 }) => {
   const { control } = useFormContext();
   const { field } = useController({ name, control });
@@ -65,9 +69,12 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={() => inputRef.current?.click()}
-      className="cursor-pointer rounded border border-dashed border-gray-400 bg-gray-50 p-4 text-center"
+      className={cn("cursor-pointer rounded border border-dashed border-gray-400 bg-[#00000039] p-4 text-center",{
+                      "text-gray-300": theme === Theme.LIGHT,
+                      "text-zinc-400": theme === Theme.DARK,
+      })}
     >
-      <p className="text-sm text-gray-500">
+      <p className="text-sm">
         Drag and drop images here or click to browse (max 10)
       </p>
       <input

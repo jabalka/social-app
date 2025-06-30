@@ -2,10 +2,12 @@
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navigation";
+import { usePostcodeAddress } from "@/hooks/use-postcode-address.hook";
 import { useShowToastOnBrowserBack } from "@/hooks/use-show-toast-on-browser-back";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { IdeaDraft } from "@/models/idea";
-import { clearIdeaDraft, loadIdeaDraft, saveIdeaDraft } from "@/utils/idea-draft";
+import { IdeaFormFields, isIdeaFormEmpty } from "@/utils/create-idea-form.utils";
+import { clearDraft, loadDraft, saveDraft } from "@/utils/save-to-draft.utils";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
@@ -14,10 +16,10 @@ import GlowingGreenButton from "../glowing-green-button";
 import GlowingPinkButton from "../glowing-pink-button";
 import IconWithTooltip from "../icon-with-tooltip";
 import LeafletMapModal from "../leaflet-map-modal";
-import LeaveDraftModal from "../prompt-modal";
-import { IdeaFormFields, isFormEmpty } from "@/utils/create-idea-form.utils";
-import { usePostcodeAddress } from "@/hooks/use-postcode-address.hook";
+import LocationPostcodePickup from "../location-postode-pick-up";
+import RequiredStar from "../required-star";
 
+const DRAFT_KEY = "IDEA_FORM_DRAFT"
 const CATEGORIES = PROJECT_CATEGORIES;
 
 interface IdeaCreateFormProps {
@@ -42,16 +44,22 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
 
   const methods = useForm<IdeaFormFields>({ defaultValues, mode: "onChange" });
   const { handleSubmit, control, setValue, getValues, watch, reset, formState } = methods;
-  const { lat, lng, addressLines, addressCoords, what3words, updateByPostcode, updateByLatLng,     resetAddressState,
-    setAllAddressState, } = usePostcodeAddress();
+  const {
+    lat,
+    lng,
+    addressLines,
+    addressCoords,
+    what3words,
+    updateByPostcode,
+    updateByLatLng,
+    resetAddressState,
+    setAllAddressState,
+  } = usePostcodeAddress();
   const watchedCategories = watch("categories");
 
   const [loading, setLoading] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  // Drag-and-drop state
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  // Modal state for leave navigation
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const pendingUrlRef = useRef<string | null>(null);
 
   // Description Content limitation
@@ -63,18 +71,11 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
   const isCreateButtonDisabled =
     loading || !formState.isValid || !lat || !lng || !watchedCategories || watchedCategories.length === 0;
 
-  const RequiredStar = () => (
-    <span className="ml-1 text-red-500" title="Required" aria-label="required">
-      *
-    </span>
-  );
-
-
   // Save draft state
   const saveDraftState = useCallback(() => {
     const values = getValues();
-    if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
-      clearIdeaDraft();
+    if (isIdeaFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+      clearDraft(DRAFT_KEY);
       return;
     }
     const draft: IdeaDraft = {
@@ -86,138 +87,146 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
       addressCoords,
       previewUrls,
     };
-    saveIdeaDraft(draft);
+    saveDraft(DRAFT_KEY, draft);
   }, [getValues, lat, lng, what3words, addressLines, addressCoords, previewUrls]);
 
-  // Intercept and blocks anchor navigation for <Link> and <a>:
   useInterceptAnchorNavigation(
     (href) => {
       if (loading) return true;
       const values = getValues();
-      if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
-        clearIdeaDraft();
+      if (isIdeaFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+        clearDraft(DRAFT_KEY);
         return true;
       }
       pendingUrlRef.current = href;
       return false;
     },
-    () => setShowLeaveModal(true),
+    async () => {
+      const result = await confirm({
+        title: "Leave and save as draft?",
+        description:
+          "Your idea will be saved as a draft and you can continue later. Are you sure you want to leave this page?",
+        confirmText: "Leave",
+        cancelText: "Stay",
+      });
+      if (result) {
+        saveDraftState();
+        sessionStorage.setItem("showIdeaDraftToast", "true");
+        if (pendingUrlRef.current) {
+          router.push(pendingUrlRef.current);
+          pendingUrlRef.current = null;
+        } else {
+          router.back();
+        }
+      } else {
+        pendingUrlRef.current = null;
+      }
+    },
     open,
   );
-  // Intercepts browser back/forward button:
+
   useShowToastOnBrowserBack(
-    () => !isFormEmpty(getValues(), lat, lng, addressLines, addressCoords, previewUrls),
+    () => !isIdeaFormEmpty(getValues(), lat, lng, addressLines, addressCoords, previewUrls),
     () => {
       saveDraftState();
       sessionStorage.setItem("showIdeaDraftToast", "true");
     },
   );
 
-    // Modal handlers for leave/confirm navigation
-    const handleConfirmLeave = () => {
-      saveDraftState();
-      setShowLeaveModal(false);
-      sessionStorage.setItem("showIdeaDraftToast", "true");
-      if (pendingUrlRef.current) {
-        router.push(pendingUrlRef.current);
-        pendingUrlRef.current = null;
-      } else {
-        router.back();
-      }
-    };
-    const handleCancelLeave = () => {
-      setShowLeaveModal(false);
-      pendingUrlRef.current = null;
-    };
-  
-    // Postcode field handler
-    const handlePostcodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setValue("postcode", value); 
-    
-      await updateByPostcode(value); 
-    };
-  
-    // Map modal handler
-    const handleMapPick = async (lat: number, lng: number) => {
-      setShowMap(false);
-      const data = await updateByLatLng(lat, lng);
-      if (data?.postcode) setValue("postcode", data.postcode, { shouldValidate: true });
-    };
-  
-    // Form submit
-    const onSubmit = async (data: IdeaFormFields) => {
-      setLoading(true);
-      const res = await fetch("/api/ideas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: data.title,
-          content: data.content,
-          allowCollab: data.allowCollab,
-          latitude: lat,
-          longitude: lng,
-          postcode: data.postcode,
-          what3words,
-          categories: data.categories,
-        }),
-      });
-      if (!res.ok) {
-        setLoading(false);
-        return;
-      }
-      const result = await res.json();
-      const ideaId = result.data?.id;
-      if (ideaId && data.images && data.images.length > 0) {
-        for (const file of data.images.slice(0, 10)) {
-          const formData = new FormData();
-          formData.append("image", file);
-          formData.append("ideaId", ideaId);
-          await fetch("/api/ideas/upload-image", { method: "POST", body: formData });
-        }
-      }
-      setLoading(false);
-      reset();
-      resetAddressState();
-      setPreviewUrls([]);
-      clearIdeaDraft();
-      onIdeaCreated?.();
-      onClose?.();
-    };
-  
-    // "Back" button triggers the same leave modal
-    const handleBack = () => {
-      const values = getValues();
-      if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
-        clearIdeaDraft();
-        onClose?.();
-        router.back();
-        return;
-      }
-      pendingUrlRef.current = null;
-      setShowLeaveModal(true);
-    };
+  const handlePostcodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setValue("postcode", value);
 
-      // Save draft when form changes
+    await updateByPostcode(value);
+  };
+
+  const handleMapPick = async (lat: number, lng: number) => {
+    setShowMap(false);
+    const data = await updateByLatLng(lat, lng);
+    if (data?.postcode) setValue("postcode", data.postcode, { shouldValidate: true });
+  };
+
+  const onSubmit = async (data: IdeaFormFields) => {
+    setLoading(true);
+    const res = await fetch("/api/ideas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: data.title,
+        content: data.content,
+        allowCollab: data.allowCollab,
+        latitude: lat,
+        longitude: lng,
+        postcode: data.postcode,
+        what3words,
+        categories: data.categories,
+      }),
+    });
+    if (!res.ok) {
+      setLoading(false);
+      return;
+    }
+    const result = await res.json();
+    const ideaId = result.data?.id;
+    if (ideaId && data.images && data.images.length > 0) {
+      for (const file of data.images.slice(0, 10)) {
+        const formData = new FormData();
+        formData.append("image", file);
+        formData.append("ideaId", ideaId);
+        await fetch("/api/ideas/upload-image", { method: "POST", body: formData });
+      }
+    }
+    setLoading(false);
+    reset();
+    resetAddressState();
+    setPreviewUrls([]);
+    clearDraft(DRAFT_KEY);
+    onIdeaCreated?.();
+    onClose?.();
+  };
+
+  const handleBackButton = async () => {
+    const values = getValues();
+    if (isIdeaFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+      clearDraft(DRAFT_KEY);
+      onClose?.();
+      router.back();
+      return;
+    }
+    const result = await confirm({
+      title: "Leave and save as draft?",
+      description:
+        "Your idea will be saved as a draft and you can continue later. Are you sure you want to leave this page?",
+      confirmText: "Leave",
+      cancelText: "Stay",
+    });
+    if (result) {
+      saveDraftState();
+      sessionStorage.setItem("showIdeaDraftToast", "true");
+      onClose?.();
+      router.back();
+    }
+  };
+
+  // save draft when form changes
   useEffect(() => {
     const subscription = methods.watch(() => {
       const values = getValues();
-      if (!isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
+      if (!isIdeaFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) {
         saveDraftState();
         sessionStorage.setItem("showIdeaDraftToast", "true");
       }
     });
     return () => subscription.unsubscribe();
   }, [methods, getValues, saveDraftState, lat, lng, addressLines, addressCoords, previewUrls]);
-  
 
-  // On mount, check for existing draft and optionally load it
+  // checking for existing draft and optionally load it
   useEffect(() => {
     if (!open) return;
-    const draft = loadIdeaDraft?.();
+    const draft = loadDraft<IdeaDraft>?.(DRAFT_KEY);
     if (
       draft &&
-      !isFormEmpty(
+      !isIdeaFormEmpty(
         draft,
         draft.lat,
         draft.lng,
@@ -233,7 +242,6 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
         cancelText: "Discard",
       }).then((result) => {
         if (result) {
-          // resume draft
           reset({
             title: draft.title ?? "",
             content: draft.content ?? "",
@@ -252,22 +260,19 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
           );
           setPreviewUrls(draft.previewUrls ?? []);
         } else {
-          // discard draft
-          clearIdeaDraft?.();
+          clearDraft?.(DRAFT_KEY);
         }
       });
     }
     // eslint-disable-next-line
   }, [open]);
 
-
-
-  // Browser tab close/reload
+  // browser tab close/reload
   useEffect(() => {
     const beforeUnload = (e: BeforeUnloadEvent) => {
       if (loading) return;
       const values = getValues();
-      if (isFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) return;
+      if (isIdeaFormEmpty(values, lat, lng, addressLines, addressCoords, previewUrls)) return;
       e.preventDefault();
       e.returnValue = "";
       saveDraftState();
@@ -279,187 +284,168 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
     // eslint-disable-next-line
   }, [saveDraftState, loading, formState.isDirty]);
 
-
-
   if (!open) return null;
-  
 
   return (
     <>
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-xl bg-white p-6 shadow">
-          {/* Title */}
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">
-                Idea Title
-                <RequiredStar />
-              </label>
-              <IconWithTooltip
-                theme={theme}
-                id="title"
-                content="A short, descriptive title for your idea. E.g. 'New Playground in Riverside Park'."
-              />
-            </div>
-            <input
-              className="w-full rounded border p-2"
-              placeholder="Idea title"
-              {...methods.register("title", { required: true })}
-            />
-          </div>
-          {/* Description */}
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">
-                Description
-                <RequiredStar />
-              </label>
-              <IconWithTooltip
-                theme={theme}
-                id="desc"
-                content="Briefly explain your idea. What problem does it solve? Why is it important?"
-              />
-            </div>
-            <textarea
-              className={`w-full rounded border p-2 ${isContentLimitReached ? "border-red-400" : ""}`}
-              placeholder="Describe your idea..."
-              {...methods.register("content", { required: true, maxLength: maxContentLength })}
-              rows={4}
-              maxLength={maxContentLength}
-            />
-            <div className="mt-1 flex justify-end text-xs">
-              <span className={isContentLimitReached ? "font-semibold text-red-500" : "text-gray-500"}>
-                {contentLength}/{maxContentLength}
-              </span>
-            </div>
-          </div>
-          {/* Postcode & map */}
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">
-                Location (Postcode or pick on map)
-                <RequiredStar />
-              </label>
-              <IconWithTooltip
-                id="postcode"
-                theme={theme}
-                content={
-                  <>
-                    Enter a UK postcode or select a point on the map.
-                    <br />
-                    This will fill the address and coordinates below.
-                  </>
-                }
-              />
-            </div>
-            <div className="mb-2 flex items-center gap-2">
+        <div className="rounded-xl bg-gradient-to-b from-[#d9b8a71a] via-[#514e4d45] to-[#00000065]">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-xl p-6 shadow">
+            {/* Title */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm font-semibold">
+                  Idea Title
+                  <RequiredStar />
+                </label>
+                <IconWithTooltip
+                  theme={theme}
+                  id="title"
+                  tooltipPlacement="left"
+                  content="A short, descriptive title for your idea. E.g. 'New Playground in Riverside Park'."
+                />
+              </div>
               <input
                 className="w-full rounded border p-2"
-                placeholder="Enter UK postcode (auto-fills location)"
-                            value={watch("postcode")}
-                            onChange={handlePostcodeChange}
+                placeholder="Idea title"
+                {...methods.register("title", { required: true })}
               />
-              <button
-                type="button"
-                onClick={() => setShowMap(true)}
-                className="rounded bg-blue-500 px-3 py-2 text-white"
-              >
-                Pick on Map
-              </button>
             </div>
-            {addressLines.filter(Boolean).length > 0 && (
-              <div className="mb-1 rounded border bg-gray-50 px-3 py-2 text-xs text-gray-700">
-                {addressLines[0] && <div className="font-medium">{addressLines[0]}</div>}
-                {addressLines[1] && <div>{addressLines[1]}</div>}
-                {addressLines[2] && <div className="text-gray-500">{addressLines[2]}</div>}
-              </div>
-            )}
-            {addressCoords && <div className="text-[11px] text-gray-500">Coordinates: {addressCoords}</div>}
-          </div>
-          {/* Categories */}
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">
-                Categories
-                <RequiredStar />
-              </label>
-              <IconWithTooltip id="categories" theme={theme} content="Select all categories that fit your idea." />
-            </div>
-            <div className="flex flex-wrap gap-4">
-              {CATEGORIES.map((cat) => (
-                <label key={cat.id} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Controller
-                    control={control}
-                    name="categories"
-                    render={({ field }) => (
-                      <input
-                        type="checkbox"
-                        value={cat.id}
-                        checked={field.value?.includes(cat.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            field.onChange([...(field.value || []), cat.id]);
-                          } else {
-                            field.onChange((field.value || []).filter((id: string) => id !== cat.id));
-                          }
-                        }}
-                      />
-                    )}
-                  />
-                  {cat.name}
+            {/* Description */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm font-semibold">
+                  Description
+                  <RequiredStar />
                 </label>
-              ))}
+                <IconWithTooltip
+                  theme={theme}
+                  tooltipPlacement="left"
+                  id="desc"
+                  content="Briefly explain your idea. What problem does it solve? Why is it important?"
+                />
+              </div>
+              <textarea
+                className={`w-full rounded border p-2 ${isContentLimitReached ? "border-red-400" : ""}`}
+                placeholder="Describe your idea..."
+                {...methods.register("content", { required: true, maxLength: maxContentLength })}
+                rows={4}
+                maxLength={maxContentLength}
+              />
+              <div className="mt-1 flex justify-end text-xs">
+                <span className={isContentLimitReached ? "font-semibold text-red-500" : "text-gray-500"}>
+                  {contentLength}/{maxContentLength}
+                </span>
+              </div>
             </div>
-          </div>
-          {/* Images upload */}
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold">Idea Images</label>
+            {/* Postcode & map */}
+            {/* Postcode & map */}
+            <LocationPostcodePickup
+              theme={theme}
+              watch={watch}
+              handlePostcodeChange={handlePostcodeChange}
+              setShowMap={setShowMap}
+              addressLines={addressLines}
+              addressCoords={addressCoords}
+              required
+            />
+            {/* Categories */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm font-semibold">
+                  Categories
+                  <RequiredStar />
+                </label>
+                <IconWithTooltip
+                  id="categories"
+                  tooltipPlacement="left"
+                  theme={theme}
+                  content="Select all categories that fit your idea."
+                />
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {CATEGORIES.map((cat) => (
+                  <label key={cat.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                    <Controller
+                      control={control}
+                      name="categories"
+                      render={({ field }) => (
+                        <input
+                          type="checkbox"
+                          value={cat.id}
+                          checked={field.value?.includes(cat.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              field.onChange([...(field.value || []), cat.id]);
+                            } else {
+                              field.onChange((field.value || []).filter((id: string) => id !== cat.id));
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                    {cat.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            {/* Images upload */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm font-semibold">Idea Images</label>
+                <IconWithTooltip
+                  theme={theme}
+                  tooltipPlacement="left"
+                  id="images"
+                  content="Attach up to 10 images that help explain your idea. Drag and drop or click to browse."
+                />
+              </div>
+              <Controller
+                name="images"
+                control={control}
+                render={({ field }) => (
+                  <DragAndDropArea
+                    theme={theme}
+                    previewUrls={previewUrls}
+                    onPreviewUrlsChange={setPreviewUrls}
+                    {...field}
+                  />
+                )}
+              />
+            </div>
+            {/* Allow Collaboration */}
+            <label className="flex items-center gap-2">
+              <input type="checkbox" {...methods.register("allowCollab")} />
+              Allow collaboration requests
               <IconWithTooltip
                 theme={theme}
-                id="images"
-                content="Attach up to 10 images that help explain your idea. Drag and drop or click to browse."
+                tooltipPlacement="left"
+                id="collab"
+                content="If enabled, others can request to join and help with your idea."
               />
-            </div>
-            <Controller
-              name="images"
-              control={control}
-              render={({ field }) => (
-                <DragAndDropArea previewUrls={previewUrls} onPreviewUrlsChange={setPreviewUrls} {...field} />
+            </label>
+            {/* Buttons */}
+            <div className="flex gap-2">
+              <GlowingPinkButton onClick={handleBackButton}>Back</GlowingPinkButton>
+              <GlowingGreenButton theme={theme} type="submit" disabled={isCreateButtonDisabled} className="px-4 py-2">
+                {loading ? "Submitting..." : "Share Idea"}
+              </GlowingGreenButton>
+              <span className="flex items-center text-xs">
+                <RequiredStar />
+                <span className="ml-1">Required fields</span>
+              </span>
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
               )}
-            />
-          </div>
-          {/* Allow Collaboration */}
-          <label className="flex items-center gap-2">
-            <input type="checkbox" {...methods.register("allowCollab")} />
-            Allow collaboration requests
-            <IconWithTooltip
-              theme={theme}
-              id="collab"
-              content="If enabled, others can request to join and help with your idea."
-            />
-          </label>
-          {/* Buttons */}
-          <div className="flex gap-2">
-            <GlowingPinkButton onClick={handleBack}>Back</GlowingPinkButton>
-            <GlowingGreenButton type="submit" disabled={isCreateButtonDisabled} className="px-4 py-2">
-              {loading ? "Submitting..." : "Share Idea"}
-            </GlowingGreenButton>
-            <span className="flex items-center text-xs text-gray-500">
-              <RequiredStar />
-              <span className="ml-1">Required fields</span>
-            </span>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
         <LeafletMapModal
           open={showMap}
           theme={theme}
@@ -468,13 +454,6 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
           defaultPosition={lat && lng ? [lat, lng] : [51.505, -0.09]}
         />
       </FormProvider>
-      <LeaveDraftModal
-        open={showLeaveModal}
-        onConfirm={handleConfirmLeave}
-        onCancel={handleCancelLeave}
-        title="Leave and save as draft?"
-        description="Your idea will be saved as a draft and you can continue later. Are you sure you want to leave this page?"
-      />
     </>
   );
 };

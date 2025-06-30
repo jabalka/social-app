@@ -1,18 +1,22 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button";
+import { useSafeThemeContext } from "@/context/safe-theme-context";
+import { useConfirmation } from "@/hooks/use-confirmation.hook";
+import GlowingPinkButton from "./glowing-pink-button";
+import GlowingGreenButton from "./glowing-green-button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-    DialogFooter,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useConfirmation } from "@/hooks/use-confirmation.hook";
 
-export function ConfirmationModal() {
+const ConfirmationModal: React.FC = () => {
   const { modalProps } = useConfirmation();
+  const { theme } = useSafeThemeContext();
+
   const {
     isOpen,
     content,
@@ -33,12 +37,16 @@ export function ConfirmationModal() {
         </DialogHeader>
         {content && <div className="py-4" id="confirmation-content">{content}</div>}
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <GlowingPinkButton onClick={onCancel}>
             {cancelText}
-          </Button>
-          <Button onClick={onConfirm}>{confirmText}</Button>
+          </GlowingPinkButton>
+          <GlowingGreenButton onClick={onConfirm} theme={theme}>
+            {confirmText}
+          </GlowingGreenButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ConfirmationModal;

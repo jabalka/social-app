@@ -165,6 +165,7 @@ export const LeafletMapModal: React.FC<LeafletMapModalProps> = ({
         <div className="flex justify-end gap-2">
           <GlowingPinkButton onClick={onClose}>Cancel</GlowingPinkButton>
           <GlowingGreenButton
+          theme={theme}
             disabled={!picked}
             onClick={handleConfirm}
           >
