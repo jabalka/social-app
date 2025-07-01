@@ -1,11 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import MapWrapper from "./map-wrapper";
 import axios from "axios";
 import { cn } from "@/utils/cn.utils";
 import { Theme } from "@/types/theme.enum";
 import GlowingGreenButton from "./glowing-green-button";
 import GlowingPinkButton from "./glowing-pink-button";
+import { getPostcodeData } from "@/utils/postcode.utils";
 
 interface LeafletMapModalProps {
   open: boolean;
@@ -29,15 +30,17 @@ export const LeafletMapModal: React.FC<LeafletMapModalProps> = ({
     addressLines?: string[];
     country?: string;
   }>({});
+  const wasOpen = useRef(false);
 
   // Clear pick on open/close
   useEffect(() => {
-    if (open) {
-      setPicked(null); // Always require explicit pick!
+    if (open && !wasOpen.current) {
+      setPicked(defaultPosition ?? null);
       setLocationInfo({});
     }
+    wasOpen.current = open;
     // eslint-disable-next-line
-  }, [open]);
+  }, [open, defaultPosition]);
 
   // When picked changes, fetch address info
   useEffect(() => {
@@ -46,24 +49,15 @@ export const LeafletMapModal: React.FC<LeafletMapModalProps> = ({
       return;
     }
     const [lat, lng] = picked;
-    axios
-      .get(`https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}`)
-      .then((res) => {
-        const best = res.data.result?.[0];
-        if (best) {
-          setLocationInfo({
-            postcode: best.postcode,
-            addressLines: [
-              best.thoroughfare || best.street || best.parish || "",
-              [best.admin_ward, best.admin_district].filter(Boolean).join(", "),
-            ],
-            country: best.country,
-          });
-        } else {
-          throw new Error();
-        }
-      })
-      .catch(() => {
+    getPostcodeData({ lat, lng }).then((result) => {
+      console.log("Postcode data:", result);
+      if (result) {
+        setLocationInfo({
+          postcode: result.postcode,
+          addressLines: result.addressLines,
+          country: result.addressLines?.[2],
+        });
+      } else {
         // fallback: Nominatim (global)
         axios
           .get(
@@ -91,7 +85,8 @@ export const LeafletMapModal: React.FC<LeafletMapModalProps> = ({
             });
           })
           .catch(() => setLocationInfo({}));
-      });
+      }
+    });
   }, [picked]);
 
   // Only allow Confirm if user has explicitly picked
@@ -156,10 +151,7 @@ export const LeafletMapModal: React.FC<LeafletMapModalProps> = ({
                 (line, i) =>
                   line && <div key={i}>{line}</div>
               )}
-            {locationInfo.country && (
-              <div>{locationInfo.country}</div>
-            )}
-          </div>
+             </div>
         )}
 
         <div className="flex justify-end gap-2">

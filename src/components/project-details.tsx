@@ -12,9 +12,9 @@ import { FormProvider, useForm } from "react-hook-form";
 import CommentCreation from "./create-comment";
 import DragAndDropArea from "./drag-and-drop-area";
 import GlowingProgressBar from "./glowing-progress-bar";
-import { Project } from "./map-wrapper-viewer";
 import ProjectAllComments from "./project-all-comments";
 import GlowingVioletButton from "./glowing-violet-button";
+import { Project } from "@/models/project";
 
 interface ProjectDetailsDialogProps {
   user: AuthUser;

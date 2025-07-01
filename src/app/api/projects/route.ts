@@ -1,5 +1,5 @@
 // app/api/projects/route.ts
-import { createProject, getAllProjects } from "@/api";
+import { createProject, getProjects } from "@/api";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -8,8 +8,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data, { status });
 }
 
-export async function GET() {
-  const { data, error, status } = await getAllProjects();
+export async function GET(req: NextRequest) {
+  const { data, error, status } = await getProjects(req);
   if (error) return NextResponse.json({ error }, { status });
   return NextResponse.json(data, { status });
 }

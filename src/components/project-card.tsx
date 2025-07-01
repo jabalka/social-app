@@ -1,28 +1,20 @@
 "use client";
 
-import { PROJECT_CATEGORIES, ProjectCategory } from "@/lib/project-categories";
+import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { AuthUser } from "@/models/auth";
+import { Project } from "@/models/project";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { Like, ProjectImage } from "@prisma/client";
 import Image from "next/image";
 import React from "react";
 import DefaultProjectImage from "../../public/images/project-image-dedfault.png";
 import CommentCreation from "./create-comment";
 import GlowingProgressBar from "./glowing-progress-bar";
-import { Project } from "./map-wrapper-viewer";
 import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
 
-type FullProject = Project & {
-  categories: ProjectCategory[];
-  images: ProjectImage[];
-  comments: Comment[];
-  likes: Like[];
-};
-
 interface ProjectCardProps {
-  project: FullProject;
+  project: Project;
   theme: string;
   user: AuthUser;
   commentModalProjectId: string | null;
@@ -98,13 +90,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             >
               View Details
               <span
-                className={cn(
-                  "pointer-events-none absolute -inset-[1px] overflow-hidden rounded-full",
-                  {
-                    "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-                    "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
-                  },
-                )}
+                className={cn("pointer-events-none absolute -inset-[1px] overflow-hidden rounded-full", {
+                  "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+                  "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+                })}
               />
             </Button>
           </div>
