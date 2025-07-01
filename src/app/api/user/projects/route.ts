@@ -4,7 +4,7 @@ import { getUserProjects } from "@/api";
 export async function GET(req: NextRequest) {
   const result = await getUserProjects(req);
 
-  if (result.error) {
+  if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 

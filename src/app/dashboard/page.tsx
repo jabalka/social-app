@@ -20,8 +20,26 @@ const DashboardPage: React.FC = async () => {
       images: true,
       comments: true,
       likes: true,
-      author: true,
-    },
+      author: {
+        include: {
+          comments: {
+            select: { id: true, content: true, createdAt: true }
+          },
+          likes: {
+            select: { id: true, projectId: true, createdAt: true }
+          },
+          ideas: {
+            select: { id: true, title: true, createdAt: true }
+          },
+          projects: {
+            select: { id: true, title: true, createdAt: true }
+          },
+          role: {
+            select: { id: true, name: true }
+          }
+        }
+      }
+    }
   });
 
   return (

@@ -9,9 +9,9 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import CommentCreation from "./create-comment";
 import GlowingProgressBar from "./glowing-progress-bar";
-import { Project } from "./map-wrapper-viewer";
 import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
+import { Project } from "@/models/project";
 
 interface ProjectPopupContentProps {
   user: AuthUser;

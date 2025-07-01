@@ -43,7 +43,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalCount, pageSi
                 <div className="group relative flex flex-col items-center overflow-hidden rounded-full p-[1px]">
                   {/* Glowing effect */}
                   {page !== currentPage && (
-                    <span className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-full group-hover:animate-snakeBorderGreen1s" />
+                    <span className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-full group-hover:animate-snakeBorderGreen1sLight" />
                   )}
 
                   {/* Dot */}

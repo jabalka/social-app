@@ -8,6 +8,7 @@ import SafeThemeProviders from "./safe-theme-providers";
 import SidebarProviders from "./sidebar-providers";
 import ThemeProviders from "./theme-providers";
 import ToasterProvider from "./toaster-provider";
+import { ProjectProvider } from "@/context/project-context";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -23,7 +24,9 @@ const Providers: React.FC<ProvidersProps> = ({ children }) => {
               <SafeThemeProviders>
                 <ConfirmationProviders>
                   <ToasterProvider>
+                    <ProjectProvider>
                     <SidebarProviders>{children}</SidebarProviders>
+                    </ProjectProvider>
                   </ToasterProvider>
                 </ConfirmationProviders>
               </SafeThemeProviders>
