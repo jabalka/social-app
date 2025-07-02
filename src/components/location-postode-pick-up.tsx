@@ -1,6 +1,7 @@
 import React from "react";
 import RequiredStar from "./required-star";
 import IconWithTooltip from "./icon-with-tooltip";
+import GlowingVioletButton from "./glowing-violet-button";
 
 interface Props {
     theme: string;
@@ -42,18 +43,21 @@ const LocationPostcodePickup: React.FC<Props> = ({
             </div>
             <div className="mb-2 flex items-center gap-2">
                 <input
-                    className="w-full rounded border p-2"
+                    className="w-9/12 rounded border p-2"
                     placeholder="Enter UK postcode (auto-fills location)"
                     value={watch("postcode")}
                     onChange={handlePostcodeChange}
                 />
-                <button
+                <GlowingVioletButton    onClick={() => setShowMap(true)}>
+                Pick on Map
+                </GlowingVioletButton>
+                {/* <button
                     type="button"
-                    onClick={() => setShowMap(true)}
+                 
                     className="rounded bg-blue-500 px-3 py-2 text-white"
                 >
                     Pick on Map
-                </button>
+                </button> */}
             </div>
             {addressLines.filter(Boolean).length > 0 && (
                 <div className="mb-1 rounded border bg-[#00000039] px-3 py-2 text-xs">
