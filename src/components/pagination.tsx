@@ -14,65 +14,70 @@ interface PaginationProps {
 
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalCount, pageSize, onPageChange, theme }) => {
   const totalPages = Math.ceil(totalCount / pageSize);
-  if (totalPages <= 1) return null;
+
+  // Always show pagination, but disable controls if no pages
+  const isDisabled = totalPages <= 1;
 
   return (
-    <div className="mt-4 flex flex-col items-center justify-center text-sm text-gray-600 dark:text-gray-300">
+    <div className="flex flex-col items-center justify-center text-sm text-gray-600 dark:text-gray-300">
       {/* Page count */}
-      <span className="mb-2">
-        {Math.min(currentPage * pageSize, totalCount)} / {totalCount}
+      <span className="mb-[1px] text-xs">
+        {totalCount === 0 ? 0 : Math.min(currentPage * pageSize, totalCount)} / {totalCount}
       </span>
 
       {/* Controls */}
       <div className="flex items-center gap-4">
         <div className="group relative flex flex-col items-center">
           <button
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
+            onClick={() => !isDisabled && onPageChange(Math.max(1, currentPage - 1))}
+            disabled={isDisabled || currentPage === 1}
             className="rounded px-3 py-1 font-semibold disabled:opacity-40"
           >
             <ChevronLeft />
           </button>
-          {currentPage !== 1 && <TooltipBubble theme={theme} content="Previous" placement="top" />}
+          {!isDisabled && currentPage !== 1 && <TooltipBubble theme={theme} content="Previous" placement="top" />}
         </div>
         <div className="flex items-center gap-2">
-          {Array.from({ length: totalPages }).map((_, idx) => {
-            const page = idx + 1;
-            return (
-              <div key={page} className="group relative flex flex-col items-center">
-                <div className="group relative flex flex-col items-center overflow-hidden rounded-full p-[1px]">
-                  {/* Glowing effect */}
-                  {page !== currentPage && (
-                    <span className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-full group-hover:animate-snakeBorderGreen1sLight" />
-                  )}
-
-                  {/* Dot */}
-                  <button
-                    onClick={() => onPageChange(page)}
-                    disabled={page === currentPage}
-                    className={cn(
-                      "relative z-10 h-[10px] w-[10px] rounded-full",
-                      page === currentPage ? "bg-green-600" : "bg-gray-400 opacity-50 hover:opacity-100",
+          {isDisabled ? (
+            <div className="h-[10px] w-[10px] rounded-full bg-gray-200 opacity-50" />
+          ) : (
+            Array.from({ length: totalPages }).map((_, idx) => {
+              const page = idx + 1;
+              return (
+                <div key={page} className="group relative flex flex-col items-center">
+                  <div className="group relative flex flex-col items-center overflow-hidden rounded-full p-[1px]">
+                    {/* Glowing effect */}
+                    {page !== currentPage && (
+                      <span className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-full group-hover:animate-snakeBorderGreen1sLight" />
                     )}
-                  />
+
+                    {/* Dot */}
+                    <button
+                      onClick={() => onPageChange(page)}
+                      disabled={page === currentPage}
+                      className={cn(
+                        "relative z-10 h-[10px] w-[10px] rounded-full",
+                        page === currentPage ? "bg-green-600" : "bg-gray-400 opacity-50 hover:opacity-100",
+                      )}
+                    />
+                  </div>
+
+                  {/* Tooltip */}
+                  <TooltipBubble theme={theme} content={`Page ${page}`} placement="top" />
                 </div>
-
-                {/* Tooltip */}
-
-                <TooltipBubble theme={theme} content={`Page ${page}`} placement="top" />
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
         <div className="group relative flex flex-col items-center">
           <button
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
+            onClick={() => !isDisabled && onPageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={isDisabled || currentPage === totalPages}
             className="rounded px-3 py-1 font-semibold disabled:opacity-40"
           >
             <ChevronRight />
           </button>
-          {currentPage !== totalPages && <TooltipBubble theme={theme} content="Next" placement="top" />}
+          {!isDisabled && currentPage !== totalPages && <TooltipBubble theme={theme} content="Next" placement="top" />}
         </div>
       </div>
     </div>

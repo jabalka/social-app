@@ -38,12 +38,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const showDetailsModal = detailsModalProjectId === project.id;
 
   return (
-    <div
-      className={cn("flex h-[360px] w-full flex-col justify-between rounded border p-4 shadow", {
-        "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
-        "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
-      })}
-    >
+    <>
+    <div className="flex h-[360px] w-full flex-col justify-between rounded border p-4 shadow ">
       <div className="flex flex-col gap-3 md:flex-row">
         {/* LEFT COLUMN */}
         <div className="flex-1">
@@ -134,7 +130,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           <span className="text-xs">Comments</span>
         </div>
       </div>
-
+      </div>
       {/* Modals */}
       {showCommentModal && (
         <CommentCreation
@@ -154,7 +150,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           theme={theme}
         />
       )}
-    </div>
+    </>
   );
 };
 

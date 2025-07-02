@@ -5,6 +5,7 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
+import { getPostcodeData } from "@/utils/postcode.utils";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import CreateProjectModal from "./create-project-modal";
@@ -14,7 +15,6 @@ import GlowingVioletButton from "./glowing-violet-button";
 import LeafletMapModal from "./leaflet-map-modal";
 import Pagination from "./pagination";
 import ProjectList from "./project-list";
-import { getPostcodeData } from "@/utils/postcode.utils";
 
 interface Props {
   showOwnedOnly?: boolean;
@@ -143,8 +143,8 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
       setRadius(pendingRadius);
     }
     const coordsChanged =
-      (lastSearchCoords?.[0] !== pendingCoords?.[0]) ||
-      (lastSearchCoords?.[1] !== pendingCoords?.[1]) ||
+      lastSearchCoords?.[0] !== pendingCoords?.[0] ||
+      lastSearchCoords?.[1] !== pendingCoords?.[1] ||
       (!lastSearchCoords && pendingCoords) ||
       (lastSearchCoords && !pendingCoords);
     if (coordsChanged) {
@@ -159,171 +159,158 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
   };
 
   return (
-    <div className="mx-auto mt-2 rounded-3xl border-2 border-zinc-400/10 bg-[#f0e3dd] px-8 py-8 shadow-2xl backdrop-blur-md dark:border-zinc-700/40 dark:bg-[#f0e3dd]/10 md:max-w-5xl">
-      <div className="relative flex items-start justify-between">
-        {/* Left side: Create button only */}
-        <div className="flex min-w-[220px] flex-col items-start pt-2">
-          <GlowingGreenButton onClick={() => setShowCreateModal(true)} className="h-8 p-2">
-            + Create New Project
-          </GlowingGreenButton>
-        </div>
-
-        {/* Right side: toggle button and absolute filter panel */}
-        <div className="relative flex flex-col items-end">
-          <div className="pt-2">
-            <GlowingGreyButton theme={theme} className="h-8 p-2" onClick={() => setShowFilters((prev) => !prev)}>
-              {showFilters ? "Hide Filters" : "Search Filters"}
-            </GlowingGreyButton>
+    <div className={cn("flex w-full flex-col justify-between")}>
+      <div className="mx-auto mt-2 rounded-3xl border-2 border-zinc-400/10 bg-[#f0e3dd] px-8 py-8 shadow-2xl backdrop-blur-md dark:border-zinc-700/40 dark:bg-[#f0e3dd]/10 md:max-w-5xl">
+        {/* Top controls row */}
+        <div className="grid grid-cols-3 items-center mb-6">
+          <div className="flex min-w-[220px] flex-col items-start pt-2">
+            <GlowingGreenButton onClick={() => setShowCreateModal(true)} className="h-8 p-2">
+              + Create New Project
+            </GlowingGreenButton>
           </div>
 
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute right-0 z-20 mx-auto mt-12 w-full max-w-xs overflow-hidden rounded-xl border border-zinc-300 bg-white p-4 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
-              style={{ minWidth: 320 }}
-            >
-              <div className="flex w-full flex-col gap-4">
-                <div className="flex w-full flex-row items-center justify-between">
-                  <label className="text-sm">Sort By:</label>
-                  <select
-                    value={pendingSortBy}
-                    onChange={(e) => setPendingSortBy(e.target.value as "createdAt" | "likes" | "comments")}
-                    className={cn("w-44 rounded-lg border px-2 py-1 text-sm", {
-                      "border-zinc-700 bg-[#d0c4bf] text-zinc-700": theme === Theme.LIGHT,
-                      "border-zinc-200 bg-[#5e5652] text-zinc-200": theme === Theme.DARK,
+          <div className="flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalCount={totalProjects}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            theme={theme}
+          />
+          </div>
+          
+          <div className="relative flex flex-col items-end">
+            <div className="pt-2">
+              <GlowingGreyButton theme={theme} className="h-8 p-2" onClick={() => setShowFilters((prev) => !prev)}>
+                {showFilters ? "Hide Filters" : "Search Filters"}
+              </GlowingGreyButton>
+            </div>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="absolute right-0 z-20 mx-auto mt-12 w-full max-w-xs overflow-hidden rounded-xl border border-zinc-300 bg-white p-4 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+                style={{ minWidth: 320 }}
+              >
+                <div className="flex w-full flex-col gap-4">
+                  <div className="flex w-full flex-row items-center justify-between">
+                    <label className="text-sm">Sort By:</label>
+                    <select
+                      value={pendingSortBy}
+                      onChange={(e) => setPendingSortBy(e.target.value as "createdAt" | "likes" | "comments")}
+                      className={cn("w-44 rounded-lg border px-2 py-1 text-sm", {
+                        "border-zinc-700 bg-[#d0c4bf] text-zinc-700": theme === Theme.LIGHT,
+                        "border-zinc-200 bg-[#5e5652] text-zinc-200": theme === Theme.DARK,
+                      })}
+                    >
+                      <option value="createdAt">Newest</option>
+                      <option value="likes">Most Liked</option>
+                      <option value="comments">Most Commented</option>
+                    </select>
+                  </div>
+                  <div className="flex w-full flex-row items-center justify-between">
+                    <label className="whitespace-nowrap text-sm font-normal">Search Radius:</label>
+                    <select
+                      value={pendingRadius}
+                      onChange={(e) => setPendingRadius(Number(e.target.value))}
+                      className={cn("w-44 rounded-lg border px-2 py-1 text-sm", {
+                        "border-zinc-700 bg-[#d0c4bf] text-zinc-700": theme === Theme.LIGHT,
+                        "border-zinc-200 bg-[#5e5652] text-zinc-200": theme === Theme.DARK,
+                      })}
+                    >
+                      {radiusOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex w-full flex-row items-center justify-end gap-2">
+                    <button
+                      onClick={fetchNearbyProjects}
+                      className="whitespace-nowrap rounded bg-blue-500 px-2 py-1 text-white"
+                    >
+                      Near Me
+                    </button>
+                    <GlowingVioletButton onClick={() => setShowMap(true)} className="px-2 py-1">
+                      Pick on Map
+                    </GlowingVioletButton>
+
+                    <GlowingGreenButton className="px-2 py-1" onClick={onSearch}>
+                      Search
+                    </GlowingGreenButton>
+                  </div>
+                </div>
+
+                {pendingCoords && pendingAddressInfo && (
+                  <div
+                    className={cn("relative mb-3 rounded border p-2 text-xs", {
+                      "bg-[#574e4b]": theme === Theme.DARK,
+                      "bg-[#f5e9e4]": theme === Theme.LIGHT,
                     })}
                   >
-                    <option value="createdAt">Newest</option>
-                    <option value="likes">Most Liked</option>
-                    <option value="comments">Most Commented</option>
-                  </select>
-                </div>
-                <div className="flex w-full flex-row items-center justify-between">
-                  <label className="whitespace-nowrap text-sm font-normal">Search Radius:</label>
-                  <select
-                    value={pendingRadius}
-                    onChange={(e) => setPendingRadius(Number(e.target.value))}
-                    className={cn("w-44 rounded-lg border px-2 py-1 text-sm", {
-                      "border-zinc-700 bg-[#d0c4bf] text-zinc-700": theme === Theme.LIGHT,
-                      "border-zinc-200 bg-[#5e5652] text-zinc-200": theme === Theme.DARK,
-                    })}
-                  >
-                    {radiusOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex w-full flex-row items-center justify-end gap-2">
-                  <button
-                    onClick={fetchNearbyProjects}
-                    className="whitespace-nowrap rounded bg-blue-500 px-2 py-1 text-white"
-                  >
-                    Near Me
-                  </button>
-                  <GlowingVioletButton onClick={() => setShowMap(true)} className="px-2 py-1">
-                    Pick on Map
-                  </GlowingVioletButton>
+                    <button
+                      className="absolute right-2 top-0 text-lg text-red-400 hover:text-red-600"
+                      onClick={() => {
+                        setPendingCoords(null); // Reset to no location
+                        setPendingAddressInfo(null);
+                        setStoredSearchCoords(undefined); // Reset map modal default
+                      }}
+                      title="Reset location"
+                      type="button"
+                    >
+                      <span className="text-3xl">×</span>
+                    </button>
 
-                  <GlowingGreenButton className="px-2 py-1" onClick={onSearch}>
-                    Search
-                  </GlowingGreenButton>
-                </div>
-              </div>
-
-              {pendingCoords && pendingAddressInfo && (
-  <div
-    className={cn(
-      "mb-3 text-xs border rounded p-2 relative",
-      {
-        "bg-[#574e4b]": theme === Theme.DARK,
-        "bg-[#f5e9e4]": theme === Theme.LIGHT,
-      }
-    )}
-  >
-    <button
-      className="absolute top-0 right-2 text-lg text-red-400 hover:text-red-600"
-      onClick={() => {
-        setPendingCoords(null); // Reset to no location
-        setPendingAddressInfo(null);
-        setStoredSearchCoords(undefined); // Reset map modal default
-      }}
-      title="Reset location"
-      type="button"
-    >
-      <span className="text-3xl">×</span>
-    </button>
- 
-    <div>
-    <span className="font-semibold">Address: </span>
-    {pendingAddressInfo.postcode}
-    {pendingAddressInfo.addressLines &&
-      (pendingAddressInfo.addressLines.map(
-        (line, i) => line && <div key={i}>{line}</div>
-      ))
-      }
-
-    </div>
-
-  </div>
-)}
-            </motion.div>
-          )}
+                    <div>
+                      <span className="font-semibold">Address: </span>
+                      {pendingAddressInfo.postcode}
+                      {pendingAddressInfo.addressLines &&
+                        pendingAddressInfo.addressLines.map((line, i) => line && <div key={i}>{line}</div>)}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {showCreateModal && (
-        <CreateProjectModal
-          open={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onProjectCreated={() =>
-            refreshProjects({
-              page: currentPage,
-              limit: pageSize,
-              type: "user",
-              ownerId: user?.id,
-              sort: sortBy,
-            })
-          }
-        />
-      )}
-
-      <LeafletMapModal
-        open={showMap}
-        theme={theme}
-        onPick={handleMapPick}
-        onClose={() => setShowMap(false)}
-        defaultPosition={storedSearchCoords} // Pass stored location to the map
-      />
-
-      <div className="relative bottom-6">
-        <Pagination
-          currentPage={currentPage}
-          totalCount={totalProjects}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          theme={theme}
-        />
-      </div>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : projects && projects.length === 0 ? (
-        <p>No projects found.</p>
-      ) : (
+        {/* Project list */}
         <ProjectList
           projects={projects || []}
           theme={theme}
+          loading={loading}
           commentModalProjectId={commentModalProjectId}
           setCommentModalProjectId={setCommentModalProjectId}
           detailsModalProjectId={detailsModalProjectId}
           setDetailsModalProjectId={setDetailsModalProjectId}
           refreshProjects={refreshProjects}
         />
-      )}
+
+        {showCreateModal && (
+          <CreateProjectModal
+            open={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onProjectCreated={() =>
+              refreshProjects({
+                page: currentPage,
+                limit: pageSize,
+                type: "user",
+                ownerId: user?.id,
+                sort: sortBy,
+              })
+            }
+          />
+        )}
+        <LeafletMapModal
+          open={showMap}
+          theme={theme}
+          onPick={handleMapPick}
+          onClose={() => setShowMap(false)}
+          defaultPosition={storedSearchCoords}
+        />
+      </div>
     </div>
   );
 };
