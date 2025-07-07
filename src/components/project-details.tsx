@@ -1,6 +1,5 @@
 "use client";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"; // or use your dialog system
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { canEditCategories, canEditProgress, canEditProgressNotes, canEditStatus } from "@/lib/role-permissions";
 import { AuthUser } from "@/models/auth";
@@ -12,9 +11,14 @@ import { FormProvider, useForm } from "react-hook-form";
 import CommentCreation from "./create-comment";
 import DragAndDropArea from "./drag-and-drop-area";
 import GlowingProgressBar from "./glowing-progress-bar";
-import ProjectAllComments from "./project-all-comments";
 import GlowingVioletButton from "./glowing-violet-button";
+import ProjectAllComments from "./project-all-comments";
+
 import { Project } from "@/models/project";
+import GlowingGreenButton from "./glowing-green-button";
+import GlowingPinkButton from "./glowing-pink-button";
+import ModalOverlay from "./modal-overlay";
+import { useSocketContext } from "@/context/socket-context";
 
 interface ProjectDetailsDialogProps {
   user: AuthUser;
@@ -23,7 +27,6 @@ interface ProjectDetailsDialogProps {
   onClose: () => void;
   refreshProjects: () => void;
   theme: string;
-
 }
 
 const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
@@ -33,7 +36,6 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   onClose,
   refreshProjects,
   theme,
-
 }) => {
   const isAuthor = user.id === project.author.id;
   const isEditable = project.status === "PROPOSED";
@@ -44,6 +46,8 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   const allowEditStatus = canEditStatus(user.roleId);
   const allowEditCategories = canEditCategories(user.roleId);
 
+  const { socket } = useSocketContext();
+
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description);
   const [progressNotes, setProgressNotes] = useState(project.progressNotes || "");
@@ -53,7 +57,6 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
-  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
   const [showDeleteSection, setShowDeleteSection] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -64,6 +67,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
 
   const fetchLikes = useCallback(async () => {
     try {
@@ -83,14 +87,35 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
     setIsLiking(true);
 
     try {
+      // if liked the socket event should not be emmitted
+      socket?.emit("project:like", { projectId: project.id, userId: user.id });
+      const alreadyLiked = likes.some((like) => like.userId === user.id);
+      let newLikes;
+      if (alreadyLiked) {
+        newLikes = likes.filter((like) => like.userId !== user.id);
+      } else {
+        // Provide dummy id and createdAt for optimistic update
+        newLikes = [
+          ...likes,
+          {
+            id: `optimistic-${user.id}-${Date.now()}`,
+            userId: user.id,
+            createdAt: new Date(),
+          },
+        ];
+      }
+      setLikes(newLikes); // Optimistic update
+  
       const res = await fetch(`/api/projects/${project.id}/like`, { method: "POST" });
       if (res.ok) {
-        await fetchLikes();
+        fetchLikes(); // Sync with server
         refreshProjects();
       } else {
+        setLikes(likes); // Revert if failed
         console.error("Failed to like project");
       }
     } catch (err) {
+      setLikes(likes); // Revert on error
       console.error("Like error:", err);
     } finally {
       setIsLiking(false);
@@ -106,6 +131,10 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
     return () => clearTimeout(timeout);
   }, [animationKey]);
+
+  useEffect(() => {
+    setLikes(project.likes || []);
+  }, [project.id]);
 
   useEffect(() => {
     fetchLikes();
@@ -191,7 +220,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
     if (hasChanges) {
       setShowUnsavedPrompt(true);
     } else {
@@ -224,43 +253,32 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
+    <ModalOverlay open={open} onClose={handleClose}>
+      <div
         className={cn("max-h-[90vh] max-w-2xl overflow-y-auto p-6", {
           "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
           "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
         })}
       >
-        <DialogTitle className="sr-only">Project Details</DialogTitle>
-        <div className="mb-4">
-          {isAuthor && isEditable && editingTitle ? (
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mb-2 w-full rounded border p-2 text-xl font-bold"
-            />
-          ) : (
-            <h2 className="mb-2 text-2xl font-bold">
-              {title}
-              {isAuthor && isEditable && !editingTitle && (
-                <button
-                  onClick={() => setEditingTitle(true)}
-                  className="ml-2 text-sm font-medium text-blue-500 hover:underline"
-                >
-                  Edit
-                </button>
-              )}
-            </h2>
+        <h2 className="mb-2 text-2xl font-bold">
+          {title}
+          {isAuthor && isEditable && !editingTitle && (
+            <button
+              onClick={() => setEditingTitle(true)}
+              className="ml-2 text-sm font-medium text-blue-500 hover:underline"
+            >
+              Edit
+            </button>
           )}
-          <p
-            className={cn("text-sm", {
-              "text-zinc-700": theme === Theme.LIGHT,
-              "text-zinc-200": theme === Theme.DARK,
-            })}
-          >
-            Postcode: {project.postcode}
-          </p>
-        </div>
+        </h2>
+        <p
+          className={cn("text-sm", {
+            "text-zinc-700": theme === Theme.LIGHT,
+            "text-zinc-200": theme === Theme.DARK,
+          })}
+        >
+          Postcode: {project.postcode}
+        </p>
 
         {/* Category Icons */}
         <div className="mt-2 flex gap-2">
@@ -346,26 +364,15 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           <div className="relative flex flex-col items-center">
             <span className="mb-1 text-sm">({likes.length}) Likes</span>
             <div className="relative inline-flex overflow-hidden rounded-full p-[4px]">
-              <button
-                onClick={handleLike}
-                className={`w-32 rounded-full py-1 text-sm text-white transition duration-300 ${
-                  likes.some((like) => like.userId === user.id)
-                    ? "bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] outline outline-[#359c33]/60 hover:bg-gradient-to-br hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2"
-                    : "bg-gradient-to-br from-[#99315e] via-[#c93f7b] to-[#8c2954] outline outline-[#dd4386]/60 hover:bg-gradient-to-br hover:from-[#d84182] hover:via-[#8c2954] hover:to-[#dd4386] hover:outline-2"
-                }`}
-              >
-                {likes.some((like) => like.userId === user.id) ? "Liked" : "Like"}
-                {animationKey > 0 && (
-                  <span
-                    key={animationKey}
-                    className={`pointer-events-none absolute inset-0 overflow-hidden rounded-full ${
-                      likes.some((like) => like.userId === user.id)
-                        ? "animate-snakeBorderGreen"
-                        : "animate-snakeBorderPink"
-                    }`}
-                  />
-                )}
-              </button>
+              {likes.some((like) => like.userId === user.id) ? (
+                <GlowingGreenButton onClick={handleLike} className="w-32" disabled={isLiking}>
+                  Liked
+                </GlowingGreenButton>
+              ) : (
+                <GlowingPinkButton onClick={handleLike} className="w-32" disabled={isLiking}>
+                  Like
+                </GlowingPinkButton>
+              )}
             </div>
           </div>
           <div className="relative flex flex-col items-center">
@@ -381,8 +388,8 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
             {/* from-[#185b17] via-[#2a8829] to-[#185b17] */}
 
             <GlowingVioletButton onClick={() => setShowCommentModal(true)} className="w-32">
-            Comment
-              </GlowingVioletButton>
+              Comment
+            </GlowingVioletButton>
           </div>
         </div>
 
@@ -529,7 +536,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           </div>
         )}
 
-        {showUnsavedPrompt && (
+{showUnsavedPrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="w-full max-w-sm rounded bg-white p-6 shadow">
               <h4 className="mb-2 text-lg font-semibold">Unsaved Changes</h4>
@@ -556,27 +563,29 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
         )}
 
         {showCommentModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <ModalOverlay open={showCommentModal} onClose={() => setShowCommentModal(false)}>
             <CommentCreation
               user={user}
               projectId={project.id}
               onClose={() => setShowCommentModal(false)}
               theme={theme}
             />
-          </div>
+          </ModalOverlay>
         )}
 
         {showAllComments && (
-          <ProjectAllComments
-            projectId={project.id}
-            user={user}
-            open={showAllComments}
-            onClose={() => setShowAllComments(false)}
-            theme={theme}
-          />
+          <ModalOverlay open={showAllComments} onClose={() => setShowAllComments(false)}>
+            <ProjectAllComments
+              projectId={project.id}
+              user={user}
+              open={showAllComments}
+              onClose={() => setShowAllComments(false)}
+              theme={theme}
+            />
+          </ModalOverlay>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ModalOverlay>
   );
 };
 

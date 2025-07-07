@@ -8,6 +8,7 @@ import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Loader from "./common/loader";
+import { useSocketContext } from "@/context/socket-context";
 // import UserDetailsDialog from "./user-details";
 // import UserInteractionDialog from "./user-interaction-dialog";
 
@@ -36,6 +37,7 @@ interface ProjectAllCommentsProps {
 
 const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user, open, onClose, theme }) => {
   const { setSelectedUserId, setIsOpen } = useUserDialog();
+  const { socket } = useSocketContext();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [page, setPage] = useState(1);
@@ -101,6 +103,7 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
           : c,
       ),
     );
+    socket?.emit("comment:like", { commentId, userId: user.id, projectId });
   };
 
   const handleReply = async (parentId: string) => {
@@ -113,8 +116,27 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
     });
     if (res.ok) {
       const newComment = await res.json();
-      setComments((prev) => prev.map((c) => (c.id === parentId ? { ...c, replies: [...c.replies, newComment] } : c)));
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === parentId
+            ? {
+                ...c,
+                replies: [
+                  // filter out any reply with the same id before adding
+                  ...c.replies.filter((r) => r.id !== newComment.id),
+                  newComment,
+                ],
+              }
+            : c
+        )
+      );
       setReplyContent((prev) => ({ ...prev, [parentId]: "" }));
+      socket?.emit("comment:reply", {
+        parentId,
+        commentId: newComment.id,
+        projectId,
+        userId: user.id,
+      });
     }
   };
 
@@ -124,7 +146,7 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
   };
 
   const renderComment = (comment: CommentType, depth = 0) => (
-    <div key={comment.id} className={cn("mb-4", { "ml-6": depth > 0 })}>
+    <div key={`comment-${comment.id}`} className={cn("mb-4", { "ml-6": depth > 0 })}>
       <div className="flex items-start gap-3">
         {comment.author?.image ? (
           <Image
@@ -173,6 +195,17 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
     </div>
   );
 
+  function dedupeComments(comments: CommentType[]): CommentType[] {
+    const seen = new Set<string>();
+    return comments.filter((c) => {
+      if (seen.has(c.id)) return false;
+      seen.add(c.id);
+      // Also dedupe replies recursively
+      if (c.replies) c.replies = dedupeComments(c.replies);
+      return true;
+    });
+  }
+
   return (
     <>
 
@@ -189,7 +222,7 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
 
           <div className="mt-4">
             {comments.length === 0 && !loading && <p className="text-center text-sm text-gray-500">No comments yet.</p>}
-            {comments.map((comment) => renderComment(comment))}
+            {dedupeComments(comments).map((comment) => renderComment(comment))}
             <div ref={observerRef} />
             {loading && (<Loader />
             )}

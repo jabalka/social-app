@@ -1,5 +1,7 @@
 "use client";
+import { useSocketContext } from "@/context/socket-context";
 import { Idea } from "@/models/idea";
+import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 
 interface Props {
@@ -9,9 +11,14 @@ interface Props {
 // const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY;
 
 const IdeaCard: React.FC<Props> = ({ idea }) => {
+  const { data: session } = useSession();
+  const myCollab = idea.collaborators?.find((c) => c.userId === session?.user?.id);
+  const [collabId, setCollabId] = useState<string | null>(myCollab?.id ?? null);
+
   const [showComments, setShowComments] = useState(false);
-  const [collabStatus, setCollabStatus] = useState(idea.collaborators?.[0]?.status ?? null);
+  const [collabStatus, setCollabStatus] = useState((idea.collaborators?.[0]?.status ?? null) || null);
   const [displayAddress, setDisplayAddress] = useState<string | null>(idea.postcode ?? null);
+  const { socket } = useSocketContext();
 
   // Fetch postcode/address if not provided, but w3w or coords exist
   useEffect(() => {
@@ -36,8 +43,8 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
         //     if (postcode) setDisplayAddress(postcode);
         //     else setDisplayAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
         //   }
-        // } 
-         if (idea.latitude && idea.longitude) {
+        // }
+        if (idea.latitude && idea.longitude) {
           // No w3w, but have coords
           const postRes = await fetch(`https://api.postcodes.io/postcodes?lon=${idea.longitude}&lat=${idea.latitude}`);
           const postData = await postRes.json();
@@ -47,7 +54,7 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
         }
       } catch (err) {
         setDisplayAddress(null);
-        console.log(err)
+        console.log(err);
       }
     };
     fetchAddress();
@@ -55,19 +62,35 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
 
   const requestCollab = async () => {
     const res = await fetch(`/api/ideas/${idea.id}/collaborate`, { method: "POST" });
-    if (res.ok) setCollabStatus("PENDING");
+    if (res.ok) {
+      setCollabStatus("PENDING");
+      const data = await res.json();
+      const collab = data.data;
+
+      setCollabId(collab.id);
+      console.log("Emitting idea:collab-request", { ideaId: idea.id, requestId: collab.id }, socket?.connected);
+
+      socket?.emit("idea:collab-request", { ideaId: idea.id, requestId: collab.id });
+    }
   };
+
+  // Cancel collaboration
+  const cancelCollab = async () => {
+    const res = await fetch(`/api/ideas/${idea.id}/collaborate/${collabId}`, { method: "DELETE" });
+    if (res.ok) {
+      // for now there is no such socket event but in future it can be added
+      // socket?.emit("idea:collab-cancel", { ideaId: idea.id });
+      setCollabId(null);
+    }
+  };
+
 
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-white p-5 shadow">
       <div className="flex items-center gap-2">
         <span className="text-lg font-semibold">{idea.title}</span>
-        {displayAddress && (
-          <span className="text-xs text-gray-600 ml-2">({displayAddress})</span>
-        )}
-        {idea.allowCollab && (
-          <span className="rounded bg-blue-100 px-2 text-xs text-blue-800">Collaboration Open</span>
-        )}
+        {displayAddress && <span className="ml-2 text-xs text-gray-600">({displayAddress})</span>}
+        {idea.allowCollab && <span className="rounded bg-blue-100 px-2 text-xs text-blue-800">Collaboration Open</span>}
         {idea.isConverted && (
           <span className="rounded bg-green-100 px-2 text-xs text-green-800">Converted to Project</span>
         )}
@@ -83,9 +106,14 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
         <button className="rounded bg-blue-50 px-3 py-1 hover:bg-blue-100" onClick={() => setShowComments((c) => !c)}>
           {showComments ? "Hide" : "Show"} Comments
         </button>
-        {idea.allowCollab && !idea.isConverted && !collabStatus && (
+        {idea.allowCollab && !idea.isConverted && !collabId && (
           <button className="rounded bg-orange-50 px-3 py-1 hover:bg-orange-100" onClick={requestCollab}>
             Request Collaboration
+          </button>
+        )}
+        {collabStatus === "PENDING" && collabId && (
+          <button className="rounded bg-red-50 px-3 py-1 hover:bg-red-100" onClick={cancelCollab}>
+            Cancel Collaboration
           </button>
         )}
         {collabStatus && <span className="text-xs">Collab: {collabStatus}</span>}

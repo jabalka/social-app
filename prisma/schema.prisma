@@ -32,6 +32,7 @@ model User {
   conversations           Conversation[]
   messages                Message[]
   ideaCollaborations      IdeaCollaboration[]
+  notifications           Notification[]      @relation("UserNotifications")
 }
 
 model Idea {
@@ -228,6 +229,26 @@ model Message {
 
   sender       User         @relation(fields: [senderId], references: [id])
   conversation Conversation @relation("ConversationMessages", fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String 
+  type       String 
+  message    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  targetType String 
+  targetId   String 
+  projectId  String? 
+  ideaId     String? 
+  commentId  String? 
+  user       User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  fromUserId String?
+
+  @@index([userId, read])
+  @@index([targetType, targetId])
 }
 
 enum ProjectStatus {

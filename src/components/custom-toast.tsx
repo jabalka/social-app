@@ -5,13 +5,15 @@ import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import React, { useEffect, useState } from "react";
 import { Toast } from "react-hot-toast";
+import GlowingGreenButton from "./glowing-green-button";
 
 interface CustomToastProps {
   t: Toast;
   message: string;
+  action?: { label: string; onClick: () => void };
 }
 
-const CustomToast: React.FC<CustomToastProps> = ({ t, message }) => {
+const CustomToast: React.FC<CustomToastProps> = ({ t, message, action }) => {
   const { theme } = useSafeThemeContext();
 
   const [animationKey, setAnimationKey] = useState<number>(0);
@@ -27,7 +29,7 @@ const CustomToast: React.FC<CustomToastProps> = ({ t, message }) => {
   }, [animationKey]);
 
   return (
-    <div className="absolute overflow-hidden rounded-lg mt-20">
+    <div className="absolute mt-20 overflow-hidden rounded-lg">
       <div
         className={cn(
           "relative flex min-w-[320px] items-center justify-center rounded-lg px-4 py-3 font-medium text-white shadow backdrop-blur-md",
@@ -40,10 +42,20 @@ const CustomToast: React.FC<CustomToastProps> = ({ t, message }) => {
         )}
         style={{
           minWidth: 320,
-     
         }}
       >
         <span>{message}</span>
+        {action && (
+          <GlowingGreenButton
+            onClick={() => {
+              action.onClick();
+              window.toast.dismiss(t.id);
+            }}
+            type="button"
+          >
+            {action.label}
+          </GlowingGreenButton>
+        )}
         <button
           onClick={() => window.toast.dismiss(t.id)}
           className="absolute right-2 top-0 text-lg hover:text-gray-100"

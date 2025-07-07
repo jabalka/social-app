@@ -1,3 +1,5 @@
+import { NotificationsProvider } from "@/context/notifications-context";
+import { ProjectProvider } from "@/context/project-context";
 import { SocketProvider } from "@/context/socket-context";
 import { UserDialogProvider } from "@/context/user-dialog-context";
 import React from "react";
@@ -8,7 +10,6 @@ import SafeThemeProviders from "./safe-theme-providers";
 import SidebarProviders from "./sidebar-providers";
 import ThemeProviders from "./theme-providers";
 import ToasterProvider from "./toaster-provider";
-import { ProjectProvider } from "@/context/project-context";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -18,21 +19,25 @@ const Providers: React.FC<ProvidersProps> = ({ children }) => {
   return (
     <AuthProviders>
       <HtmlProviders>
-        <SocketProvider>
-          <UserDialogProvider>
-            <ThemeProviders>
-              <SafeThemeProviders>
-                <ConfirmationProviders>
-                  <ToasterProvider>
-                    <ProjectProvider>
-                    <SidebarProviders>{children}</SidebarProviders>
-                    </ProjectProvider>
-                  </ToasterProvider>
-                </ConfirmationProviders>
-              </SafeThemeProviders>
-            </ThemeProviders>
-          </UserDialogProvider>
-        </SocketProvider>
+      <ThemeProviders>
+      <SafeThemeProviders>
+        <ToasterProvider>
+          <NotificationsProvider>
+            <SocketProvider>
+              <UserDialogProvider>
+    
+                    <ConfirmationProviders>
+                      <ProjectProvider>
+                        <SidebarProviders>{children}</SidebarProviders>
+                      </ProjectProvider>
+                    </ConfirmationProviders>
+    
+              </UserDialogProvider>
+            </SocketProvider>
+          </NotificationsProvider>
+        </ToasterProvider>
+        </SafeThemeProviders>
+        </ThemeProviders>
       </HtmlProviders>
     </AuthProviders>
   );

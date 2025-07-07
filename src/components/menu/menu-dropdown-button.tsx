@@ -67,8 +67,8 @@ interface DropdownButtonProps {
             })}
           >
             {items.map((item, index) => (
-              <Link key={index} href={item.href} legacyBehavior passHref>
-                <a
+              <Link key={index} href={item.href}>
+                <span
                   className={cn(
                     "nav-link border-l border-r border-gray-400/30 px-3 py-1.5 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00] sm:px-4 sm:py-2 lg:px-5 lg:py-2.5",
                     {
@@ -78,7 +78,7 @@ interface DropdownButtonProps {
                   )}
                 >
                   <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">{item.label}</span>
-                </a>
+                </span>
               </Link>
             ))}
           </div>

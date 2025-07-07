@@ -12,6 +12,40 @@ export interface AppSocket extends Socket {
   on(event: "connect_error", listener: (error: Error) => void): this;
   on(event: "disconnect", listener: (reason: string) => void): this;
 
+  // Notification events
+  on(event: "notification:like", listener: (data: { projectId: string; userId: string; type: "like" }) => void): this;
+  on(
+    event: "notification:comment",
+    listener: (data: { projectId: string; commentId: string; userId: string; type: "comment" }) => void,
+  ): this;
+  on( 
+    event: "notification:comment-like",
+    listener: (data: { commentId: string; userId: string; type: "comment-like" }) => void,
+  ): this;
+  on(
+    event: "notification:reply",
+    listener: (data: { parentId: string; commentId: string; userId: string; type: "reply" }) => void,
+  ): this;
+  on(
+    event: "notification:collab-request",
+    listener: (data: { ideaId: string; requestId: string; userId: string; type: "collab-request" }) => void,
+  ): this;
+  on(
+    event: "notification:collab-accepted",
+    listener: (data: { ideaId: string; requestId: string; userId: string; type: "collab-accepted" }) => void,
+  ): this;
+
+  // Comment/project events
+  emit(event: "project:like", data: { projectId: string; userId: string }): boolean;
+  emit(event: "project:comment", data: { projectId: string; commentId: string; userId: string }): boolean;
+  emit(event: "comment:like", data: { commentId: string; userId: string; projectId: string }): boolean;
+  emit(
+    event: "comment:reply",
+    data: { parentId: string; commentId: string; projectId: string; userId: string },
+  ): boolean;
+  emit(event: "idea:collab-request", data: { ideaId: string; requestId: string }): boolean;
+  emit(event: "idea:collab-accepted", data: { ideaId: string; requestId: string; userId: string }): boolean;
+
   // Message events
   on(event: "message:new", listener: (message: Message & { conversationId: string; tempId?: string }) => void): this;
   on(event: "message:error", listener: (data: { error: string }) => void): this;
@@ -69,6 +103,58 @@ export interface AppSocket extends Socket {
 }
 
 export interface SocketEventMap {
+  // Notifications
+  "notification:like": {
+    payload: { projectId: string; userId: string; type: "like" };
+    response: void;
+  };
+  "notification:comment": {
+    payload: { projectId: string; commentId: string; userId: string; type: "comment" };
+    response: void;
+  };
+  "notification:comment-like": {
+    payload: { commentId: string; userId: string; type: "comment-like" };
+    response: void;
+  };
+  "notification:reply": {
+    payload: { parentId: string; commentId: string; userId: string; type: "reply" };
+    response: void;
+  };
+  "notification:collab-request": {
+    payload: { ideaId: string; requestId: string; userId: string; type: "idea:collab-request" };
+    response: void;
+  };
+  "notification:collab-accepted": {
+    payload: { ideaId: string; requestId: string; userId: string; type: "idea:collab-accepted" };
+    response: void;
+  };
+
+  // Comment|Project events
+  "project:like": {
+    payload: { projectId: string; userId: string };
+    response: void;
+  };
+  "project:comment": {
+    payload: { projectId: string; commentId: string; userId: string };
+    response: void;
+  };
+  "comment:like": {
+    payload: { commentId: string; userId: string; projectId: string };
+    response: void;
+  };
+  "comment:reply": {
+    payload: { parentId: string; commentId: string; projectId: string; userId: string };
+    response: void;
+  };
+  "idea:collab-request": {
+    payload: { ideaId: string; requestId: string };
+    response: void;
+  };
+  "idea:collab-accepted": {
+    payload: { ideaId: string; requestId: string; userId: string };
+    response: void;
+  };
+  // Message events
   "message:send": {
     payload: { content: string; attachmentUrl: string | null; conversationId: string; tempId?: string };
     response: MessageSendResponse;

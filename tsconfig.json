@@ -10,6 +10,10 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "noEmit": false,
     "esModuleInterop": true,
     "moduleResolution": "bundler",
