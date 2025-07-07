@@ -44,7 +44,7 @@ export const createComment = async (projectId: string, content: string, parentId
           },
         },
       });
-      return { data: comment, status: 201 };
+        return { data: comment, status: 201 };
     } catch (err) {
       console.error("[COMMENT_CREATE_ERROR]", err);
       return { error: "Failed to create comment", status: 500 };

@@ -6,6 +6,9 @@ import express from "express";
 import { createServer } from "http";
 import jwt from "jsonwebtoken";
 import { Server as IOServer } from "socket.io";
+import { notifyUser } from "../utils/socket.utils";
+import { upsertNotification } from "../lib/api/notifications";
+
 
 const prisma = new PrismaClient();
 const SECRET = process.env.NEXTAUTH_SECRET!;
@@ -15,18 +18,18 @@ if (!SECRET) {
 }
 
 const checkDatabaseConnection = async () => {
-    try {
-      await prisma.$connect();
-      console.log("[Socket] Database connected successfully");
-      
-      // Test query
-      const userCount = await prisma.user.count();
-      console.log(`[Socket] Database test query successful. User count: ${userCount}`);
-    } catch (error) {
-      console.error("[Socket] Database connection failed:", error);
-      process.exit(1);
-    }
-  };
+  try {
+    await prisma.$connect();
+    console.log("[Socket] Database connected successfully");
+
+    // Test query
+    const userCount = await prisma.user.count();
+    console.log(`[Socket] Database test query successful. User count: ${userCount}`);
+  } catch (error) {
+    console.error("[Socket] Database connection failed:", error);
+    process.exit(1);
+  }
+};
 
 const app = express();
 const httpServer = createServer(app);
@@ -34,12 +37,9 @@ const io = new IOServer(httpServer, {
   cors: { origin: "http://localhost:3000", credentials: true },
 });
 
-// Track typing users by conversation with timestamps
 const typingUsers = new Map<string, Map<string, NodeJS.Timeout>>();
-// Track active users by conversation
 const activeUsers = new Map<string, Set<string>>();
 
-// Helper function to clean up typing status
 const cleanupTypingStatus = (conversationId: string, userId: string) => {
   const conversationTyping = typingUsers.get(conversationId);
   if (conversationTyping) {
@@ -89,7 +89,7 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(`[Socket Connected] ${socket.id} (user: ${socket.data.user?.email})`);
-
+ 
   // Join the conversation room on connection
   socket.on("join:conversation", (conversationId) => {
     socket.join(conversationId);
@@ -138,12 +138,83 @@ io.on("connection", (socket) => {
     });
   });
 
+  // LIKE NOTIFICATION
+  socket.on("project:like", async ({ projectId }) => {
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { authorId: true },
+      });
+      if (project && project.authorId !== socket.data.user.id) {
+        const message = "Someone liked your project!";
+        notifyUser(io, project.authorId, "notification:like", {
+          projectId,
+          userId: socket.data.user.id,
+          type: "like",
+          target: {
+            id: projectId,
+            type: "project",
+            projectId,
+          },
+        });
+
+        await upsertNotification({
+          userId: project.authorId,
+          fromUserId: socket.data.user.id,
+          type: "like",
+          message,
+          targetType: "project",
+          targetId: projectId,
+          projectId,
+        });
+      }
+    } catch (err) {
+      console.error("[Socket] Error in project:like notification:", err);
+    }
+  });
+
+  // COMMENT NOTIFICATION
+  socket.on("project:comment", async ({ projectId, commentId }) => {
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { authorId: true },
+      });
+      if (project && project.authorId !== socket.data.user.id) {
+        const message = "You received a comment!";
+        notifyUser(io, project.authorId, "notification:comment", {
+          projectId,
+          commentId,
+          userId: socket.data.user.id,
+          type: "comment",
+          target: {
+            id: commentId,
+            type: "comment",
+            projectId: projectId,
+          },
+        });
+
+        await upsertNotification({
+          userId: project.authorId,
+          fromUserId: socket.data.user.id,
+          type: "comment",
+          message,
+          targetType: "comment",
+          targetId: commentId,
+          commentId,
+        });
+      }
+    } catch (err) {
+      console.error("[Socket] Error in project:comment notification:", err);
+    }
+  });
+
+
+
   socket.on("message:send", async (messageData) => {
-    console.log(`[Socket] New message received:`, messageData);
     const { conversationId, content, attachmentUrl, tempId } = messageData;
 
     if (!conversationId || !content) {
-      console.error("[Socket] Invalid message data.");
       socket.emit("message:error", { error: "Invalid message data" });
       return;
     }
@@ -298,6 +369,156 @@ io.on("connection", (socket) => {
     });
   });
 
+  // Handle comment like notification
+  socket.on(
+    "comment:like",
+    async ({
+      commentId,
+      userId,
+      // projectId
+    }) => {
+      try {
+        const comment = await prisma.comment.findUnique({
+          where: { id: commentId },
+          select: { authorId: true },
+        });
+        if (comment && comment.authorId !== socket.data.user.id) {
+          const message = "Someone liked your comment!";
+          notifyUser(io, comment.authorId, "notification:comment-like", {
+            commentId,
+            userId,
+            type: "comment-like",
+            target: {
+              id: commentId,
+              type: "comment",
+              commentId: commentId,
+            },
+          });
+
+          await upsertNotification({
+            userId: comment.authorId,
+            fromUserId: socket.data.user.id,
+            type: "like",
+            message,
+            targetType: "comment",
+            targetId: commentId,
+            commentId,
+          });
+        }
+      } catch (err) {
+        console.error("[Socket] Error in comment:like notification:", err);
+      }
+    },
+  );
+
+  // Handle comment reply notification
+  socket.on(
+    "comment:reply",
+    async ({
+      parentId,
+      commentId,
+    }) => {
+      try {
+        const parentComment = await prisma.comment.findUnique({
+          where: { id: parentId },
+          select: { authorId: true },
+        });
+        if (parentComment && parentComment.authorId !== socket.data.user.id) {
+          const message = "Someone replied to your comment!";
+          notifyUser(io, parentComment.authorId, "notification:reply", {
+            parentId,
+            commentId,
+            userId: socket.data.user.id,
+            type: "reply",
+            target: {
+              id: commentId,
+              type: "comment",
+              commentId: commentId,
+                    },
+          });
+
+          await upsertNotification({
+            userId: parentComment.authorId,
+            fromUserId: socket.data.user.id,
+            type: "comment",
+            message,
+            targetType: "comment",
+            targetId: commentId,
+            commentId,
+          });
+        }
+      } catch (err) {
+        console.error("[Socket] Error in comment:reply notification:", err);
+      }
+    },
+  );
+
+    // COLLABORATION REQUEST NOTIFICATION
+    socket.on("idea:collab-request", async ({ ideaId, requestId }) => {
+  try {
+    const idea = await prisma.idea.findUnique({
+      where: { id: ideaId },
+      select: { authorId: true },
+    });
+    if (idea && idea.authorId !== socket.data.user.id) {
+      const message = "You received a collaboration request!";
+      notifyUser(io, idea.authorId, "notification:collab-request", {
+        ideaId,
+        requestId,
+        userId: socket.data.user.id,
+        type: "idea:collab-request",
+        target: {
+          id: ideaId,
+          type: "idea",
+          ideaId: ideaId,
+        },
+      });
+
+      await upsertNotification({
+        userId: idea.authorId,
+        fromUserId: socket.data.user.id,
+        type: "collab-request",
+        message,
+        targetType: "idea",
+        targetId: ideaId,
+        ideaId,
+      });
+    }
+  } catch (err) {
+    console.error("[So`cket] Error in idea:collab-request notification:", err);
+  }
+});
+
+// COLLABORATION ACCEPTED NOTIFICATION
+socket.on("idea:collab-accepted", async ({ ideaId, requestId, userId }) => {
+  try {
+    const message = "Your collaboration request was accepted!";
+    // Notify the user who requested collaboration
+    notifyUser(io, userId, "notification:collab-accepted", {
+      ideaId,
+      requestId,
+      userId,
+      type: "idea:collab-accepted",
+      target: {
+        id: ideaId,
+        type: "ideea",
+        ideaId: ideaId,
+      },
+    });
+    await upsertNotification({
+      userId: userId,
+      fromUserId: socket.data.user.id,
+      type: "collab-accepted",
+      message,
+      targetType: "idea",
+      targetId: ideaId,
+      ideaId,
+    });
+  } catch (err) {
+    console.error("[Socket] Error in ideaId:collab-accepted notification:", err);
+  }
+});
+
   // Handle disconnection
   socket.on("disconnect", () => {
     console.log(`[Socket] Disconnected: ${socket.id} (${socket.data.user?.email})`);
@@ -336,6 +557,6 @@ io.on("connection", (socket) => {
 });
 
 httpServer.listen(5000, () => {
-    checkDatabaseConnection();
+  checkDatabaseConnection();
   console.log("[WebSocket] Server running on port 5000");
 });

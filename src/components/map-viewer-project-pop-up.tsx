@@ -37,7 +37,7 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
 
   return (
     <UserDialogProvider>
-      <div
+          <div
         className={cn("flex h-[360px] w-48 flex-col justify-between rounded border p-4 shadow", {
           "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
           "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,

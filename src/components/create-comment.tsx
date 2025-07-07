@@ -1,5 +1,6 @@
 "use client";
 
+import { useSocketContext } from "@/context/socket-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { User } from "next-auth";
@@ -11,7 +12,7 @@ interface CommentModalProps {
   projectId: string;
   onClose: () => void;
   onCommentAdded?: () => void;
-  theme: string
+  theme: string;
 }
 
 const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose, onCommentAdded, theme }) => {
@@ -19,15 +20,17 @@ const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose
   const [loading, setLoading] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
 
-    useEffect(() => {
-      if (animationKey === 0) return;
-  
-      const timeout = setTimeout(() => {
-        setAnimationKey(0);
-      }, 1500); // match animation duration (in ms)
-  
-      return () => clearTimeout(timeout);
-    }, [animationKey]);
+  const { socket } = useSocketContext();
+
+  useEffect(() => {
+    if (animationKey === 0) return;
+
+    const timeout = setTimeout(() => {
+      setAnimationKey(0);
+    }, 1500); // match animation duration (in ms)
+
+    return () => clearTimeout(timeout);
+  }, [animationKey]);
 
   const handleSubmit = async () => {
     if (!user?.id || !content.trim()) return;
@@ -38,6 +41,13 @@ const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, projectId }),
+      });
+      const data = await res.json();
+      const newCommentId = data.id;
+      socket?.emit("project:comment", {
+        projectId,
+        commentId: newCommentId,
+        userId: user.id,
       });
 
       if (res.ok) {
@@ -55,10 +65,12 @@ const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40">
-      <div className={cn("w-full max-w-md rounded-lg p-4 shadow-lg", {
-                      "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
-                      "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
-      })}>
+      <div
+        className={cn("w-full max-w-md rounded-lg p-4 shadow-lg", {
+          "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+          "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+        })}
+      >
         <h3 className="mb-2 text-lg font-semibold">Leave a Comment</h3>
         <textarea
           className="w-full rounded border p-2"
@@ -71,27 +83,27 @@ const CommentCreation: React.FC<CommentModalProps> = ({ user, projectId, onClose
             Cancel
           </button>
 
-
-      <div className="group relative inline-flex overflow-hidden rounded-full">
-          <Button
-   
-        className={cn(            "relative z-10 rounded-full w-full py-3 font-bold transition duration-300 hover:outline hover:outline-2",
-          {
-            "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
-              theme === Theme.LIGHT,
-            "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
-              theme === Theme.DARK,
-        })}
-     onClick={handleSubmit}
-     disabled={loading}
-      >
+          <div className="group relative inline-flex overflow-hidden rounded-full">
+            <Button
+              className={cn(
+                "relative z-10 w-full rounded-full py-3 font-bold transition duration-300 hover:outline hover:outline-2",
+                {
+                  "bg-gradient-to-br from-[#f3cdbd] via-[#d3a18c] to-[#bcaca5] text-zinc-700 hover:bg-gradient-to-br hover:from-[#b79789] hover:via-[#ddbeb1] hover:to-[#92817a] hover:text-zinc-50 hover:outline-gray-200":
+                    theme === Theme.LIGHT,
+                  "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
+                    theme === Theme.DARK,
+                },
+              )}
+              onClick={handleSubmit}
+              disabled={loading}
+            >
               {loading ? "Posting..." : "Post Comment"}
               <span
-            key={animationKey}
-            className="group-hover:animate-snakeBorderHover pointer-events-none absolute inset-0 rounded-full"
-          />
-      </Button>
-      </div>
+                key={animationKey}
+                className="group-hover:animate-snakeBorderHover pointer-events-none absolute inset-0 rounded-full"
+              />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import SiteLogoWhite from "../site-logo-white";
 import ThemeToggle from "../theme-toggle";
 import DesktopMenu from "./desktop-menu";
 import ProfileHeaderDetails from "./profile-header-details";
+import NotificationBubble from "../notification-bubble";
 interface DesktopHeaderProps {
   className?: string;
 }
@@ -53,6 +54,7 @@ const DesktopHeader: React.FC<DesktopHeaderProps> = ({ className = "" }) => {
 
         <div className="flex items-center gap-4">
           <ThemeToggle theme={theme} onClick={switchTheme} />
+          <NotificationBubble />
           {user && <ProfileHeaderDetails theme={theme} forceClickDropdown={menuToggleShow} variant="desktop" />}
         </div>
       </div>

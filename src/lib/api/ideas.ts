@@ -141,3 +141,11 @@ export async function updateIdeaCollab(collabId: string, status: CollaborationSt
     data: { status },
   });
 }
+
+export async function deleteIdeaCollab(collabId: string, userId: string) {
+  return prisma.ideaCollaboration.delete({
+    where: { id: collabId, userId },
+  });
+
+
+}

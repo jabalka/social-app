@@ -32,7 +32,7 @@ const providers: NextAuthConfig["providers"] = [
           include: {
             comments: true,
             likes: true,
-            posts: true,
+            ideas: true,
             projects: true,
             role: true,
           },
@@ -134,7 +134,7 @@ const callbacks: NextAuthConfig["callbacks"] = {
         include: {
           comments: true,
           likes: true,
-          posts: true,
+          ideas: true,
           projects: true,
           role: true,
         },
@@ -150,7 +150,7 @@ const callbacks: NextAuthConfig["callbacks"] = {
         token.roleId = dbUser.roleId;
         token.comments = dbUser.comments;
         token.likes = dbUser.likes;
-        token.posts = dbUser.posts;
+        token.ideas = dbUser.ideas;
         token.projects = dbUser.projects;
         token.role = dbUser.role;
       }
@@ -170,7 +170,7 @@ const callbacks: NextAuthConfig["callbacks"] = {
       roleId: token.roleId ?? null,
       comments: token.comments ?? [],
       likes: token.likes ?? [],
-      posts: token.posts ?? [],
+      ideas: token.posts ?? [],
       projects: token.projects ?? [],
       role: token.role ?? null,
     } as AdapterUser & AuthUser;
