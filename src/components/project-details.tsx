@@ -104,18 +104,18 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           },
         ];
       }
-      setLikes(newLikes); // Optimistic update
+      setLikes(newLikes);
   
       const res = await fetch(`/api/projects/${project.id}/like`, { method: "POST" });
       if (res.ok) {
-        fetchLikes(); // Sync with server
+        fetchLikes();
         refreshProjects();
       } else {
-        setLikes(likes); // Revert if failed
+        setLikes(likes); 
         console.error("Failed to like project");
       }
     } catch (err) {
-      setLikes(likes); // Revert on error
+      setLikes(likes); 
       console.error("Like error:", err);
     } finally {
       setIsLiking(false);

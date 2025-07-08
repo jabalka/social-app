@@ -54,7 +54,11 @@ const NotificationBubbleItem: React.FC<NotificationBubbleItemProps> = ({
       )}
       <button
         className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 hover:bg-blue-400"
-        onClick={() => (handleReview ? handleReview(n) : console.log("Reviewing notification:", n))}
+        onClick={() => {
+            if (handleReview) {
+              handleReview(n);
+            }
+            console.log("Reviewing notification:", n)}}
         title="Review Notification"
         type="button"
       >
