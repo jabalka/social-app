@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 export interface Notification {
   id: string;
@@ -14,9 +14,10 @@ export interface Notification {
     commentId?: string;
   };
   createdAt?: string;
+  fromUserId?: string;
+  targetId?: string;
+  targetType: "project" | "idea" | "comment";
 }
-
-
 
 interface NotificationsContextValue {
   notifications: Notification[];
@@ -57,7 +58,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   }, []);
 
   return (
-    <NotificationsContext.Provider value={{ notifications, addNotification, markNotificationRead, refetchNotifications: fetchNotifications }}>
+    <NotificationsContext.Provider
+      value={{ notifications, addNotification, markNotificationRead, refetchNotifications: fetchNotifications }}
+    >
       {children}
     </NotificationsContext.Provider>
   );
