@@ -32,11 +32,20 @@ const ConfirmationModal: React.FC = () => {
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent aria-describedby="confirmation-content">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle className="text-center w-full">{title}</DialogTitle>
+          <DialogDescription className="pt-8 text-left w-full">
+            {description}
+          </DialogDescription>
         </DialogHeader>
-        {content && <div className="py-4" id="confirmation-content">{content}</div>}
-        <DialogFooter>
+        {content && (
+          <div
+            className="py-4 flex justify-center w-full"
+            id="confirmation-content"
+          >
+            {content}
+          </div>
+        )}
+        <DialogFooter className="flex justify-center w-full gap-4">
           <GlowingPinkButton onClick={onCancel}>
             {cancelText}
           </GlowingPinkButton>

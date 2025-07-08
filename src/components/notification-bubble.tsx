@@ -1,14 +1,16 @@
+import { Notification, useNotifications } from "@/context/notifications-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
+import { showCustomToast } from "@/utils/show-custom-toast";
 import { useEffect, useRef, useState } from "react";
 import NotificationBubbleItem from "./notification-bubble-item";
-import { Notification, useNotifications } from "@/context/notifications-context";
-import { showCustomToast } from "@/utils/show-custom-toast";
+import { useConfirmation } from "@/hooks/use-confirmation.hook";
 
 const NotificationBubble = () => {
-    const { notifications, markNotificationRead } = useNotifications();
+  const { notifications, markNotificationRead, refetchNotifications } = useNotifications();
   const { theme } = useSafeThemeContext();
+    const { confirm } = useConfirmation();
 
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -20,9 +22,10 @@ const NotificationBubble = () => {
   const [animationKey, setAnimationKey] = useState<number>(0);
   const [removedNotifications, setRemovedNotifications] = useState<Notification[]>([]);
 
-  const unread = notifications
-  .filter((n) => !n.read)
-  .filter((n) => !removedNotifications.some((r) => r.id === n.id));
+  const undoClickedRef = useRef(false);
+
+  const unread = notifications.filter((n) => !n.read && !removedNotifications.some((r) => r.id === n.id));
+  const read = notifications.filter((n) => n.read && !removedNotifications.some((r) => r.id === n.id));
   const unreadCount = unread.length;
 
   useEffect(() => {
@@ -46,59 +49,122 @@ const NotificationBubble = () => {
     }
   }, [pendingRemove, countdown]);
 
-  const handleMarkAsRead = (id: string) => {
+  //   const handleMarkAsRead = (id: string) => {
+  //     setPendingRemove(id);
+  //     setCountdown(3);
+
+  //     const notification = unread.find((n) => n.id === id);
+  //     setUndoNotification(notification ?? null);
+  //     undoClickedRef.current = false;
+
+  //     // After 3s, hide notification and show toast
+  //     const timer = setTimeout(() => {
+  //       setPendingRemove(null);
+  //       setUndoTimer(null);
+  //       setCountdown(3);
+
+  //       // Actually remove from UI
+  //       if (notification) {
+  //         setRemovedNotifications((prev) => [...prev, notification]);
+  //       }
+
+  //       // Show toast with Undo button for another 3s
+  //       showCustomToast("Notification erased", {
+  //         action: {
+  //           label: "Undo",
+  //           onClick: () => handleUndo(id),
+  //         },
+  //       });
+
+  //       const finalize = setTimeout(() => {
+  //         if (!undoClickedRef.current) {
+  //           console.log("NotificationBubble.,Calling markNotificationRead for", id);
+  //           markNotificationRead(id);
+  //           setRemovedNotifications((prev) => prev.filter((n) => n.id !== id));
+  //         } else {
+  //           console.log("NotificationBubble.,Undo was clicked, not calling markNotificationRead for", id);
+  //         }
+  //         setUndoNotification(null); // here is the error
+  //         // // I believe as the toaster notification has no the id anymore after this line executed
+  //         setFinalizeTimer(null);
+  //       }, 3000);
+  //       setFinalizeTimer(finalize);
+  //     }, 3000);
+  //     setUndoTimer(timer);
+  //   };
+
+  const handleDelete = (id: string) => {
     setPendingRemove(id);
     setCountdown(3);
-  
-    // Save notification for undo
     const notification = unread.find((n) => n.id === id);
     setUndoNotification(notification ?? null);
-  
-    // After 3s, hide notification and show toast
+    undoClickedRef.current = false;
+
     const timer = setTimeout(() => {
       setPendingRemove(null);
       setUndoTimer(null);
       setCountdown(3);
-  
-      // Actually remove from UI
-      if (notification) {
-        setRemovedNotifications((prev) => [...prev, notification]);
-      }
-  
-      // Show toast with Undo button for another 3s
-      showCustomToast("Notification erased", {
+      if (notification) setRemovedNotifications((prev) => [...prev, notification]);
+      showCustomToast("Notification deleted", {
         action: {
           label: "Undo",
-          onClick: handleUndo,
+          onClick: () => handleUndo(id),
         },
       });
-  
-      // After another 3s, finalize removal if not undone
-      const finalize = setTimeout(() => {
-        // Only now, after 6s, mark as read in DB/state
-        markNotificationRead(id);
+      const finalize = setTimeout(async () => {
+        if (!undoClickedRef.current) {
+          // Call your delete API here
+          await fetch(`/api/notifications/${id}`, { method: "DELETE" });
+          setRemovedNotifications((prev) => prev.filter((n) => n.id !== id));
+          refetchNotifications();
+        }
         setUndoNotification(null);
         setFinalizeTimer(null);
-        setRemovedNotifications((prev) => prev.filter((n) => n.id !== id));
       }, 3000);
       setFinalizeTimer(finalize);
-  
     }, 3000);
     setUndoTimer(timer);
   };
-  
-  const handleUndo = () => {
+
+  const handleDeleteAllRead = async () => {
+    const result = await confirm({
+        title: "Delete all your read notifications?",
+        description:
+          "You are about to delete all your read notifications. This action cannot be undone.",
+        content: "Are you sure you want to proceed?",
+        confirmText: "Yes",
+        cancelText: "No",
+      });
+      if(result){
+        for (const n of read) {
+            await fetch(`/api/notifications/${n.id}`, { method: "DELETE" });
+          }
+          setRemovedNotifications((prev) => [...prev, ...read]);
+          refetchNotifications();
+      }
+  };
+
+  const handleUndo = (id?: string) => {
+    undoClickedRef.current = true;
     if (undoTimer) clearTimeout(undoTimer);
     if (finalizeTimer) clearTimeout(finalizeTimer);
     setPendingRemove(null);
     setUndoTimer(null);
     setCountdown(3);
-  
-    // Restore notification to UI
-    if (undoNotification) {
-      setRemovedNotifications((prev) => prev.filter((n) => n.id !== undoNotification.id));
+
+    if (id) {
+      setRemovedNotifications((prev) => prev.filter((n) => n.id !== id));
     }
     setUndoNotification(null);
+    refetchNotifications();
+  };
+
+  const handleReview = async (n: Notification) => {
+    if (!n.read) {
+      await markNotificationRead(n.id);
+      refetchNotifications();
+    }
+    // Optionally open modal here
   };
 
   useEffect(() => {
@@ -111,28 +177,15 @@ const NotificationBubble = () => {
     return () => clearTimeout(timeout);
   }, [animationKey]);
 
-  // Group notifications by type
-  const grouped = unread.reduce<Record<string, typeof unread>>((acc, n) => {
-    acc[n.type] = acc[n.type] || [];
-    acc[n.type].push(n);
-    return acc;
-  }, {});
+  const groupByType = (arr: Notification[]) =>
+    arr.reduce<Record<string, Notification[]>>((acc, n) => {
+      acc[n.type] = acc[n.type] || [];
+      acc[n.type].push(n);
+      return acc;
+    }, {});
 
-
-
-
-  //   const handleReview = (n: Notification) => {
-  //     setReviewedNotification(n);
-  //     // if (n.target.type === "project" && n.target.projectId) {
-  //     //   window.location.href = `/projects/${n.target.projectId}`;
-  //     // } else if (n.target.type === "idea" && n.target.ideaId) {
-  //     //   window.location.href = `/browse/${n.target.ideaId}`;
-  //     // } else if (n.target.type === "comment" && n.target.projectId && n.target.commentId) {
-  //     //   window.location.href = `/projects/${n.target.projectId}?comment=${n.target.commentId}`;
-  //     // } else {
-  //     //   alert("No target to review.");
-  //     // }
-  //   };
+  const groupedUnread = groupByType(unread);
+  const groupedRead = groupByType(read);
 
   return (
     <div className={cn("relative")} ref={ref}>
@@ -152,51 +205,103 @@ const NotificationBubble = () => {
         )}
       </button>
       {open && (
-        
-          <div
-            className={cn("absolute right-0 z-50 mt-2 w-96 rounded-lg border px-2 pb-3 shadow-lg overflow-hidden", {
-              "bg-[#a08f88] text-[#050505]": theme === Theme.LIGHT,
-              "bg-[#413c3a]": theme === Theme.DARK,
-            })}
-          >
-            <div className="p-3 font-semibold">Notifications</div>
-            {unreadCount === 0 && <div className="p-4 text-center text-sm">No new notifications</div>}
-            {Object.entries(grouped).map(([type, items]) => {
-              // Capitalize and replace 'collab' with 'collaboration' for the type label
-              let displayType = type.replace("-", " ").toUpperCase();
-              if (displayType.startsWith("COLLAB ")) {
-                displayType = displayType.replace("COLLAB ", "COLLABORATION ");
-              } else if (displayType === "COLLAB") {
-                displayType = "COLLABORATION";
-              }
-              return (
-                <div key={type} className="rounded-lg border border-white my-[5px]">
-                  <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-200">
-                    {displayType}
-                  </div>
-                  {items.map((n) => (
-                    <NotificationBubbleItem
-                      key={n.id}
-                      notification={n}
-                      pendingRemove={pendingRemove}
-                      handleUndo={handleUndo}
-                      handleMarkAsRead={handleMarkAsRead}
-                      countdown={pendingRemove === n.id ? countdown : undefined}
-                      // handleReview={handleReview} // Uncomment if review functionality is implemented
-                    />
-                  ))}
+        <div
+          className={cn("absolute right-0 z-50 mt-2 w-96 max-h-[360px] overflow-hidden rounded-lg border px-2 pb-3 shadow-lg", {
+            "bg-[#a08f88] text-[#050505]": theme === Theme.LIGHT,
+            "bg-[#413c3a]": theme === Theme.DARK,
+          })}
+        >
+          <div className="p-3 font-semibold">Notifications</div>
+          {unreadCount === 0 && <div className="p-4 text-center text-sm">No new notifications</div>}
+          {unread.length > 0 && (
+            <div className="h-48 overflow-y-auto pr-1 rounded border border-[#595b5e]">
+     {Object.entries(groupedUnread).map(([type, items]) => {
+            // Capitalize and replace 'collab' with 'collaboration' for the type label
+            let displayType = type.replace("-", " ").toUpperCase();
+            if (displayType.startsWith("COLLAB ")) {
+              displayType = displayType.replace("COLLAB ", "COLLABORATION ");
+            } else if (displayType === "COLLAB") {
+              displayType = "COLLABORATION";
+            }
+            return (
+              <div key={type} className="my-[5px] rounded-lg border border-white">
+                <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-200">
+                  {displayType}
                 </div>
-              );
-            })}
-            <span
-              key={animationKey}
-              className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-lg", {
-                "animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-                "animate-snakeBorderHoverDark": theme === Theme.DARK,
+                {items.map((n) => (
+                  <NotificationBubbleItem
+                    key={n.id}
+                    notification={n}
+                    pendingRemove={pendingRemove}
+                    handleUndo={handleUndo}
+                    handleDelete={handleDelete}
+                    handleReview={handleReview}
+                    countdown={pendingRemove === n.id ? countdown : undefined}
+                    isRead={false}
+                    theme={theme}
+                  />
+                ))}
+              </div>
+            );
+          })}
+            </div>
+            )}
+     
+          {read.length > 0 && (
+            <div className="mt-4">
+              <div className={cn("flex items-center justify-between px-4 py-2 text-xs font-bold uppercase border-t-2 border-black", {
+                            "bg-[#a08f88] text-gray-600": theme === Theme.LIGHT,
+                            "bg-[#413c3a] text-gray-400": theme === Theme.DARK,
+              })}>
+                Read Notifications
+                <button
+                  className="rounded bg-red-700 px-2 py-1 text-xs text-white hover:bg-red-500"
+                  onClick={handleDeleteAllRead}
+                >
+                  Delete All
+                </button>
+              </div>
+              <div className="h-48 overflow-y-auto pr-1 rounded border border-[#595b5e]">
+              {Object.entries(groupedRead).map(([type, items]) => {
+                let displayType = type.replace("-", " ").toUpperCase();
+                if (displayType.startsWith("COLLAB ")) {
+                  displayType = displayType.replace("COLLAB ", "COLLABORATION ");
+                } else if (displayType === "COLLAB") {
+                  displayType = "COLLABORATION";
+                }
+
+                return (
+                  <div key={type} className="my-[5px] rounded-lg border border-gray-600">
+                    <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-400">
+                      {type.replace("-", " ").toUpperCase()}
+                    </div>
+                    {items.map((n) => (
+                      <NotificationBubbleItem
+                        key={n.id}
+                        notification={n}
+                        pendingRemove={pendingRemove}
+                        handleUndo={handleUndo}
+                        handleDelete={handleDelete}
+                        handleReview={handleReview}
+                        countdown={pendingRemove === n.id ? countdown : undefined}
+                        isRead={true}
+                        theme={theme}
+                      />
+                    ))}
+                  </div>
+                );
               })}
-            />
-          </div>
-    
+              </div>
+            </div>
+          )}
+          <span
+            key={animationKey}
+            className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-lg", {
+              "animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+              "animate-snakeBorderHoverDark": theme === Theme.DARK,
+            })}
+          />
+        </div>
       )}
     </div>
   );
