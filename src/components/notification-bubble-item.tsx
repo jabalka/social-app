@@ -26,11 +26,14 @@ const NotificationBubbleItem: React.FC<NotificationBubbleItemProps> = ({
   theme,
 }) => (
   <div className="flex items-center justify-between border-b px-4 py-2 last:border-b-0">
-    <span className={cn(`text-sm`, {
-                " text-gray-700": theme === Theme.LIGHT && isRead,
-                                    " text-gray-400": theme === Theme.DARK && isRead,
-
-    })}>{n.message}</span>
+    <span
+      className={cn(`text-sm`, {
+        "text-gray-700": theme === Theme.LIGHT && isRead,
+        "text-gray-400": theme === Theme.DARK && isRead,
+      })}
+    >
+      {n.message}
+    </span>
     <div className="flex gap-2">
       {pendingRemove === n.id ? (
         <button
@@ -55,10 +58,9 @@ const NotificationBubbleItem: React.FC<NotificationBubbleItemProps> = ({
       <button
         className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 hover:bg-blue-400"
         onClick={() => {
-            if (handleReview) {
-              handleReview(n);
-            }
-            console.log("Reviewing notification:", n)}}
+          if (handleReview) {
+            handleReview(n);
+          }}}
         title="Review Notification"
         type="button"
       >

@@ -45,24 +45,20 @@ interface Props {
 
 type ListenerWrapper = (...args: unknown[]) => void;
 
-
-
 export const SocketProvider: React.FC<Props> = ({ children }) => {
   const socket = useSocket();
   const listeners = useRef<Map<keyof SocketEventMap, ListenerWrapper>>(new Map());
   const { notifications, addNotification, markNotificationRead, refetchNotifications } = useNotifications();
 
   const isDuplicate = (type: string, targetId: string) => {
-    return notifications.some(
-      (n) => n.type === type && n.target?.id === targetId && !n.read
-    );
+    return notifications.some((n) => n.type === type && n.target?.id === targetId && !n.read);
   };
 
   const optimisticAndSync = (notification: Notification) => {
     addNotification(notification);
     setTimeout(() => {
-      refetchNotifications(); 
-    }, 800); 
+      refetchNotifications();
+    }, 800);
   };
 
   // Join Conversation
@@ -152,6 +148,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         type: "like",
         message: "Someone liked your project!",
         read: false,
+        targetType: "project",
         target: {
           id: payload.projectId,
           type: "project",
@@ -161,7 +158,6 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
 
       showCustomToast(notification.message);
       optimisticAndSync(notification);
-
     };
 
     const handleComment: EventHandler<"notification:comment"> = (payload) => {
@@ -171,6 +167,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         type: "comment",
         message: "You received a comment!",
         read: false,
+        targetType: "comment",
         target: {
           id: payload.commentId,
           type: "comment",
@@ -180,8 +177,6 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
       };
       showCustomToast(notification.message);
       optimisticAndSync(notification);
-
-
     };
 
     const handleCommentLike: EventHandler<"notification:comment-like"> = (payload) => {
@@ -191,6 +186,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         type: "comment-like",
         message: "Someone liked your comment!",
         read: false,
+        targetType: "comment",
         target: {
           id: payload.commentId,
           type: "comment",
@@ -208,6 +204,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         type: "reply",
         message: "Someone replied to your comment!",
         read: false,
+        targetType: "comment",
         target: {
           id: payload.commentId,
           type: "comment",
@@ -215,7 +212,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         },
       };
       showCustomToast(notification.message);
-    optimisticAndSync(notification);
+      optimisticAndSync(notification);
     };
 
     const handleCollabRequest: EventHandler<"notification:collab-request"> = (payload) => {
@@ -225,6 +222,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         type: "collab-request",
         message: `You received a collaboration request!`,
         read: false,
+        targetType: "idea",
         target: {
           id: payload.ideaId,
           type: "idea",
@@ -242,6 +240,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         type: "collab-accepted",
         message: "Your collaboration request was accepted!",
         read: false,
+        targetType: "idea",
         target: {
           id: payload.ideaId,
           type: "idea",
@@ -267,7 +266,8 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
       socket.off("notification:collab-request", handleCollabRequest);
       socket.off("notification:collab-accepted", handleCollabAccepted);
     };
-  }, [socket, addNotification, refetchNotifications,]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, addNotification, refetchNotifications]);
 
   // Cleanup all listeners on unmount.
   useEffect(() => {
