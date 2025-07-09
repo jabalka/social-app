@@ -24,7 +24,9 @@ const NotificationBubbleItem: React.FC<NotificationBubbleItemProps> = ({
   countdown,
   isRead,
   theme,
-}) => (
+}) =>{ 
+    
+   return (
   <div className="flex items-center justify-between border-b px-4 py-2 last:border-b-0">
     <span
       className={cn(`text-sm`, {
@@ -68,6 +70,6 @@ const NotificationBubbleItem: React.FC<NotificationBubbleItemProps> = ({
       </button>
     </div>
   </div>
-);
+)};
 
 export default NotificationBubbleItem;

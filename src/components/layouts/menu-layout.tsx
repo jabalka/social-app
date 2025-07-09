@@ -62,10 +62,9 @@ const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
         </>
       ) : (
         <>
-          <DesktopHeader user={user} className="z-50 hidden top-0" />
+          <DesktopHeader className="top-0 z-50 hidden" />
 
           <DesktopHeader
-            user={user}
             className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
               isScrolled ? "translate-y-0 shadow-[0_1px_2px_0_rgba(0,0,0,0.1)]" : "-translate-y-full"
             }`}
@@ -75,10 +74,8 @@ const MenuLayout: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
 
       <main
         className={cn("flex flex-1 flex-col items-center justify-center", {
-        "bg-gradient-to-b from-[#f7f3f1] via-[#f0e3dd] to-[#f7f3f1] text-zinc-700":
-          theme === Theme.LIGHT,
-        "bg-gradient-to-b from-[#121211] via-[#332f2d] to-[#121211] text-zinc-200":
-          theme === Theme.DARK,
+          "bg-gradient-to-b from-[#f7f3f1] via-[#f0e3dd] to-[#f7f3f1] text-zinc-700": theme === Theme.LIGHT,
+          "bg-gradient-to-b from-[#121211] via-[#332f2d] to-[#121211] text-zinc-200": theme === Theme.DARK,
         })}
       >
         <div>{children}</div>

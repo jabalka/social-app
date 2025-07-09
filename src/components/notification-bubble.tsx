@@ -5,6 +5,7 @@ import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { showCustomToast } from "@/utils/show-custom-toast";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import NotificationBubbleItem from "./notification-bubble-item";
 
@@ -23,6 +24,7 @@ const NotificationBubble = () => {
   const [finalizeTimer, setFinalizeTimer] = useState<NodeJS.Timeout | null>(null);
   const [animationKey, setAnimationKey] = useState<number>(0);
   const [removedNotifications, setRemovedNotifications] = useState<Notification[]>([]);
+  const [isSlideOut, setIsSlideOut] = useState(false);
 
   const undoClickedRef = useRef(false);
 
@@ -117,6 +119,7 @@ const NotificationBubble = () => {
   };
 
   const handleReview = async (n: Notification) => {
+    setIsSlideOut(true);
     if (!n.read) {
       await markNotificationRead(n.id);
       refetchNotifications();
@@ -153,6 +156,16 @@ const NotificationBubble = () => {
     return () => clearTimeout(timeout);
   }, [animationKey]);
 
+  useEffect(() => {
+    if (isSlideOut) {
+      const timeout = setTimeout(() => {
+        setOpen(false);
+        setIsSlideOut(false);
+      }, 400); // match the motion.div duration
+      return () => clearTimeout(timeout);
+    }
+  }, [isSlideOut]);
+
   const groupByType = (arr: Notification[]) =>
     arr.reduce<Record<string, Notification[]>>((acc, n) => {
       acc[n.type] = acc[n.type] || [];
@@ -164,100 +177,52 @@ const NotificationBubble = () => {
   const groupedRead = groupByType(read);
 
   return (
-    <div className={cn("relative")} ref={ref}>
-      <button className="relative p-2" aria-label="Notifications" onClick={() => setOpen((v) => !v)}>
-        <svg width={24} height={24} fill="none" viewBox="0 0 24 24">
-          <path
-            d="M12 2a6 6 0 0 0-6 6v3c0 .7-.3 1.4-.8 1.9L4 15h16l-1.2-2.1A2.7 2.7 0 0 1 18 11V8a6 6 0 0 0-6-6z"
-            stroke="currentColor"
-            strokeWidth={2}
-          />
-          <circle cx={12} cy={19} r={2} fill="currentColor" />
-        </svg>
-        {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white">
-            {unreadCount}
-          </span>
-        )}
-      </button>
-      {open && (
-        <div
-          className={cn(
-            "absolute right-0 z-50 mt-2 max-h-[460px] w-96 overflow-hidden rounded-lg border px-2 pb-3 shadow-lg",
-            {
-              "bg-[#a08f88] text-[#050505]": theme === Theme.LIGHT,
-              "bg-[#413c3a]": theme === Theme.DARK,
-            },
-          )}
-        >
-          <div className="p-3 font-semibold">Notifications</div>
-          {unreadCount === 0 && <div className="p-4 text-center text-sm">No new notifications</div>}
-          {unread.length > 0 && (
-            <div className="max-h-48 overflow-y-auto rounded border border-[#595b5e] pr-1">
-              {Object.entries(groupedUnread).map(([type, items]) => {
-                // Capitalize and replace 'collab' with 'collaboration' for the type label
-                let displayType = type.replace("-", " ").toUpperCase();
-                if (displayType.startsWith("COLLAB ")) {
-                  displayType = displayType.replace("COLLAB ", "COLLABORATION ");
-                } else if (displayType === "COLLAB") {
-                  displayType = "COLLABORATION";
-                }
-                return (
-                  <div key={type} className="my-[5px] rounded-lg border border-white">
-                    <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-200">
-                      {displayType}
-                    </div>
-                    {items.map((n) => (
-                      <NotificationBubbleItem
-                        key={n.id}
-                        notification={n}
-                        pendingRemove={pendingRemove}
-                        handleUndo={handleUndo}
-                        handleDelete={handleDelete}
-                        handleReview={handleReview}
-                        countdown={pendingRemove === n.id ? countdown : undefined}
-                        isRead={false}
-                        theme={theme}
-                      />
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
 
-          {read.length > 0 && (
-            <div className="mt-4">
-              <div
-                className={cn(
-                  "flex items-center justify-between border-t-2 border-black px-4 py-2 text-xs font-bold uppercase",
-                  {
-                    "bg-[#a08f88] text-gray-600": theme === Theme.LIGHT,
-                    "bg-[#413c3a] text-gray-400": theme === Theme.DARK,
-                  },
-                )}
-              >
-                Read Notifications
-                <button
-                  className="rounded bg-red-700 px-2 py-1 text-xs text-white hover:bg-red-500"
-                  onClick={handleDeleteAllRead}
-                >
-                  Delete All
-                </button>
-              </div>
+      <div className={cn("relative")} ref={ref}>
+        <button className="relative p-2" aria-label="Notifications" onClick={() => setOpen((v) => !v)}>
+          <svg width={24} height={24} fill="none" viewBox="0 0 24 24">
+            <path
+              d="M12 2a6 6 0 0 0-6 6v3c0 .7-.3 1.4-.8 1.9L4 15h16l-1.2-2.1A2.7 2.7 0 0 1 18 11V8a6 6 0 0 0-6-6z"
+              stroke="currentColor"
+              strokeWidth={2}
+            />
+            <circle cx={12} cy={19} r={2} fill="currentColor" />
+          </svg>
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+        {open && (
+          <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={isSlideOut ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+            className={cn(
+              "absolute right-0 z-30 mt-2 max-h-[460px] w-96 overflow-hidden rounded-lg border px-2 pb-3 shadow-lg",
+              {
+                "bg-[#a08f88] text-[#050505]": theme === Theme.LIGHT,
+                "bg-[#413c3a]": theme === Theme.DARK,
+              },
+            )}
+          >
+            <div className="p-3 font-semibold">Notifications</div>
+            {unreadCount === 0 && <div className="p-4 text-center text-sm">No new notifications</div>}
+            {unread.length > 0 && (
               <div className="max-h-48 overflow-y-auto rounded border border-[#595b5e] pr-1">
-                {Object.entries(groupedRead).map(([type, items]) => {
+                {Object.entries(groupedUnread).map(([type, items]) => {
+                  // Capitalize and replace 'collab' with 'collaboration' for the type label
                   let displayType = type.replace("-", " ").toUpperCase();
                   if (displayType.startsWith("COLLAB ")) {
                     displayType = displayType.replace("COLLAB ", "COLLABORATION ");
                   } else if (displayType === "COLLAB") {
                     displayType = "COLLABORATION";
                   }
-
                   return (
-                    <div key={type} className="my-[5px] rounded-lg border border-gray-600">
-                      <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-400">
-                        {type.replace("-", " ").toUpperCase()}
+                    <div key={type} className="my-[5px] rounded-lg border border-white">
+                      <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-200">
+                        {displayType}
                       </div>
                       {items.map((n) => (
                         <NotificationBubbleItem
@@ -268,7 +233,7 @@ const NotificationBubble = () => {
                           handleDelete={handleDelete}
                           handleReview={handleReview}
                           countdown={pendingRemove === n.id ? countdown : undefined}
-                          isRead={true}
+                          isRead={false}
                           theme={theme}
                         />
                       ))}
@@ -276,18 +241,71 @@ const NotificationBubble = () => {
                   );
                 })}
               </div>
-            </div>
-          )}
-          <span
-            key={animationKey}
-            className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-lg", {
-              "animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-              "animate-snakeBorderHoverDark": theme === Theme.DARK,
-            })}
-          />
-        </div>
-      )}
-    </div>
+            )}
+
+            {read.length > 0 && (
+              <div className="mt-4">
+                <div
+                  className={cn(
+                    "flex items-center justify-between border-t-2 border-black px-4 py-2 text-xs font-bold uppercase",
+                    {
+                      "bg-[#a08f88] text-gray-600": theme === Theme.LIGHT,
+                      "bg-[#413c3a] text-gray-400": theme === Theme.DARK,
+                    },
+                  )}
+                >
+                  Read Notifications
+                  <button
+                    className="rounded bg-red-700 px-2 py-1 text-xs text-white hover:bg-red-500"
+                    onClick={handleDeleteAllRead}
+                  >
+                    Delete All
+                  </button>
+                </div>
+                <div className="max-h-48 overflow-y-auto rounded border border-[#595b5e] pr-1">
+                  {Object.entries(groupedRead).map(([type, items]) => {
+                    let displayType = type.replace("-", " ").toUpperCase();
+                    if (displayType.startsWith("COLLAB ")) {
+                      displayType = displayType.replace("COLLAB ", "COLLABORATION ");
+                    } else if (displayType === "COLLAB") {
+                      displayType = "COLLABORATION";
+                    }
+
+                    return (
+                      <div key={type} className="my-[5px] rounded-lg border border-gray-600">
+                        <div className="rounded-lg bg-[#312d2c] px-4 py-2 text-xs font-bold uppercase text-gray-400">
+                          {type.replace("-", " ").toUpperCase()}
+                        </div>
+                        {items.map((n) => (
+                          <NotificationBubbleItem
+                            key={n.id}
+                            notification={n}
+                            pendingRemove={pendingRemove}
+                            handleUndo={handleUndo}
+                            handleDelete={handleDelete}
+                            handleReview={handleReview}
+                            countdown={pendingRemove === n.id ? countdown : undefined}
+                            isRead={true}
+                            theme={theme}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <span
+              key={animationKey}
+              className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-lg", {
+                "animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+                "animate-snakeBorderHoverDark": theme === Theme.DARK,
+              })}
+            />
+          </motion.div>
+        )}
+      </div>
+
   );
 };
 

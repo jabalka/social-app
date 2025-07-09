@@ -1,35 +1,78 @@
+@keyframes progressBarGlow {
+  0% {
+    background-position-x: 0%;
+  }
+  100% {
+    background-position-x: 100%;
+  }
+}
+
 *::-webkit-scrollbar {
-  @apply h-2 w-2;
+  height: 0.5rem;
+  width: 0.5rem;
 }
 
 *::-webkit-scrollbar-thumb {
-  @apply bg-gradient-to-b from-zinc-300 via-indigo-200 to-slate-400;
+  background: linear-gradient(90deg, #fff 0%, #a5b4fc 40%, #818cf8 60%, #fff 100%);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 1.2s linear infinite;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  @apply bg-gradient-to-b from-zinc-400 via-indigo-300 to-slate-500;
+  background: linear-gradient(90deg, #fff 0%, #818cf8 40%, #a5b4fc 60%, #fff 100%);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 1s linear infinite;
 }
 
 *::-webkit-scrollbar-thumb:active {
-  @apply bg-gradient-to-b from-zinc-500 via-indigo-400 to-slate-600;
+  background: linear-gradient(90deg, #fff 0%, #6366f1 40%, #a5b4fc 60%, #fff 100%);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 0.8s linear infinite;
 }
 
 *::-webkit-scrollbar-track {
-  @apply border-x border-y-0 border-solid border-zinc-200 bg-white;
+  border-left: 1px solid #e4e4e7;
+  border-right: 1px solid #e4e4e7;
+  border-top: 0;
+  border-bottom: 0;
+  background: #fff;
 }
 
 .dark *::-webkit-scrollbar-thumb {
-  @apply bg-gradient-to-b from-zinc-900 via-indigo-950 to-slate-900;
+  background: linear-gradient(90deg, #fff 0%, #312e81 40%, #818cf8 60%, #fff 100%);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 1.2s linear infinite;
 }
 
 .dark *::-webkit-scrollbar-thumb:hover {
-  @apply bg-gradient-to-b from-zinc-800 via-indigo-900 to-slate-800;
+  background: linear-gradient(90deg, #fff 0%, #3730a3 40%, #a5b4fc 60%, #fff 100%);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 1s linear infinite;
 }
 
 .dark *::-webkit-scrollbar-thumb:active {
-  @apply bg-gradient-to-b from-zinc-700 via-indigo-800 to-slate-700;
+  background: linear-gradient(90deg, #fff 0%, #6366f1 40%, #a5b4fc 60%, #fff 100%);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 0.8s linear infinite;
 }
 
 .dark *::-webkit-scrollbar-track {
-  @apply border-zinc-300 bg-zinc-300;
+  border-left: 1px solid #d4d4d8;
+  border-right: 1px solid #d4d4d8;
+  border-top: 0;
+  border-bottom: 0;
+  background: #d4d4d8;
+}
+
+.animated-scrollbar-thumb {
+  background: linear-gradient(90deg, #a5b4fc, #818cf8, #a5b4fc);
+  background-size: 200% 100%;
+  background-position-x: 0%;
+  animation: progressBarGlow 2s linear infinite;
 }

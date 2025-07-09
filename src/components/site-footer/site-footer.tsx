@@ -15,7 +15,7 @@ const SiteFooter: React.FC<Props> = ({ className, theme }) => {
     <>
       {/* <div className="absolute left-0 right-0 h-0.5 bg-[#2b2725]" /> */}
       <footer
-        className={cn("space-y-4 border-t-2 py-6 text-center text-sm", className, {
+        className={cn("z-50 space-y-4 border-t-2 py-6 text-center text-sm", className, {
           "border-[#bda69c] bg-gradient-to-br from-[#fbe8e0] via-[#dfc9bf] to-[#c8b3aa] text-zinc-700":
             theme === Theme.LIGHT,
           "border-[#72645f] bg-gradient-to-br from-[#443d3a] via-[#72645f] to-[#bda69c] text-zinc-300":
