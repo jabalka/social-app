@@ -5,11 +5,12 @@ import React, { createContext, useCallback, useContext, useState } from "react";
 import { useProjectContext } from "./project-context";
 import { useSafeThemeContext } from "./safe-theme-context";
 import { useSafeUser } from "./user-context";
+import LoaderModal from "@/components/loader-modal";
 
 interface ProjectModalContextType {
   openProjectModal: (projectId: string) => Promise<void>;
   closeProjectModal: () => void;
-  loading?: boolean;
+  loading: boolean;
 }
 
 const ProjectModalContext = createContext<ProjectModalContextType>({
@@ -27,14 +28,16 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useSafeUser();
   const { theme } = useSafeThemeContext();
   const [fetchedProject, setFetchedProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const openProjectModal = useCallback(
     async (id: string) => {
       setProjectId(id);
       setOpen(true);
-      
+
       const project = projects.find((p) => p.id === id);
       if (!project) {
+        setLoading(true);
         const res = await fetch(`/api/projects/${id}`);
         if (res.ok) {
           const fetched = await res.json();
@@ -43,9 +46,10 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } else {
           setFetchedProject(null);
         }
+        setLoading(false);
       } else {
         setFetchedProject(null);
-      }
+          }
     },
     [projects, setProjects],
   );
@@ -54,15 +58,17 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setOpen(false);
     setProjectId(null);
     setFetchedProject(null);
+    setLoading(false);
   }, []);
 
   const project = projects.find((p) => p.id === projectId) || fetchedProject;
 
   return (
     <>
-      <ProjectModalContext.Provider value={{ openProjectModal, closeProjectModal }}>
+      <ProjectModalContext.Provider value={{ openProjectModal, closeProjectModal, loading }}>
         {children}
-        {project && user && (
+        {loading && <LoaderModal />}
+        {!loading && project && user && (
           <ProjectDetailsDialog
             user={user}
             project={project}
