@@ -134,7 +134,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
   useEffect(() => {
     setLikes(project.likes || []);
-  }, [project.id]);
+  }, [project.likes]);
 
   useEffect(() => {
     fetchLikes();

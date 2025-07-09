@@ -51,50 +51,6 @@ const NotificationBubble = () => {
     }
   }, [pendingRemove, countdown]);
 
-  //   const handleMarkAsRead = (id: string) => {
-  //     setPendingRemove(id);
-  //     setCountdown(3);
-
-  //     const notification = unread.find((n) => n.id === id);
-  //     setUndoNotification(notification ?? null);
-  //     undoClickedRef.current = false;
-
-  //     // After 3s, hide notification and show toast
-  //     const timer = setTimeout(() => {
-  //       setPendingRemove(null);
-  //       setUndoTimer(null);
-  //       setCountdown(3);
-
-  //       // Actually remove from UI
-  //       if (notification) {
-  //         setRemovedNotifications((prev) => [...prev, notification]);
-  //       }
-
-  //       // Show toast with Undo button for another 3s
-  //       showCustomToast("Notification erased", {
-  //         action: {
-  //           label: "Undo",
-  //           onClick: () => handleUndo(id),
-  //         },
-  //       });
-
-  //       const finalize = setTimeout(() => {
-  //         if (!undoClickedRef.current) {
-  //           console.log("NotificationBubble.,Calling markNotificationRead for", id);
-  //           markNotificationRead(id);
-  //           setRemovedNotifications((prev) => prev.filter((n) => n.id !== id));
-  //         } else {
-  //           console.log("NotificationBubble.,Undo was clicked, not calling markNotificationRead for", id);
-  //         }
-  //         setUndoNotification(null); // here is the error
-  //         // // I believe as the toaster notification has no the id anymore after this line executed
-  //         setFinalizeTimer(null);
-  //       }, 3000);
-  //       setFinalizeTimer(finalize);
-  //     }, 3000);
-  //     setUndoTimer(timer);
-  //   };
-
   const handleDelete = (id: string) => {
     setPendingRemove(id);
     setCountdown(3);
@@ -165,11 +121,10 @@ const NotificationBubble = () => {
       await markNotificationRead(n.id);
       refetchNotifications();
     }
-    console.log("Reviewing notification:", n.targetId, "type: ", n.targetType);
     switch (n.targetType) {
       case "project":
         if (n.targetId) {
-          openProjectModal(n.targetId);
+          await openProjectModal(n.targetId);
         }
         break;
       case "idea":

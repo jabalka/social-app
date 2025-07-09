@@ -1,7 +1,7 @@
 "use client";
 
 import type { AuthUser } from "@/models/auth";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 interface Props {
   user: AuthUser | null;
@@ -15,6 +15,13 @@ export const UserProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ initialUser: initialUser, children }) => {
   const [user, setUser] = useState<AuthUser | null>(initialUser);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then(res => res.json())
+      .then(data => setUser(data.user));
+  }, []);
+
 
   return <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>;
 };

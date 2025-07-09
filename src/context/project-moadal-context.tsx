@@ -1,18 +1,21 @@
 "use client";
-import React, { createContext, useContext, useState, useCallback } from "react";
 import ProjectDetailsDialog from "@/components/project-details";
+import { Project } from "@/models/project";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import { useProjectContext } from "./project-context";
 import { useSafeThemeContext } from "./safe-theme-context";
 import { useSafeUser } from "./user-context";
 
 interface ProjectModalContextType {
-  openProjectModal: (projectId: string) => void;
+  openProjectModal: (projectId: string) => Promise<void>;
   closeProjectModal: () => void;
+  loading?: boolean;
 }
 
 const ProjectModalContext = createContext<ProjectModalContextType>({
-  openProjectModal: () => {},
+  openProjectModal: async () => {},
   closeProjectModal: () => {},
+  loading: false,
 });
 
 export const useProjectModal = () => useContext(ProjectModalContext);
@@ -20,35 +23,56 @@ export const useProjectModal = () => useContext(ProjectModalContext);
 export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const { projects, refreshProjects } = useProjectContext();
-  const {user} = useSafeUser()
-  const {theme} = useSafeThemeContext();
+  const { projects, setProjects, refreshProjects } = useProjectContext();
+  const { user } = useSafeUser();
+  const { theme } = useSafeThemeContext();
+  const [fetchedProject, setFetchedProject] = useState<Project | null>(null);
 
-  const openProjectModal = useCallback((id: string) => {
-    setProjectId(id);
-    setOpen(true);
-  }, []);
+  const openProjectModal = useCallback(
+    async (id: string) => {
+      setProjectId(id);
+      setOpen(true);
+      
+      const project = projects.find((p) => p.id === id);
+      if (!project) {
+        const res = await fetch(`/api/projects/${id}`);
+        if (res.ok) {
+          const fetched = await res.json();
+          setFetchedProject(fetched);
+          setProjects([...projects, fetched as Project]);
+        } else {
+          setFetchedProject(null);
+        }
+      } else {
+        setFetchedProject(null);
+      }
+    },
+    [projects, setProjects],
+  );
 
   const closeProjectModal = useCallback(() => {
     setOpen(false);
     setProjectId(null);
+    setFetchedProject(null);
   }, []);
 
-  const project = projects.find((p) => p.id === projectId);
+  const project = projects.find((p) => p.id === projectId) || fetchedProject;
 
   return (
-    <ProjectModalContext.Provider value={{ openProjectModal, closeProjectModal }}>
-      {children}
-      {project && user && (
-        <ProjectDetailsDialog
-          user={user}
-          project={project}
-          open={open}
-          onClose={closeProjectModal}
-          refreshProjects={refreshProjects}
-          theme={theme}
-        />
-      )}
-    </ProjectModalContext.Provider>
+    <>
+      <ProjectModalContext.Provider value={{ openProjectModal, closeProjectModal }}>
+        {children}
+        {project && user && (
+          <ProjectDetailsDialog
+            user={user}
+            project={project}
+            open={open}
+            onClose={closeProjectModal}
+            refreshProjects={refreshProjects}
+            theme={theme}
+          />
+        )}
+      </ProjectModalContext.Provider>
+    </>
   );
 };
