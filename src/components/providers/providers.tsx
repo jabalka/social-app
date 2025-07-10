@@ -1,6 +1,6 @@
 import { NotificationsProvider } from "@/context/notifications-context";
 import { ProjectProvider } from "@/context/project-context";
-import { ProjectModalProvider } from "@/context/project-moadal-context";
+import { ProjectModalProvider } from "@/context/project-modal-context";
 import { SocketProvider } from "@/context/socket-context";
 import { UserProvider } from "@/context/user-context";
 import { UserDialogProvider } from "@/context/user-dialog-context";

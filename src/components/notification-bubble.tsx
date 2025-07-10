@@ -1,5 +1,5 @@
 import { Notification, useNotifications } from "@/context/notifications-context";
-import { useProjectModal } from "@/context/project-moadal-context";
+import { useProjectModal } from "@/context/project-modal-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { Theme } from "@/types/theme.enum";
