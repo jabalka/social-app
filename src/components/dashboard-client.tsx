@@ -18,6 +18,7 @@ const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
   const { projects, refreshProjects } = useProjectContext();
 
   return (
+    
     <div className="text-center sm:w-96 md:w-[768px]">
       <h1 className="mb-6 text-3xl font-bold">Welcome {user.name ?? "User"}</h1>
       <p className="mb-8">You have successfully logged in!</p>

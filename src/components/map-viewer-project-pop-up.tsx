@@ -9,39 +9,56 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import CommentCreation from "./create-comment";
 import GlowingProgressBar from "./glowing-progress-bar";
-import ProjectDetailsDialog from "./project-details";
+// import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
 import { Project } from "@/models/project";
+import { useProjectModal } from "@/context/project-modal-context";
 
 interface ProjectPopupContentProps {
   user: AuthUser;
   project: Project;
   refreshProjects(): void;
   theme: string;
+  onClose: () => void;
 }
 
-const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project, refreshProjects, theme }) => {
+const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({
+  user,
+  project,
+  // refreshProjects,
+  theme,
+  onClose,
+}) => {
+  const { openProjectModal } = useProjectModal();
   const [showCommentModal, setShowCommentModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
+
+  const handleViewDetails = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+    await openProjectModal(project.id);
+  };
 
   useEffect(() => {
     if (animationKey === 0) return;
 
     const timeout = setTimeout(() => {
       setAnimationKey(0);
-    }, 1500); // match style animation duration (in ms)
+    }, 1500);
 
     return () => clearTimeout(timeout);
   }, [animationKey]);
 
   return (
     <UserDialogProvider>
-          <div
-        className={cn("flex h-[360px] w-48 flex-col justify-between rounded border p-4 shadow", {
-          "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
-          "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
-        })}
+      <div
+        className={cn(
+          "relative flex h-[360px] w-48 flex-col justify-between rounded border p-4 shadow",
+          {
+            "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+            "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+          }
+        )}
         style={
           {
             "--popup-bg": theme === Theme.LIGHT ? "#f0e3dd" : "#332f2d",
@@ -49,6 +66,13 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
           } as React.CSSProperties & Record<string, string>
         }
       >
+        <button
+          onClick={onClose}
+          className="absolute right-2 top-2 text-lg font-bold"
+          aria-label="Close"
+        >
+          ×
+        </button>
         <h2 className="mb-1 text-sm font-bold">{project.title}</h2>
 
         {project.images.length > 0 && (
@@ -87,7 +111,10 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
           })}
         </div>
 
-        <GlowingProgressBar project={project} className="mt-3 h-3 w-full border-[1px] border-gray-400 bg-gray-200" />
+        <GlowingProgressBar
+          project={project}
+          className="mt-3 h-3 w-full border-[1px] border-gray-400 bg-gray-200"
+        />
         <p
           className={cn("mt-1 text-xs text-gray-500", {
             "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
@@ -105,12 +132,11 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
                   theme === Theme.LIGHT,
                 "bg-gradient-to-br from-[#bda69c] via-[#72645f] to-[#bda69c] text-zinc-100 hover:bg-gradient-to-br hover:from-[#ff6913]/50 hover:via-white/20 hover:to-[#ff6913]/60 hover:text-gray-600 hover:outline-gray-700":
                   theme === Theme.DARK,
-              },
+              }
             )}
-            onClick={() => setShowDetailsModal(true)}
+            onClick={handleViewDetails}
           >
             View Details
-            {/* Animated border layer */}
             <span
               key={animationKey}
               className={cn("pointer-events-none absolute inset-0 rounded-full", {
@@ -142,16 +168,6 @@ const ProjectPopupContent: React.FC<ProjectPopupContentProps> = ({ user, project
             user={user}
             projectId={project.id}
             onClose={() => setShowCommentModal(false)}
-            theme={theme}
-          />
-        )}
-        {showDetailsModal && (
-          <ProjectDetailsDialog
-            user={user}
-            project={project}
-            open={true}
-            onClose={() => setShowDetailsModal(false)}
-            refreshProjects={refreshProjects}
             theme={theme}
           />
         )}

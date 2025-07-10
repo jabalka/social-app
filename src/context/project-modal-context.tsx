@@ -35,6 +35,8 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setProjectId(id);
       setOpen(true);
 
+      
+
       const project = projects.find((p) => p.id === id);
       if (!project) {
         setLoading(true);
@@ -50,6 +52,8 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } else {
         setFetchedProject(null);
           }
+
+          console.log("ProjectModalProvider, openProjectModal project***:", project, "user***", user, "loading?***", loading);
     },
     [projects, setProjects],
   );

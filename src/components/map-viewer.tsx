@@ -1,14 +1,14 @@
 "use client";
 
 import { useSafeThemeContext } from "@/context/safe-theme-context";
-import { Theme } from "@/types/theme.enum";
+// import { Theme } from "@/types/theme.enum";
 import { ProjectStatus } from "@prisma/client";
 import L from "leaflet";
-import { useEffect, useId, useRef } from "react";
-import ReactDOM from "react-dom/client";
+import { useEffect, useId, useRef, useState } from "react";
 import ProjectMapLegend from "./map-legend";
 import ProjectPopupContent from "./map-viewer-project-pop-up";
 import { ProjectMapViewerProps } from "./map-wrapper-viewer";
+import { Project } from "@/models/project";
 
 const getMarkerIcon = (status: ProjectStatus): L.Icon => {
   let iconUrl = "/images/project-proposed.png"; // Default: PROPOSED
@@ -41,10 +41,11 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({
   user,
   projects,
   refreshProjects,
-
 }) => {
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const containerId = useId(); // generates unique ID per component instance
   const mapRef = useRef<L.Map | null>(null);
+  const markerRefs = useRef<L.Marker[]>([]);
   const { theme } = useSafeThemeContext();
 
   useEffect(() => {
@@ -60,33 +61,17 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({
       zIndex: 10,
     }).addTo(map);
 
-    // const icon = L.icon({
-    //   iconUrl: "/images/marker-icon.png",
-    //   iconSize: [60, 60],
-    //   iconAnchor: [30, 60],
-    // });
+    markerRefs.current = [];
 
     projects.forEach((project) => {
       const icon = getMarkerIcon(project.status);
-      const popupContainer = document.createElement("div");
-      ReactDOM.createRoot(popupContainer).render(
-        <ProjectPopupContent
-          user={user}
-          project={project}
-          refreshProjects={refreshProjects}
-          theme={theme}
-        />,
-      );
+      const marker = L.marker([project.latitude, project.longitude], { icon }).addTo(map);
 
-      const marker = L.marker([project.latitude, project.longitude], { icon }).addTo(map).bindPopup(popupContainer);
-
-      marker.on("popupopen", (e) => {
-        const popupEl = e.popup.getElement(); // this is .leaflet-popup
-        if (popupEl) {
-          // set the pop-up tip to theme colour
-          popupEl.style.setProperty("--popup-bg", theme === Theme.LIGHT ? "#f0e3dd" : "#332f2d");
-        }
+      marker.on("click", () => {
+        setSelectedProject(project);
       });
+
+      markerRefs.current.push(marker);
     });
 
     return () => {
@@ -98,6 +83,17 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({
     <div className="relative z-10 h-full w-full">
       <div id={containerId} className="h-full w-full" />
       <ProjectMapLegend />
+      {selectedProject && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <ProjectPopupContent
+            user={user}
+            project={selectedProject}
+            refreshProjects={refreshProjects}
+            theme={theme}
+            onClose={() => setSelectedProject(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };
