@@ -14,12 +14,12 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import DragAndDropArea from "../drag-and-drop-area";
 import GlowingGreenButton from "../glowing-green-button";
 import GlowingPinkButton from "../glowing-pink-button";
-import IconWithTooltip from "../icon-with-tooltip";
 import LeafletMapModal from "../leaflet-map-modal";
 import LocationPostcodePickup from "../location-postode-pick-up";
 import RequiredStar from "../required-star";
+import IconWithTooltip from "../tooltip-with-icon";
 
-const DRAFT_KEY = "IDEA_FORM_DRAFT"
+const DRAFT_KEY = "IDEA_FORM_DRAFT";
 const CATEGORIES = PROJECT_CATEGORIES;
 
 interface IdeaCreateFormProps {

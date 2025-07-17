@@ -1,7 +1,10 @@
 import { auth } from "@/auth";
-import { v4 as uuid } from "uuid";
-import { supabase } from "../supabase";
 import { prisma } from "@/lib/prisma";
+import { v4 as uuid } from "uuid";
+import { canEditImages } from "../role-permissions";
+import { supabase } from "../supabase";
+
+const storageUrlBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/projects-images/`;
 
 export async function uploadProjectImage(formData: FormData, userId: string) {
   const file = formData.get("image") as File;
@@ -23,10 +26,9 @@ export async function uploadProjectImage(formData: FormData, userId: string) {
     return { error: error.message, status: 500 };
   }
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/projects-images/${filePath}`;
+  const imageUrl = `${storageUrlBase}${filePath}`;
   return { data: { url: imageUrl }, status: 200 };
 }
-
 
 export async function uploadUserProfileImage(req: Request) {
   const session = await auth();
@@ -64,7 +66,6 @@ export async function uploadUserProfileImage(req: Request) {
   return { data: { url: publicUrl }, status: 200 };
 }
 
-
 export async function uploadMessageFile(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -96,4 +97,60 @@ export async function uploadMessageFile(req: Request) {
   } = supabase.storage.from("message-attachments").getPublicUrl(filePath);
 
   return { data: { url: publicUrl }, status: 200 };
+}
+
+export async function deleteProjectImage(
+  projectId: string,
+  imageUrl: string,
+  userId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      images: true,
+      author: true,
+    },
+  });
+
+  if (!project) {
+    return { success: false, error: "Project not found" };
+  }
+
+  if (project.authorId !== userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { roleId: true },
+    });
+
+    const hasRoleRights = canEditImages(user?.roleId) || project.authorId === userId;
+
+    if (!hasRoleRights) {
+      return { success: false, error: "Permission denied" };
+    }
+  }
+
+  const projectImage = project.images.find((img) => img.url === imageUrl);
+  if (!projectImage) {
+    return { success: false, error: "Image not found in project" };
+  }
+
+  if (!imageUrl.startsWith(storageUrlBase)) {
+    return { success: false, error: "Invalid image URL format" };
+  }
+
+  const storagePath = imageUrl.replace(storageUrlBase, "");
+
+  const { error: storageError } = await supabase.storage.from("projects-images").remove([storagePath]);
+
+  if (storageError) {
+    console.error("Failed to delete from storage:", storageError);
+  }
+
+  await prisma.projectImage.delete({
+    where: {
+      id: projectImage.id,
+    },
+  });
+
+  return { success: true };
 }

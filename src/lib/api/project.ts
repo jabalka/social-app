@@ -72,7 +72,6 @@ export const updateProject = async (
     return { error: "Unauthorized", status: 401 };
   }
   const roleName = session.user.role?.name || null;
-
   try {
     const project = await prisma.project.findUnique({
       where: { id },

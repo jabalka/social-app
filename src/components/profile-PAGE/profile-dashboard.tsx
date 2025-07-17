@@ -13,7 +13,7 @@ import DefaultAvatar from "public/images/default-avatar.png";
 import React, { useEffect, useRef, useState } from "react";
 import GlowingGreenButton from "../glowing-green-button";
 import GlowingPinkButton from "../glowing-pink-button";
-import IconWithTooltip from "../icon-with-tooltip";
+import IconWithTooltip from "../tooltip-with-icon";
 
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
