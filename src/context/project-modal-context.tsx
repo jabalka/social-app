@@ -24,7 +24,7 @@ export const useProjectModal = () => useContext(ProjectModalContext);
 export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const { projects, setProjects, refreshProjects } = useProjectContext();
+  const { projects, setProjects } = useProjectContext();
   const { user } = useSafeUser();
   const { theme } = useSafeThemeContext();
   const [fetchedProject, setFetchedProject] = useState<Project | null>(null);
@@ -55,6 +55,7 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
           console.log("ProjectModalProvider, openProjectModal project***:", project, "user***", user, "loading?***", loading);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [projects, setProjects],
   );
 
@@ -78,7 +79,7 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
             project={project}
             open={open}
             onClose={closeProjectModal}
-            refreshProjects={refreshProjects}
+
             theme={theme}
           />
         )}

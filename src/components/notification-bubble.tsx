@@ -1,5 +1,4 @@
 import { Notification, useNotifications } from "@/context/notifications-context";
-import { useProjectModal } from "@/context/project-modal-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { Theme } from "@/types/theme.enum";
@@ -8,6 +7,7 @@ import { showCustomToast } from "@/utils/show-custom-toast";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import NotificationBubbleItem from "./notification-bubble-item";
+import { useProjectModal } from "@/context/project-modal-context";
 
 const NotificationBubble = () => {
   const { notifications, markNotificationRead, refetchNotifications } = useNotifications();

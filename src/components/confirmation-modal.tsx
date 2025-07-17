@@ -33,7 +33,7 @@ const ConfirmationModal: React.FC = () => {
       <DialogContent aria-describedby="confirmation-content">
         <DialogHeader>
           <DialogTitle className="text-center w-full">{title}</DialogTitle>
-          <DialogDescription className="pt-8 text-left w-full">
+          <DialogDescription className="pt-8 text-center w-full">
             {description}
           </DialogDescription>
         </DialogHeader>

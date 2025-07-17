@@ -1,6 +1,5 @@
 import { NotificationsProvider } from "@/context/notifications-context";
 import { ProjectProvider } from "@/context/project-context";
-import { ProjectModalProvider } from "@/context/project-modal-context";
 import { SocketProvider } from "@/context/socket-context";
 import { UserProvider } from "@/context/user-context";
 import { UserDialogProvider } from "@/context/user-dialog-context";
@@ -12,6 +11,7 @@ import SafeThemeProviders from "./safe-theme-providers";
 import SidebarProviders from "./sidebar-providers";
 import ThemeProviders from "./theme-providers";
 import ToasterProvider from "./toaster-provider";
+import { ProjectModalProvider } from "@/context/project-modal-context";
 
 interface ProvidersProps {
   children: React.ReactNode;

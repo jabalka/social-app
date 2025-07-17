@@ -76,11 +76,14 @@ export default {
       },
       keyframes: {
         progressBarGlow: {
-          "0%": { transform: "translateX(-100%)", opacity: "0" },
-          "25%": { opacity: "0.7" }, // how intense to appear - higher value more intense
-          "50%": { transform: "translateX(100%)", opacity: "0" },
-          "75%": { opacity: "0.7" },
-          "100%": { transform: "translateX(-100%)", opacity: "0" },
+          // '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          // '25%': { opacity: '0.7' }, // how intense to appear - higher value more intense
+          // '50%': { transform: 'translateX(100%)', opacity: '0' },
+          // '75%': { opacity: '0.7' },
+          // '100%': { transform: 'translateX(-100%)', opacity: '0' },
+          "0%": { transform: "translateX(0%)", backgroundColor: "#f00" },
+          "50%": { transform: "translateX(100%)", backgroundColor: "#0f0" },
+          "100%": { transform: "translateX(0%)", backgroundColor: "#f00" },
         },
         snakeBorderGreen: {
           "0%": {

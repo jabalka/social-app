@@ -33,6 +33,7 @@ export const ALLOWED_ROLES_FOR_PROGRESS_NOTES = ["admin", "council", "mayor", "p
 export const ALLOWED_ROLES_FOR_PROGRESS = ["admin", "council", "mayor", "inspector"];
 export const ALLOWED_ROLES_FOR_PROJECT_STATUS = ["admin", "council", "mayor"];
 export const ALLOWED_ROLES_FOR_PROJECT_CATEGORIES = ["admin", "council", "mayor", "planner", "inspector"];
+export const ALLOWED_ROLES_FOR_IMAGE = ["admin", "planner", "inspector"];
 
 // Messages
 export const MESSAGES = {

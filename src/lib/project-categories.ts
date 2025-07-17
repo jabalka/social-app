@@ -12,6 +12,7 @@ import {
     name: string;
     icon: LucideIcon;
   }
+
   
   export const PROJECT_CATEGORIES: ProjectCategory[] = [
     {
