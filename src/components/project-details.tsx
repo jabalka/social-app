@@ -86,6 +86,8 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
   const [editImages, setEditImages] = useState(false);
   const [editCategories, setEditCategories] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
+  const [editingProgress, setEditingProgress] = useState(false);
+  const [progressChanged, setProgressChanged] = useState(false);
 
   const [titleInput, setTitleInput] = useState(project.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -95,7 +97,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionChanged, setDescriptionChanged] = useState(false);
 
-  const [displayCategories, setDisplayCategories] = useState<{id: string; name: string}[]>(project.categories);
+  const [displayCategories, setDisplayCategories] = useState<{ id: string; name: string }[]>(project.categories);
   const [progressNotes, setProgressNotes] = useState(project.progressNotes || "");
   const [progress, setProgress] = useState(project.progress ?? 0);
   const [status, setStatus] = useState(project.status);
@@ -225,6 +227,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
     (isAuthor && descriptionChanged) ||
     (allowEditProgressNotes && progressNotes !== (project.progressNotes || "")) ||
     (allowEditProgress && progress !== (project.progress ?? 0)) ||
+    progressChanged ||
     (allowEditStatus && (status !== project.status || statusChanged)) ||
     (allowEditCategories &&
       (categoriesChanged ||
@@ -464,19 +467,19 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
       >
         {/* DELETE BUTTON: top left */}
         {(isAuthor || isAdmin) && (
-            <>
-              <div className="absolute left-2 top-2 flex items-center">
-                <TooltipWithIcon
-                  id="edit-title"
-                  icon={Trash}
-                  content="Delete Project"
-                  theme={theme}
-                  iconClassName="text-red-700 hover:text-red-900"
-                  onClick={() => setShowDeleteSection(true)}
-                />
-              </div>
-            </>
-          )}
+          <>
+            <div className="absolute left-2 top-2 flex items-center">
+              <TooltipWithIcon
+                id="edit-title"
+                icon={Trash}
+                content="Delete Project"
+                theme={theme}
+                iconClassName="text-red-700 hover:text-red-900"
+                onClick={() => setShowDeleteSection(true)}
+              />
+            </div>
+          </>
+        )}
 
         {/* TITLE */}
         <div className="mb-2 mt-2 flex items-center gap-2">
@@ -495,7 +498,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                   setTitleInput(project.title);
                 }}
               >
-                <X className="h-6 w-6 text-red-600 hover:text-red-700" />
+                <X className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700" />
               </button>
               {titleInput !== project.title && (
                 <button
@@ -504,7 +507,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                     setTitleChanged(true);
                   }}
                 >
-                  <Check className="h-6 w-6 text-green-600 hover:text-green-700" />
+                  <Check className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-green-600 transition-colors hover:bg-green-100 hover:text-green-700" />
                 </button>
               )}
             </>
@@ -512,17 +515,17 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
             <>
               <span className="text-xl font-bold">{titleInput}</span>
               {((isAuthor && isEditable) || isAdmin) && (
-        <TooltipWithIcon
-          id="edit-title"
-          icon={Pencil}
-          content="Edit Title"
-          theme={theme}
-          tooltipPlacement="top"
-          iconClassName="text-blue-500 h-4 w-4"
-          onClick={() => setEditingTitle(true)}
-        />
-      )}
-    </>
+                <TooltipWithIcon
+                  id="edit-title"
+                  icon={Pencil}
+                  content="Edit Title"
+                  theme={theme}
+                  tooltipPlacement="top"
+                  iconClassName="text-blue-500 h-4 w-4"
+                  onClick={() => setEditingTitle(true)}
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -628,121 +631,104 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                 })}
               </div>
               <div className="mt-3 flex gap-2">
-                {/* Only show the save button if categories have changed */}
+                <div className="group relative">
+                  <button onClick={cancelCategoryEdit} className="rounded-full p-1 transition-colors">
+                    <X className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700" />
+                  </button>
+                  <TooltipBubble theme={theme} content="Cancel" placement="top" />
+                </div>
+
                 {watchedCategories.sort().join(",") !==
                   project.categories
                     .map((c) => c.id)
                     .sort()
                     .join(",") && (
                   <div className="group relative">
-                    <button
-                      onClick={applyCategories}
-                      className="rounded-full p-1 transition-colors"
-                    >
-                      <Check className="h-6 w-6 text-green-600 hover:text-green-700" />
+                    <button onClick={applyCategories} className="rounded-full p-1 transition-colors">
+                      <Check className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-green-600 transition-colors hover:bg-green-100 hover:text-green-700" />
                     </button>
                     <TooltipBubble theme={theme} content="Save" placement="top" />
                   </div>
                 )}
-
-                {/* Always show the cancel button */}
-                <div className="group relative">
-                  <button
-                    onClick={cancelCategoryEdit}
-                    className="rounded-full p-1 transition-colors"
-                  >
-                    <X className="h-6 w-6 text-red-600 hover:text-red-700" />
-                  </button>
-                  <TooltipBubble theme={theme} content="Cancel" placement="top" />
-                </div>
               </div>
             </div>
           )}
         </div>
-         {/* Status Icon with Tooltip */}
-         <div className="mb-4 flex items-center gap-2">
-  <span className="text-sm font-semibold">Status:</span>
-  
-  {/* Status Icon with Tooltip */}
-  <div className="group relative flex items-center">
-    <Image
-      src={`/images/${
-        status === "COMPLETED" 
-          ? "project-completed.png" 
-          : status === "IN_PROGRESS" 
-          ? "project-in-progress.png" 
-          : status === "REJECTED"
-          ? "marker-icon.png"
-          : "project-proposed.png"
-      }`}
-      alt={status}
-      width={20}
-      height={20}
-      className="h-8 w-8 object-contain"
-    />
-    <TooltipBubble
-      theme={theme}
-      content={status.replace("_", " ")}
-      placement="top"
-    />
-  </div>
-  
-  
-  {/* Edit Status Button */}
-  {allowEditStatus && !editingStatus && (
-    <TooltipWithIcon
-      id="edit-status"
-      icon={Pencil}
-      content="Edit Status"
-      theme={theme}
-      tooltipPlacement="top"
-      iconClassName="text-blue-500 h-4 w-4"
-      onClick={() => setEditingStatus(true)}
-    />
-  )}
-</div>
+        {/* Status Icon with Tooltip */}
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-sm font-semibold">Status:</span>
 
-{/* Status Edit Dropdown - only shown when editing */}
-{allowEditStatus && editingStatus && (
-  <div className="mb-4 flex items-center gap-2">
-    <label className="text-sm font-semibold">New Status:</label>
-    <select 
-      value={status} 
-      onChange={handleStatusChange} 
-      className="rounded border px-2 py-1"
-    >
-      <option value="PROPOSED">Proposed</option>
-      <option value="IN_PROGRESS">In Progress</option>
-      <option value="COMPLETED">Completed</option>
-      <option value="REJECTED">Rejected</option>
-    </select>
-    
-    {/* Confirm/Cancel buttons */}
-    <div className="flex gap-1">
-      <button
-        onClick={() => {
-          setEditingStatus(false);
-          setStatus(project.status);
-          setStatusChanged(false);
-        }}
-        aria-label="Cancel"
-      >
-        <X className="h-6 w-6 text-red-600 hover:text-red-700" />
-      </button>
-      {status !== project.status && (
-        <button
-          onClick={() => {
-            setEditingStatus(false);
-            setStatusChanged(true);
-          }}
-          aria-label="Confirm"
-        >
-          <Check className="h-6 w-6 text-green-600 hover:text-green-700" />
-        </button>
-      )}
-    </div>
-  </div>
-)}
+          {/* Status Icon with Tooltip */}
+          <div className="group relative flex items-center">
+            <Image
+              src={`/images/${
+                status === "COMPLETED"
+                  ? "project-completed.png"
+                  : status === "IN_PROGRESS"
+                    ? "project-in-progress.png"
+                    : status === "REJECTED"
+                      ? "marker-icon.png"
+                      : "project-proposed.png"
+              }`}
+              alt={status}
+              width={20}
+              height={20}
+              className="h-8 w-8 object-contain"
+            />
+            <TooltipBubble theme={theme} content={status.replace("_", " ")} placement="top" />
+          </div>
+
+          {/* Edit Status Button */}
+          {allowEditStatus && !editingStatus && (
+            <TooltipWithIcon
+              id="edit-status"
+              icon={Pencil}
+              content="Edit Status"
+              theme={theme}
+              tooltipPlacement="top"
+              iconClassName="text-blue-500 h-4 w-4"
+              onClick={() => setEditingStatus(true)}
+            />
+          )}
+        </div>
+
+        {/* Status Edit Dropdown - only shown when editing */}
+        {allowEditStatus && editingStatus && (
+          <div className="mb-4 flex items-center gap-2">
+            <label className="text-sm font-semibold">New Status:</label>
+            <select value={status} onChange={handleStatusChange} className="rounded border px-2 py-1">
+              <option value="PROPOSED">Proposed</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+
+            {/* Confirm/Cancel buttons */}
+            <div className="flex gap-1">
+              <button
+                onClick={() => {
+                  setEditingStatus(false);
+                  setStatus(project.status);
+                  setStatusChanged(false);
+                }}
+                aria-label="Cancel"
+              >
+                <X className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700" />
+              </button>
+              {status !== project.status && (
+                <button
+                  onClick={() => {
+                    setEditingStatus(false);
+                    setStatusChanged(true);
+                  }}
+                  aria-label="Confirm"
+                >
+                  <Check className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-green-600 transition-colors hover:bg-green-100 hover:text-green-700" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* IMAGES CAROUSEL & UPLOAD & EDIT */}
         <div className="relative mb-4 flex flex-col items-center">
@@ -771,7 +757,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                   {editImages && (
                     <button
                       type="button"
-                      className="absolute right-1 top-1 z-10 rounded-full bg-white/80 p-1 hover:bg-red-500 hover:text-white"
+                      className="absolute right-1 top-1 z-10 rounded-full bg-white/80 p-1 text-red-500 hover:bg-red-500 hover:text-white"
                       onClick={() => handleDeleteImage(img, idx, false)}
                     >
                       <X className="h-4 w-4" />
@@ -809,7 +795,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                     {editImages && (
                       <button
                         type="button"
-                        className="absolute right-1 top-1 z-10 rounded-full bg-white/80 p-1 hover:bg-red-500 hover:text-white"
+                        className="absolute right-1 top-1 z-10 rounded-full bg-white/80 p-1 text-red-500 hover:bg-red-500 hover:text-white"
                         onClick={() => handleDeleteImage({ id: `new-${idx}`, url: previewUrl }, idx, true)}
                       >
                         <X className="h-4 w-4" />
@@ -876,27 +862,100 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
 
         {/* PROGRESS BAR */}
         <div className="mb-4">
-          <h3 className="font-semibold">Progress</h3>
-          <GlowingProgressBar project={project} className="h-3 w-full border-[1px] border-gray-400 bg-gray-200" />
+          <div className="mb-2 flex items-center justify-between">
+            {/* Progress label with plus/minus buttons */}
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">Progress</h3>
+
+              {editingProgress && (
+                <>
+                  <button
+                    onClick={() => setProgress(Math.max(0, progress - 5))}
+                    disabled={progress <= 0}
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                      progress <= 0 ? "cursor-not-allowed opacity-50" : "hover:bg-red-100",
+                    )}
+                  >
+                    <div className="group relative">
+                      <span className="text-lg font-bold text-red-600">-</span>
+                      <TooltipBubble theme={theme} content="Decrease" placement="top" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setProgress(Math.min(100, progress + 5))}
+                    disabled={progress >= 100}
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                      progress >= 100 ? "cursor-not-allowed opacity-50" : "hover:bg-green-100",
+                    )}
+                  >
+                    <div className="group relative">
+                      <span className="text-lg font-bold text-green-600">+</span>
+                      <TooltipBubble theme={theme} content="Increase" placement="top" />
+                    </div>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Control buttons section */}
+            <div className="flex items-center gap-2">
+              {/* Edit button - only shown when not editing */}
+              {allowEditProgress && !editingProgress && (
+                <TooltipWithIcon
+                  id="edit-progress"
+                  icon={Pencil}
+                  content="Edit Progress"
+                  theme={theme}
+                  tooltipPlacement="top"
+                  iconClassName="text-blue-500 h-4 w-4"
+                  onClick={() => setEditingProgress(true)}
+                />
+              )}
+
+              {/* Save/Cancel buttons - only shown when editing */}
+              {editingProgress && (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditingProgress(false);
+                      setProgress(project.progress ?? 0);
+                    }}
+                    className="rounded-full p-1 transition-colors"
+                  >
+                    <X className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700" />
+                  </button>
+                  {progress !== (project.progress ?? 0) && (
+                    <button
+                      onClick={() => {
+                        setEditingProgress(false);
+                        setProgressChanged(true);
+                      }}
+                      className="rounded-full p-1 transition-colors"
+                    >
+                      <Check className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-green-600 transition-colors hover:bg-green-100 hover:text-green-700" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <GlowingProgressBar
+            project={{ ...project, progress }}
+            className="h-3 w-full border-[1px] border-gray-400 bg-gray-200"
+          />
+
           <p
             className={cn("text-md mt-1 text-gray-500", {
               "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
               "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
             })}
           >
-            {project.progress}% completed
+            {progress}% completed
           </p>
-          {allowEditProgress && (
-            <input
-              type="number"
-              min={0}
-              max={100}
-              className="mt-2 w-full rounded border p-2 text-sm"
-              value={progress}
-              onChange={(e) => setProgress(Number(e.target.value))}
-              placeholder="Progress (0–100)"
-            />
-          )}
         </div>
 
         {/* DESCRIPTION */}
@@ -912,7 +971,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                   }}
                   aria-label="Cancel"
                 >
-                  <X className="h-6 w-6 text-red-600 hover:text-red-700" />
+                      <X className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700" />
                 </button>
                 {descriptionInput !== project.description && (
                   <button
@@ -922,12 +981,12 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
                     }}
                     aria-label="Confirm"
                   >
-                    <Check className="h-6 w-6 text-green-600 hover:text-green-700" />
+                                <Check className="flex h-8 w-8 items-center justify-center rounded-full p-1 text-green-600 transition-colors hover:bg-green-100 hover:text-green-700" />
                   </button>
                 )}
               </div>
             )}
-            {!editingDescription && isAuthor && isEditable && (
+            {!editingDescription && (isAuthor && isEditable || isAdmin) && (
               <TooltipWithIcon
                 id="edit-description"
                 icon={Pencil}

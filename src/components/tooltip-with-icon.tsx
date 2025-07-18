@@ -56,45 +56,45 @@ const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
   };
 
   const hideTooltip = () => setActiveTooltip(null);
+
+function getTooltipPlacementStyles(
+  tooltipPlacement: "top" | "right" | "bottom" | "left",
+  coords: { top: number; left: number },
+  iconRef: React.RefObject<HTMLButtonElement>
+) {
+  const gap = 6; // Increased gap for better visibility
+  const iconWidth = iconRef.current?.offsetWidth ?? 0;
+  const iconHeight = iconRef.current?.offsetHeight ?? 0;
   
-  function getTooltipPlacementStyles(
-    tooltipPlacement: "top" | "right" | "bottom" | "left",
-    coords: { top: number; left: number },
-    iconRef: React.RefObject<HTMLButtonElement>
-  ) {
-    const gap = 8;
-    const iconWidth = iconRef.current?.offsetWidth ?? 0;
-    const iconHeight = iconRef.current?.offsetHeight ?? 0;
-    
-    switch (tooltipPlacement) {
-      case "right":
-        return {
-          top: coords.top + iconHeight / 2,
-          left: coords.left + iconWidth + gap,
-          transform: "translate(0, -50%)",
-        };
-      case "bottom":
-        return {
-          top: coords.top + iconHeight + gap,
-          left: coords.left + iconWidth / 2,
-          transform: "translate(-50%, 0)",
-        };
-      case "left":
-        return {
-          top: coords.top + iconHeight / 2,
-          left: coords.left - gap,
-          transform: "translate(-100%, -50%)",
-        };
-      case "top":
-      default: // top
-        return {
-          top: coords.top - gap,
-          left: coords.left + iconWidth / 2,
-          transform: "translate(-50%, -100%)",
-          marginTop: -8, // Add extra margin to ensure it's above
-        };
-    }
+  switch (tooltipPlacement) {
+    case "right":
+      return {
+        top: coords.top + iconHeight / 2,
+        left: coords.left + iconWidth + gap,
+        transform: "translate(0, -50%)",
+      };
+    case "bottom":
+      return {
+        top: coords.top + iconHeight + gap,
+        left: coords.left + iconWidth / 2,
+        transform: "translate(-50%, 0)",
+      };
+    case "left":
+      return {
+        top: coords.top + iconHeight / 2,
+        left: coords.left - gap,
+        transform: "translate(-100%, -50%)",
+      };
+    case "top":
+    default:
+
+      return {
+        top: Math.max(0, coords.top - gap), // if bug persist and tooltip appears way below then consider fixed offset of some px
+        left: coords.left + iconWidth / 2,
+        transform: "translate(-50%, -100%)", 
+      };
   }
+}
 
   const tooltip = activeTooltip === id && coords
   ? createPortal(
