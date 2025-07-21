@@ -1,22 +1,22 @@
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { cn } from "@/utils/cn.utils";
-import { Controller, Control } from "react-hook-form";
+import { Control, Controller, useWatch } from "react-hook-form";
 
 import { Check, Pencil, X } from "lucide-react";
-import { useState } from "react";
-import React from "react";
-import IconWithTooltip from "./tooltip-with-icon";
+import React, { useEffect, useState } from "react";
 import TooltipBubble from "./tooltip-bubble";
+import IconWithTooltip from "./tooltip-with-icon";
 
 interface CategorySelectorProps {
-  mode: 'create' | 'view' | 'edit';
+  mode: "create" | "view" | "edit";
   theme: string;
-  control: Control;
+  control: Control<{ categories: string[] }>;
   watchedCategories: string[];
   onCategoriesChange?: (categories: string[]) => void;
   displayCategories?: { id: string; name: string }[];
   allowEdit?: boolean;
   onEditComplete?: (categories: string[]) => void;
+  onCancel?: () => void;
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({
@@ -27,46 +27,57 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   onCategoriesChange,
   displayCategories = [],
   allowEdit = false,
-  onEditComplete
+  onEditComplete,
+  onCancel,
 }) => {
-  const [editMode, setEditMode] = useState(mode === 'edit');
-  
+  const [editMode, setEditMode] = useState(false);
+
+  const currentCategories = useWatch({
+    control,
+    name: "categories",
+    defaultValue: watchedCategories || [],
+  });
+
+  useEffect(() => {
+    if (onCategoriesChange && JSON.stringify(currentCategories) !== JSON.stringify(watchedCategories)) {
+      console.log("Categories changed in form, notifying parent:", currentCategories);
+      onCategoriesChange(currentCategories);
+    }
+  }, [currentCategories, watchedCategories, onCategoriesChange]);
+
   const handleApplyCategories = () => {
     setEditMode(false);
     if (onEditComplete) {
-      onEditComplete(watchedCategories);
+      console.log("Applying categories from form:", currentCategories);
+      onEditComplete(currentCategories);
     }
   };
-  
+
   const handleCancelEdit = () => {
     setEditMode(false);
+    if (onCancel) {
+      onCancel();
+    }
   };
-  
+
   // Display mode - just show icons with tooltips
-  if (mode === 'view' || (mode === 'edit' && !editMode)) {
+  if (mode === "view" || (mode === "edit" && !editMode)) {
     return (
       <div className="mb-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Categories:</span>
-          
+
           {displayCategories.map(({ id, name }) => {
             const matched = PROJECT_CATEGORIES.find((cat) => cat.id === id);
             const Icon = matched?.icon;
             return (
               Icon && (
-                <IconWithTooltip
-                  key={id}
-                  id={id}
-                  icon={Icon}
-                  content={name}
-                  theme={theme}
-                  iconClassName="h-5 w-5"
-                />
+                <IconWithTooltip key={id} id={id} icon={Icon} content={name} theme={theme} iconClassName="h-5 w-5" />
               )
             );
           })}
-          
-          {allowEdit && mode === 'edit' && (
+
+          {allowEdit && mode === "edit" && (
             <IconWithTooltip
               id="edit-categories"
               icon={Pencil}
@@ -81,7 +92,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       </div>
     );
   }
-  
+
   // Edit or Create mode - show checkboxes
   return (
     <div className="mb-4">
@@ -89,10 +100,12 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
         <label className="text-sm font-semibold">Categories</label>
         <span className="text-xs text-gray-500">Select up to 3</span>
       </div>
-      
+
       <div className="flex flex-wrap gap-4">
         {PROJECT_CATEGORIES.map((cat) => {
-          const isDisabled = watchedCategories.length >= 3 && !watchedCategories.includes(cat.id);
+          // FIXED: Use currentCategories instead of watchedCategories for disabled state
+          const isDisabled = currentCategories.length >= 3 && !currentCategories.includes(cat.id);
+
           return (
             <div key={cat.id} className={cn("relative", { group: isDisabled })}>
               <label
@@ -120,14 +133,12 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                           if ((field.value || []).length < 3) {
                             newCategories = [...(field.value || []), cat.id];
                             field.onChange(newCategories);
+                            console.log("CHECKBOX CHECKED - New categories:", newCategories);
                           }
                         } else {
                           newCategories = (field.value || []).filter((id: string) => id !== cat.id);
                           field.onChange(newCategories);
-                        }
-                        
-                        if (onCategoriesChange && newCategories) {
-                          onCategoriesChange(newCategories);
+                          console.log("CHECKBOX UNCHECKED - New categories:", newCategories);
                         }
                       }}
                     />
@@ -140,16 +151,14 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
               </label>
 
               {/* Custom tooltip for disabled state */}
-              {isDisabled && (
-                <TooltipBubble theme={theme} content="Max. 3 allowed" placement="top" className="z-50" />
-              )}
+              {isDisabled && <TooltipBubble theme={theme} content="Max. 3 allowed" placement="top" className="z-50" />}
             </div>
           );
         })}
       </div>
-      
+
       {/* Action buttons for edit mode */}
-      {mode === 'edit' && (
+      {mode === "edit" && (
         <div className="mt-3 flex gap-2">
           <div className="group relative">
             <button onClick={handleCancelEdit} className="rounded-full p-1 transition-colors">

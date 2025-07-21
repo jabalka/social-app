@@ -1,46 +1,53 @@
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { ChevronLeft, ChevronRight, Pencil, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type ProjectImage = { id?: string; url: string };
 
-interface ImageUploadProps {
-  mode: 'create' | 'view' | 'edit';
+interface Props {
+  mode: "create" | "view" | "edit";
   theme?: string;
-  existingImages?: ProjectImage[];
+  existingImages: { id?: string; url: string }[]; // Changed from ? to required
   onImagesChange?: (files: File[]) => void;
   onRemoveImage?: (url: string) => void;
   maxImages?: number;
   allowEdit?: boolean;
+  onCancel?: () => void;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({
+const ProjectImageUpload: React.FC<Props> = ({
   mode,
 
   existingImages = [],
   onImagesChange,
   onRemoveImage,
   maxImages = 10,
-  allowEdit = false
+  allowEdit = false,
+  onCancel,
 }) => {
   const { confirm } = useConfirmation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [zoomedImage, setZoomedImage] = useState<ProjectImage | null>(null);
-  const [editMode, setEditMode] = useState(mode === 'create');
-  const [newImages, setNewImages] = useState<File[]>([]);
+  const [editMode, setEditMode] = useState(mode === "create");
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
-  
+
+  const [localNewImages, setLocalNewImages] = useState<File[]>([]);
+
   // Generate previews for new images
   useEffect(() => {
-    const urls = newImages.map((file) => URL.createObjectURL(file));
+    const urls = localNewImages.map((file) => URL.createObjectURL(file));
     setNewImagePreviews(urls);
     return () => {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [newImages]);
+  }, [localNewImages]);
+
+  useEffect(() => {
+    if (onImagesChange == null) return;
+    onImagesChange(localNewImages);
+  }, [localNewImages, onImagesChange]);
 
   const imagesCount = existingImages.length;
   const visibleImages = 3;
@@ -58,7 +65,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!files || files.length === 0) return;
 
     try {
-      const currentTotal = existingImages.length + newImages.length;
+      const currentTotal = existingImages.length + localNewImages.length;
       const slotsAvailable = maxImages - currentTotal;
 
       if (slotsAvailable <= 0) {
@@ -74,12 +81,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         alert(`Only adding ${slotsAvailable} of ${filesArray.length} images to stay within the limit of ${maxImages}.`);
       }
 
-      const newFilesList = [...newImages, ...filesToAdd];
-      setNewImages(newFilesList);
-      
-      if (onImagesChange) {
-        onImagesChange(newFilesList);
-      }
+      setLocalNewImages((prev) => [...prev, ...filesToAdd]);
     } catch (err) {
       console.error("Error handling files:", err);
     }
@@ -94,24 +96,28 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       confirmText: "Delete",
       cancelText: "Cancel",
     });
-    
+
     if (!result) return;
-    
+
     if (isNew && typeof idx === "number") {
-      const updatedImages = newImages.filter((_, i) => i !== idx);
-      setNewImages(updatedImages);
-      if (onImagesChange) {
-        onImagesChange(updatedImages);
-      }
-    } else if (img.url && onRemoveImage) {
+      setLocalNewImages((prev) => prev.filter((_, i) => i !== idx));
+    } else if (img.url) {
+      if (onRemoveImage == null) return;
       onRemoveImage(img.url);
+    }
+  };
+
+  const handleCancel = () => {
+
+    if (onCancel) {
+      onCancel();
     }
   };
 
   return (
     <div className="relative mb-4 flex flex-col items-center">
       {/* Image carousel */}
-      {(existingImages.length > 0 || mode === 'view') && (
+      {(existingImages.length > 0 || mode === "view") && (
         <div className="flex w-full items-center justify-center gap-2">
           {imagesCount > visibleImages && (
             <button
@@ -157,11 +163,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           )}
         </div>
       )}
-      
+
       {/* New images preview */}
-      {newImages.length > 0 && (
+      {localNewImages.length > 0 && (
         <div className="mt-4 flex w-full flex-wrap justify-center gap-2">
-          {newImages.map((file, idx) => {
+          {localNewImages.map((file, idx) => {
             const previewUrl = newImagePreviews[idx];
             if (!previewUrl) return null;
             return (
@@ -186,11 +192,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           })}
         </div>
       )}
-      
+
       {/* Edit/Create controls */}
-      {mode === 'create' || (mode === 'edit' && allowEdit) ? (
+      {mode === "create" || (mode === "edit" && allowEdit) ? (
         <div>
-          {mode === 'edit' && !editMode && allowEdit && (
+          {mode === "edit" && !editMode && allowEdit && (
             <button
               className="mt-3 flex items-center gap-2 rounded bg-gray-200 px-3 py-1 text-blue-600 hover:bg-gray-300"
               onClick={() => setEditMode(true)}
@@ -199,8 +205,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               Edit Images
             </button>
           )}
-          
-          {(mode === 'create' || editMode) && (
+
+          {(mode === "create" || editMode) && (
             <div className="mt-3 flex w-full flex-col items-center">
               <button
                 type="button"
@@ -217,8 +223,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 className="hidden"
                 onChange={handleFileInputChange}
               />
-              {mode === 'edit' && (
-                <button className="mt-2 text-xs text-gray-600 underline" onClick={() => setEditMode(false)}>
+              {mode === "edit" && (
+                <button className="mt-2 text-xs text-gray-600 underline" onClick={() =>{ 
+                  setEditMode(false)
+                  handleCancel();
+                  }}>
                   Done Editing Images
                 </button>
               )}
@@ -249,4 +258,4 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   );
 };
 
-export default ImageUpload;
+export default ProjectImageUpload;

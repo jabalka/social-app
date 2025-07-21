@@ -159,6 +159,7 @@ export const updateProject = async (
       });
     }
 
+
     return { data: updatedProject, status: 200 };
   } catch (error) {
     console.error("[PROJECT_UPDATE_ERROR]", error);
