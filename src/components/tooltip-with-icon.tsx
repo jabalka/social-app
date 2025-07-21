@@ -62,7 +62,7 @@ function getTooltipPlacementStyles(
   coords: { top: number; left: number },
   iconRef: React.RefObject<HTMLButtonElement>
 ) {
-  const gap = 6; // Increased gap for better visibility
+  const gap = 116; // Increased gap for better visibility
   const iconWidth = iconRef.current?.offsetWidth ?? 0;
   const iconHeight = iconRef.current?.offsetHeight ?? 0;
   

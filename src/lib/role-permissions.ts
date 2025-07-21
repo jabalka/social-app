@@ -33,10 +33,10 @@ export const canEditImages = (roleId: string | null | undefined) =>
 
 export function hasPermission(userRole: string | null | undefined, allowedRoles: string[]): boolean {
   if (!userRole) return false;
-  return allowedRoles.includes(userRole);
+  return allowedRoles.map(r => r.toLowerCase()).includes(userRole.toLowerCase());
 }
 
-// Check if a role has at least the required level
+// this will be implemented later in the platform
 export function hasRoleLevel(userRole: string | null | undefined, minimumRole: RoleName): boolean {
   if (!userRole) return false;
   const userLevel = ROLES[userRole as RoleName] || 0;

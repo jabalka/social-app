@@ -3,7 +3,7 @@ import { Check, Pencil, X } from "lucide-react";
 import { useState } from "react";
 
 import React from "react";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "../tooltip-with-icon";
 
 interface EditableTextFieldProps {
   mode: 'create' | 'view' | 'edit';

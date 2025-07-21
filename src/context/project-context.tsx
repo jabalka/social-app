@@ -69,6 +69,7 @@ export const ProjectProvider: React.FC<{ initialProjects?: Project[]; children: 
         }
 
         const res = await fetch(url);
+
         const data = await res.json();
         setProjects(data.projects);
         setTotalProjects(data.totalCount);
