@@ -1,4 +1,4 @@
-@keyframes progressBarGlow {
+@keyframes scrollbarGlow {
   0% {
     background-position-x: 0%;
   }
@@ -7,30 +7,32 @@
   }
 }
 
+/* Scrollbar thickness */
 *::-webkit-scrollbar {
-  height: 0.5rem;
-  width: 0.5rem;
+  height: 0.6rem;
+  width: 0.6rem;
 }
 
+/* Light Theme scrollbar */
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #fff 0%, #a5b4fc 40%, #818cf8 60%, #fff 100%);
+  background: linear-gradient(90deg, #fff 0%, #af6915 40%, #904e07 60%, #fff 100%);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 1.2s linear infinite;
+  animation: scrollbarGlow 1.2s linear infinite;
 }
 
 *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(90deg, #fff 0%, #818cf8 40%, #a5b4fc 60%, #fff 100%);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 1s linear infinite;
+  animation: scrollbarGlow 1s linear infinite;
 }
 
 *::-webkit-scrollbar-thumb:active {
   background: linear-gradient(90deg, #fff 0%, #6366f1 40%, #a5b4fc 60%, #fff 100%);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 0.8s linear infinite;
+  animation: scrollbarGlow 0.8s linear infinite;
 }
 
 *::-webkit-scrollbar-track {
@@ -41,25 +43,26 @@
   background: #fff;
 }
 
+/* Dark Theme scrollbar */
 .dark *::-webkit-scrollbar-thumb {
   background: linear-gradient(90deg, #fff 0%, #312e81 40%, #818cf8 60%, #fff 100%);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 1.2s linear infinite;
+  animation: scrollbarGlow 1.2s linear infinite;
 }
 
 .dark *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(90deg, #fff 0%, #3730a3 40%, #a5b4fc 60%, #fff 100%);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 1s linear infinite;
+  animation: scrollbarGlow 1s linear infinite;
 }
 
 .dark *::-webkit-scrollbar-thumb:active {
   background: linear-gradient(90deg, #fff 0%, #6366f1 40%, #a5b4fc 60%, #fff 100%);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 0.8s linear infinite;
+  animation: scrollbarGlow 0.8s linear infinite;
 }
 
 .dark *::-webkit-scrollbar-track {
@@ -74,5 +77,5 @@
   background: linear-gradient(90deg, #a5b4fc, #818cf8, #a5b4fc);
   background-size: 200% 100%;
   background-position-x: 0%;
-  animation: progressBarGlow 2s linear infinite;
+  animation: scrollbarGlow 2s linear infinite;
 }
