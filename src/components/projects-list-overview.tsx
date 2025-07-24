@@ -35,7 +35,6 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
   const [lastSearchCoords, setLastSearchCoords] = useState<[number, number] | null>(null);
   const [storedSearchCoords, setStoredSearchCoords] = useState<[number, number] | undefined>(undefined);
   const [commentModalProjectId, setCommentModalProjectId] = useState<string | null>(null);
-  const [detailsModalProjectId, setDetailsModalProjectId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [pendingCoords, setPendingCoords] = useState<[number, number] | null>(lastSearchCoords);
   const [pendingSortBy, setPendingSortBy] = useState<"createdAt" | "likes" | "comments">(sortBy);
@@ -278,14 +277,12 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
 
         {/* Project list */}
         <ProjectList
-          projects={projects || []}
-          theme={theme}
-          loading={loading}
-          commentModalProjectId={commentModalProjectId}
-          setCommentModalProjectId={setCommentModalProjectId}
-          detailsModalProjectId={detailsModalProjectId}
-          setDetailsModalProjectId={setDetailsModalProjectId}
-          refreshProjects={refreshProjects}
+      projects={projects || []}
+      theme={theme}
+      loading={loading}
+      commentModalProjectId={commentModalProjectId}
+      setCommentModalProjectId={setCommentModalProjectId}
+      refreshProjects={refreshProjects}
         />
 
         {showCreateModal && (

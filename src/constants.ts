@@ -60,6 +60,8 @@ export const MESSAGES = {
   //Toast
   IDEA_DRAFT_SAVED: "Idea saved as draft. You can resume later.",
   PROJECT_DRAFT_SAVED: "Project saved as draft. You can resume later.",
+  ISSUE_REPORT_DRAFT_SAVED: "Your issue report draft has been saved",
+  ISSUE_REPORT_SUCCESS : "Your issue report has been successfully created!",
 }
 
 

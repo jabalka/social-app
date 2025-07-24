@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectModal } from "@/context/project-modal-context";
+import { useSafeUser } from "@/context/user-context";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { AuthUser } from "@/models/auth";
 import { Project } from "@/models/project";
@@ -10,7 +12,6 @@ import React from "react";
 import DefaultProjectImage from "../../public/images/project-image-dedfault.png";
 import CommentCreation from "./create-comment";
 import GlowingProgressBar from "./glowing-progress-bar";
-import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
 
 interface ProjectCardProps {
@@ -19,23 +20,25 @@ interface ProjectCardProps {
   user: AuthUser;
   commentModalProjectId: string | null;
   setCommentModalProjectId: (id: string | null) => void;
-  detailsModalProjectId: string | null;
-  setDetailsModalProjectId: (id: string | null) => void;
   refreshProjects: () => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   theme,
-  user,
   commentModalProjectId,
   setCommentModalProjectId,
-  detailsModalProjectId,
-  setDetailsModalProjectId,
-  refreshProjects,
+  // refreshProjects,
 }) => {
+  const { openProjectModal } = useProjectModal();
+  const { user: currentUser } = useSafeUser();
+
   const showCommentModal = commentModalProjectId === project.id;
-  const showDetailsModal = detailsModalProjectId === project.id;
+
+  const handleViewDetails = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await openProjectModal(project.id);
+  };
 
   return (
     <>
@@ -85,7 +88,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                       theme === Theme.DARK,
                   },
                 )}
-                onClick={() => setDetailsModalProjectId(project.id)}
+                onClick={handleViewDetails}
               >
                 View Details
                 <span
@@ -135,26 +138,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </div>
       {/* Modals */}
-      {showCommentModal && (
+      {showCommentModal && currentUser && (
         <CommentCreation
-          user={user}
+          user={currentUser}
           projectId={project.id}
           onClose={() => setCommentModalProjectId(project.id)}
           theme={theme}
         />
-      )}
-      {showDetailsModal && (
-      
-          <ProjectDetailsDialog
-            user={user}
-            project={project}
-            open={true}
-            onClose={() => setDetailsModalProjectId(null)}
-            refreshProjects={refreshProjects}
-            theme={theme}
-          />
-
-
       )}
     </>
   );

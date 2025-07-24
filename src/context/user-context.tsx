@@ -19,7 +19,17 @@ export const UserProvider: React.FC<{
   useEffect(() => {
     fetch("/api/auth/session")
       .then(res => res.json())
-      .then(data => setUser(data.user));
+      .then(data => {
+        if (data && data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch user session:", err);
+        setUser(null);
+      });
   }, []);
 
 

@@ -7,6 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ProjectStatus {
+  PROPOSED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum CollaborationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum IssueType {
+  POTHOLE
+  BROKEN_SIDEWALK
+  STREET_LIGHT_FAILURE
+  TRAFFIC_LIGHT_MALFUNCTION
+  BROKEN_BENCH
+  DAMAGED_BUS_STOP
+  RUSTY_HANDRAIL
+  BROKEN_FENCE
+  OVERGROWN_VEGETATION
+  FALLEN_TREE
+  BLOCKED_DRAIN
+  ILLEGAL_DUMPING
+  GRAFFITI
+  DAMAGED_SIGN
+  MISSING_MANHOLE_COVER
+  PLAYGROUND_DAMAGE
+  WATER_LEAK
+  BROKEN_UTILITY_BOX
+  ABANDONED_VEHICLE
+  OTHER
+}
+
+enum IssueStatus {
+  REPORTED
+  UNDER_REVIEW
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id                      String              @id @default(cuid())
   name                    String?
@@ -27,12 +78,51 @@ model User {
   likes                   Like[]              @relation("UserLikes")
   ideas                   Idea[]              @relation("UserIdeas")
   projects                Project[]           @relation("UserProjects")
+  issueReports            IssueReport[]       @relation("UserIssueReports")
   sessions                Session[]
   role                    Role?               @relation(fields: [roleId], references: [id])
   conversations           Conversation[]
   messages                Message[]
   ideaCollaborations      IdeaCollaboration[]
   notifications           Notification[]      @relation("UserNotifications")
+}
+
+model IssueReport {
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  issueType    IssueType 
+  postcode     String
+  latitude     Float
+  longitude    Float
+  what3words   String?
+  address      String? 
+  landmark     String? 
+  status       IssueStatus   @default(REPORTED)
+  priority     IssuePriority @default(MEDIUM)
+  reporterId   String
+  reporter     User          @relation("UserIssueReports", fields: [reporterId], references: [id])
+  assignedToId String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  resolvedAt   DateTime?
+  images       IssueImage[]  @relation("IssueImages")
+  comments     Comment[]     @relation("IssueComments")
+  likes        Like[]        @relation("IssueLikes")
+
+  @@index([status])
+  @@index([issueType])
+  @@index([priority])
+  @@index([reporterId])
+  @@index([createdAt])
+}
+
+model IssueImage {
+  id        String      @id @default(cuid())
+  url       String
+  issueId   String
+  createdAt DateTime    @default(now())
+  issue     IssueReport @relation("IssueImages", fields: [issueId], references: [id], onDelete: Cascade)
 }
 
 model Idea {
@@ -93,31 +183,28 @@ model IdeaCollaboration {
   @@unique([ideaId, userId])
 }
 
-enum CollaborationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model Comment {
-  id        String    @id @default(cuid())
+  id        String       @id @default(cuid())
   content   String
   authorId  String
   ideaId    String?
   projectId String?
   parentId  String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  author    User      @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
-  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Comment[] @relation("CommentReplies")
-  project   Project?  @relation(fields: [projectId], references: [id])
-  idea      Idea?     @relation("IdeaComments", fields: [ideaId], references: [id])
+  issueId   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  author    User         @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Comment?     @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]    @relation("CommentReplies")
+  project   Project?     @relation(fields: [projectId], references: [id])
+  idea      Idea?        @relation("IdeaComments", fields: [ideaId], references: [id])
+  issue     IssueReport? @relation("IssueComments", fields: [issueId], references: [id])
   likes     Like[]
-  isVisible Boolean   @default(true)
-  likeCount Int       @default(0)
+  isVisible Boolean      @default(true)
+  likeCount Int          @default(0)
 
   @@index([parentId, createdAt])
+  @@index([issueId])
 }
 
 model Like {
@@ -125,20 +212,24 @@ model Like {
   ideaId    String?
   projectId String?
   commentId String?
+  issueId   String?
   userId    String
   createdAt DateTime @default(now())
 
-  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  idea    Idea?    @relation("IdeaLikes", fields: [ideaId], references: [id], onDelete: Cascade)
-  user    User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  project Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  idea    Idea?        @relation("IdeaLikes", fields: [ideaId], references: [id], onDelete: Cascade)
+  issue   IssueReport? @relation("IssueLikes", fields: [issueId], references: [id], onDelete: Cascade)
+  user    User         @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([ideaId, userId])
   @@unique([projectId, userId])
   @@unique([commentId, userId])
+    @@unique([issueId, userId])
   @@index([ideaId])
   @@index([projectId])
   @@index([commentId])
+  @@index([issueId])
 }
 
 model ProjectImage {
@@ -232,29 +323,22 @@ model Message {
 }
 
 model Notification {
-  id         String   @id @default(cuid())
-  userId     String 
-  type       String 
-  message    String
-  read       Boolean  @default(false)
-  createdAt  DateTime @default(now())
-    readAt    DateTime? 
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
 
-  targetType String 
-  targetId   String 
-  projectId  String? 
-  ideaId     String? 
-  commentId  String? 
-  user       User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  targetType String
+  targetId   String
+  projectId  String?
+  ideaId     String?
+  commentId  String?
+  user       User    @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
   fromUserId String?
 
   @@index([userId, read])
   @@index([targetType, targetId])
-}
-
-enum ProjectStatus {
-  PROPOSED
-  IN_PROGRESS
-  COMPLETED
-  REJECTED
 }
