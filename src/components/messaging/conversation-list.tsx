@@ -3,8 +3,8 @@
 import { useSocketContext } from "@/context/socket-context";
 import { useUserDialog } from "@/context/user-dialog-context";
 import { useConversations } from "@/hooks/use-conversations";
-import { AuthUser } from "@/models/auth";
-import { FullConversation } from "@/models/message";
+import { AuthUser } from "@/models/auth.types";
+import { FullConversation } from "@/models/message.types";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, Wifi, WifiOff } from "lucide-react";
 import { useSession } from "next-auth/react";

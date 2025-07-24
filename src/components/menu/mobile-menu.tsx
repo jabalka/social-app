@@ -5,7 +5,6 @@ import { ChevronRight, LogOut, User, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import LogoutLoader from "../common/logoutLoader";
 // import { SafeUser } from "../layouts/layout-client";
 import SidebarLogoBlack from "../site-logo-black";
 import SidebarLogoWhite from "../site-logo-white";
@@ -14,7 +13,8 @@ import TelegramLogo from "../svg/telegram-logo";
 import XTwitterLogo from "../svg/x-twitter-logo";
 import YoutubeLogo from "../svg/youtube-logo";
 import MenuItem, { MobileMenuItem } from "./mobile-menu-item";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
+import LoaderModal from "../common/loader-modal";
 
 const menuItems: MobileMenuItem[] = [
   {
@@ -109,7 +109,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu, theme }) =>
     <>
       {isOpen && <div className="fixed inset-0 z-40 bg-black bg-opacity-50" onClick={toggleMenu} />}
       {isLoggingOut ? (
-        <LogoutLoader />
+        <LoaderModal />
       ) : (
         <div
           ref={menuRef}

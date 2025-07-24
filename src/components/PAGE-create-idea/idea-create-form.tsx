@@ -5,18 +5,18 @@ import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navig
 import { usePostcodeAddress } from "@/hooks/use-postcode-address.hook";
 import { useShowToastOnBrowserBack } from "@/hooks/use-show-toast-on-browser-back";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
-import { IdeaDraft } from "@/models/idea";
+import { IdeaDraft } from "@/models/idea.types";
 import { IdeaFormFields, isIdeaFormEmpty } from "@/utils/create-idea-form.utils";
 import { clearDraft, loadDraft, saveDraft } from "@/utils/save-to-draft.utils";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import ActionButtons from "../action-buttons";
 import DragAndDropArea from "../drag-and-drop-area";
-import GlowingGreenButton from "../glowing-green-button";
-import GlowingPinkButton from "../glowing-pink-button";
 import LeafletMapModal from "../leaflet-map-modal";
 import LocationPostcodePickup from "../location-postode-pick-up";
 import RequiredStar from "../required-star";
+import DescriptionField from "../shared/description-field";
 import IconWithTooltip from "../tooltip-with-icon";
 
 const DRAFT_KEY = "IDEA_FORM_DRAFT";
@@ -61,12 +61,6 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
   const [showMap, setShowMap] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const pendingUrlRef = useRef<string | null>(null);
-
-  // Description Content limitation
-  const watchedContent = watch("content", "");
-  const maxContentLength = 15000;
-  const contentLength = watchedContent?.length || 0;
-  const isContentLimitReached = contentLength >= maxContentLength;
 
   const isCreateButtonDisabled =
     loading || !formState.isValid || !lat || !lng || !watchedCategories || watchedCategories.length === 0;
@@ -312,33 +306,19 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
               />
             </div>
             {/* Description */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold">
-                  Description
-                  <RequiredStar />
-                </label>
-                <IconWithTooltip
-                  theme={theme}
-                  tooltipPlacement="left"
-                  id="desc"
-                  content="Briefly explain your idea. What problem does it solve? Why is it important?"
-                />
-              </div>
-              <textarea
-                className={`w-full rounded border p-2 ${isContentLimitReached ? "border-red-400" : ""}`}
-                placeholder="Describe your idea..."
-                {...methods.register("content", { required: true, maxLength: maxContentLength })}
-                rows={4}
-                maxLength={maxContentLength}
-              />
-              <div className="mt-1 flex justify-end text-xs">
-                <span className={isContentLimitReached ? "font-semibold text-red-500" : "text-gray-500"}>
-                  {contentLength}/{maxContentLength}
-                </span>
-              </div>
-            </div>
-            {/* Postcode & map */}
+            <DescriptionField
+              formMode={true}
+              fieldName="content"
+              label="Description"
+              tooltipContent="Briefly explain your idea. What problem does it solve? Why is it important?"
+              tooltipId="desc"
+              required={true}
+              maxLength={15000}
+              placeholder="Describe your idea..."
+              minHeight="120px"
+              showCharCount={true}
+            />
+
             {/* Postcode & map */}
             <LocationPostcodePickup
               theme={theme}
@@ -425,25 +405,19 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
               />
             </label>
             {/* Buttons */}
-            <div className="flex gap-2">
-              <GlowingPinkButton onClick={handleBackButton}>Back</GlowingPinkButton>
-              <GlowingGreenButton theme={theme} type="submit" disabled={isCreateButtonDisabled} className="px-4 py-2">
-                {loading ? "Submitting..." : "Share Idea"}
-              </GlowingGreenButton>
-              <span className="flex items-center text-xs">
-                <RequiredStar />
-                <span className="ml-1">Required fields</span>
-              </span>
-              {onClose && (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
+
+            <ActionButtons
+              cancelText="Back"
+              submitText="Share Idea"
+              onCancel={handleBackButton}
+              loading={loading}
+              disabled={isCreateButtonDisabled}
+              theme={theme}
+              showRequiredIndicator={true}
+              showCloseButton={!!onClose}
+              onClose={onClose}
+              position="end"
+            />
           </form>
         </div>
         <LeafletMapModal

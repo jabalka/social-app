@@ -1,6 +1,6 @@
 import { useSocketContext } from "@/context/socket-context";
-import { AuthUser } from "@/models/auth";
-import { Project } from "@/models/project";
+import { AuthUser } from "@/models/auth.types";
+import { Project } from "@/models/project.types";
 import { useCallback, useEffect, useState } from "react";
 import GlowingPinkButton from "./glowing-pink-button";
 import GlowingGreenButton from "./glowing-green-button";

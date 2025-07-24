@@ -8,7 +8,7 @@ import {
   ALLOWED_ROLES_FOR_PROJECT_CATEGORIES,
   ALLOWED_ROLES_FOR_PROJECT_STATUS,
 } from "@/constants";
-import { ProjectUpdateInput } from "@/models/project";
+import { ProjectUpdateInput } from "@/models/project.types";
 import { Prisma, ProjectStatus } from "@prisma/client";
 import { hasPermission } from "../role-permissions";
 

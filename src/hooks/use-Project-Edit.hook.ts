@@ -5,7 +5,7 @@ import {
   canEditProgressNotes,
   canEditStatus,
 } from "@/lib/role-permissions";
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 

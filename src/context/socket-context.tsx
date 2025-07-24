@@ -1,7 +1,7 @@
 "use client";
 
 import { useSocket } from "@/hooks/use-Socket";
-import { AppSocket, SocketEventMap } from "@/models/socket";
+import { AppSocket, SocketEventMap } from "@/models/socket.types";
 import { showCustomToast } from "@/utils/show-custom-toast";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef } from "react";
 import { Notification, useNotifications } from "./notifications-context";

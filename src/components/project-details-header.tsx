@@ -1,4 +1,4 @@
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import EditableInputField from "./shared/editable-input-field";
 
 

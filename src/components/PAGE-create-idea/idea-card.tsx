@@ -1,6 +1,6 @@
 "use client";
 import { useSocketContext } from "@/context/socket-context";
-import { Idea } from "@/models/idea";
+import { Idea } from "@/models/idea.types";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 

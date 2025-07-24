@@ -1,6 +1,6 @@
 "use client";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
-import { Idea } from "@/models/idea";
+import { Idea } from "@/models/idea.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import React, { useEffect, useState } from "react";

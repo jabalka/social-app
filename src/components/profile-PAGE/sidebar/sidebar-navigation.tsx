@@ -1,6 +1,6 @@
 "use client";
 
-import type { AuthUser } from "@/models/auth";
+import type { AuthUser } from "@/models/auth.types";
 import { cn } from "@/utils/cn.utils";
 import { LucideSquareStack, MessageCircleIcon, Settings, User, Users, Home } from "lucide-react";
 import { usePathname } from "next/navigation";

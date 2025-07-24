@@ -44,7 +44,7 @@ export const ISSUE_TYPES = [
   {
     value: "RUSTY_HANDRAIL",
     label: "Rusty Handrail",
-    icon: "🔧",
+    icon: "⚠️",
     autoFill: "Rusty dangerous handrail",
     description: "A corroded handrail that may be unsafe",
   },
@@ -58,7 +58,7 @@ export const ISSUE_TYPES = [
   {
     value: "OVERGROWN_VEGETATION",
     label: "Overgrown Vegetation",
-    icon: "🌿",
+    icon: "🌱",
     autoFill: "Overgrown plants blocking path",
     description: "Plants or bushes obstructing walkways or visibility",
   },
@@ -72,14 +72,14 @@ export const ISSUE_TYPES = [
   {
     value: "BLOCKED_DRAIN",
     label: "Blocked Drain",
-    icon: "💧",
+    icon: "🏄",
     autoFill: "Blocked street drain",
     description: "A drain that is clogged or not functioning",
   },
   {
     value: "ILLEGAL_DUMPING",
     label: "Illegal Dumping",
-    icon: "🚮",
+    icon: "🚯",
     autoFill: "Illegal waste dumping",
     description: "Trash or waste improperly disposed of in public",
   },
@@ -93,14 +93,14 @@ export const ISSUE_TYPES = [
   {
     value: "DAMAGED_SIGN",
     label: "Damaged Sign",
-    icon: "⚠️",
+    icon: "⛔",
     autoFill: "Damaged street sign",
     description: "A traffic or information sign that is damaged or missing",
   },
   {
     value: "MISSING_MANHOLE_COVER",
     label: "Missing Manhole Cover",
-    icon: "⭕",
+    icon: "🚨",
     autoFill: "Missing/unsafe manhole cover",
     description: "A manhole cover that is missing, creating a safety hazard",
   },
@@ -114,7 +114,7 @@ export const ISSUE_TYPES = [
   {
     value: "WATER_LEAK",
     label: "Water Leak",
-    icon: "🌊",
+    icon: "💦",
     autoFill: "Water leak on street",
     description: "Water leaking from pipes or hydrants",
   },
@@ -135,7 +135,7 @@ export const ISSUE_TYPES = [
   {
     value: "OTHER",
     label: "Other Issue",
-    icon: "❓",
+    icon: "⁉️",
     autoFill: "Issue requiring attention",
     description: "Any other issue not listed above",
   },

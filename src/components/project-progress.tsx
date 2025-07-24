@@ -1,4 +1,4 @@
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { useState, useEffect } from "react";

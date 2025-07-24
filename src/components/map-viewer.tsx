@@ -8,7 +8,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import ProjectMapLegend from "./map-legend";
 import ProjectPopupContent from "./map-viewer-project-pop-up";
 import { ProjectMapViewerProps } from "./map-wrapper-viewer";
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 
 const getMarkerIcon = (status: ProjectStatus): L.Icon => {
   let iconUrl = "/images/project-proposed.png"; // Default: PROPOSED

@@ -1,7 +1,7 @@
 "use client";
 
-import { AuthUser } from "@/models/auth";
-import { Project } from "@/models/project";
+import { AuthUser } from "@/models/auth.types";
+import { Project } from "@/models/project.types";
 import { useEffect, useState } from "react";
 
 export interface ProjectMapViewerProps {

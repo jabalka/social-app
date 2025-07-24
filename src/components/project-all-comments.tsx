@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {  useUserDialog } from "@/context/user-dialog-context";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";

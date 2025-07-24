@@ -1,4 +1,4 @@
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import TooltipBubble from "./tooltip-bubble";

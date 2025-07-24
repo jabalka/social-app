@@ -1,6 +1,6 @@
 "use client";
 
-import { FullConversation } from "@/models/message";
+import { FullConversation } from "@/models/message.types";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import React from "react";

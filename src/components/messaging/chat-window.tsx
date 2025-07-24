@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSocketContext } from "@/context/socket-context";
-import type { AuthUser } from "@/models/auth";
+import type { AuthUser } from "@/models/auth.types";
 import type { Message } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";

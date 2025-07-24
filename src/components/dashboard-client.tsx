@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useProjectContext } from "@/context/project-context";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import React from "react";

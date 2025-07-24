@@ -1,4 +1,4 @@
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 import "next-auth";
 import "next-auth/jwt";
 

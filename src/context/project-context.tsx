@@ -1,6 +1,6 @@
 "use client";
 
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import { createContext, useCallback, useContext, useState } from "react";
 
 interface ProjectContextType {

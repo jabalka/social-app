@@ -1,6 +1,6 @@
 "use client";
 // import { AuthUser } from "@/models/auth";
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import React from "react";
 import ProjectCard from "./project-card";
 import ProjectCardSkeleton from "./project-card-skeleton";

@@ -10,6 +10,7 @@ interface Props {
   className?: string;
   type?: "button" | "submit" | "reset";
   theme?: string;
+  form?: string;
 }
 
 const GlowingGreenButton: React.FC<Props> = ({
@@ -20,6 +21,7 @@ const GlowingGreenButton: React.FC<Props> = ({
   className = "",
   type = "button",
   theme,
+  form
 }) => {
   const handleClick = () => {
     if (onClick) onClick();
@@ -32,6 +34,7 @@ const GlowingGreenButton: React.FC<Props> = ({
           onClick={handleClick}
           disabled={disabled}
           type={type}
+          form={form}
           className={cn(
             "rounded-full bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] text-sm text-white outline outline-[#359c33]/60 hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2 group-hover:bg-gradient-to-br",
             className,

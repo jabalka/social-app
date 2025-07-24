@@ -3,7 +3,7 @@ import { MAX_NAME_LENGTH, MAX_USERNAME_LENGTH } from "@/constants";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
 import { USER_ROLES } from "@/lib/user-roles";
-import { CommentWithLikes, Reply } from "@/models/comment";
+import { CommentWithLikes, Reply } from "@/models/comment.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { ChartColumn, Check, Pencil, X } from "lucide-react";
