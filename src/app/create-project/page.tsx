@@ -12,7 +12,7 @@ const CreateProjectPage: React.FC = async () => {
   }
 
   return(
-    <>
+    <>    
           <div className="mx-auto max-w-7xl px-6 py-16">
             <h1 className="mb-6 text-3xl font-bold">Create a Project Your Area</h1>
             <CreateProjectForm />

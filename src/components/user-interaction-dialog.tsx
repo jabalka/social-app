@@ -3,7 +3,7 @@
 import { useSocketContext } from "@/context/socket-context";
 import { useUserDialog } from "@/context/user-dialog-context";
 import { initializeSocket } from "@/lib/socket-client";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import ChatWindow from "./messaging/chat-window";

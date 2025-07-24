@@ -1,7 +1,7 @@
 "use client";
 
 import { useSocketContext } from "@/context/socket-context";
-import { FullConversation } from "@/models/message";
+import { FullConversation } from "@/models/message.types";
 import { fetcher } from "@/swr";
 import type { Message } from "@prisma/client";
 import { useEffect } from "react";

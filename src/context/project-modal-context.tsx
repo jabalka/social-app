@@ -1,11 +1,11 @@
 "use client";
 import ProjectDetailsDialog from "@/components/project-details";
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import React, { createContext, useCallback, useContext, useState } from "react";
 import { useProjectContext } from "./project-context";
 import { useSafeThemeContext } from "./safe-theme-context";
 import { useSafeUser } from "./user-context";
-import LoaderModal from "@/components/loader-modal";
+import LoaderModal from "@/components/common/loader-modal";
 
 interface ProjectModalContextType {
   openProjectModal: (projectId: string) => Promise<void>;

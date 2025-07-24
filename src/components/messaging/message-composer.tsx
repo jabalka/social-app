@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 
 import { useSocketContext } from "@/context/socket-context";
-import type { AuthUser } from "@/models/auth";
+import type { AuthUser } from "@/models/auth.types";
 import type { Message } from "@prisma/client";
 
 type TempMessage = Message & { tempId?: string; status?: "sending" | "failed" };

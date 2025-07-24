@@ -1,4 +1,4 @@
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import { cn } from "@/utils/cn.utils";
 import React from "react";
 

@@ -1,5 +1,5 @@
 import { Message } from "@prisma/client";
-import { AuthUser } from "./auth";
+import { AuthUser } from "./auth.types";
 
 export type SentMessage = {
   id: string;

@@ -1,5 +1,5 @@
-import { Project } from "@/models/project";
-import EditableInputField from "./shared/editable-input-field";
+import { Project } from "@/models/project.types";
+import DescriptionField from "./shared/description-field";
 
 interface ProjectDescriptionProps {
   project: Project;
@@ -20,7 +20,7 @@ const ProjectDescription: React.FC<ProjectDescriptionProps> = ({
   isAuthor,
   isAdmin,
   isEditable,
-  theme,
+  // theme,
   setDescriptionChanged,
   onCancel,
 }) => {
@@ -29,28 +29,19 @@ const ProjectDescription: React.FC<ProjectDescriptionProps> = ({
     setDescriptionChanged(newDescription !== project.description);
   };
 
-  const handleCancelEdit = () => {
-    if (onCancel) {
-      onCancel();
-    }
-  };
-
   return (
     <div className="mb-4">
-      <div className="flex items-start justify-between">
-        <label className="mb-1 text-sm font-medium">Description:</label>
-      </div>
-      <EditableInputField 
+      <DescriptionField
+        label="Description"
+        tooltipContent="Describe your project in detail"
         value={descriptionInput}
         originalValue={project.description}
         onSave={handleSaveDescription}
-        onCancel={handleCancelEdit} 
-        isEditable={(isAuthor && isEditable) || isAdmin}
-        theme={theme}
-        editTooltip="Edit Description"
-        multiline={true}
-        displayClassName="mt-1 min-h-[120px] w-full rounded border bg-gray-50 px-2 py-2 transition-all text-sm border-gray-300 dark:border-gray-600 dark:bg-[#282625]"
-        inputClassName="mt-1 w-full resize-none rounded border px-2 py-2 transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+        onCancel={onCancel}
+        editable={(isAuthor && isEditable) || isAdmin}
+        // theme={theme}
+        maxLength={5000}
+        minHeight="120px"
       />
     </div>
   );

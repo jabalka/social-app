@@ -16,10 +16,12 @@ interface Props {
   editTooltip?: string;
   inputClassName?: string;
   displayClassName?: string;
+  maxLength?: number;
   iconClassName?: string;
   inputType?: 'text' | 'number' | 'email' | 'password';
   multiline?: boolean;
   buttonSize?: 'sm' | 'md' | 'lg';
+  placeholder?: string;
 }
 
 const EditableInputField: React.FC<Props> = ({
@@ -37,6 +39,8 @@ const EditableInputField: React.FC<Props> = ({
   inputType = 'text',
   multiline = false,
   buttonSize = 'md',
+  maxLength,
+  placeholder
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
@@ -72,6 +76,8 @@ const EditableInputField: React.FC<Props> = ({
             className={inputClassName}
             rows={5}
             autoFocus
+            maxLength={maxLength}
+            placeholder={placeholder}
           />
         ) : (
           <input
@@ -80,6 +86,8 @@ const EditableInputField: React.FC<Props> = ({
             onChange={handleChange}
             className={inputClassName}
             autoFocus
+            maxLength={maxLength}
+            placeholder={placeholder}
           />
         )}
         <CancelEditButton onClick={handleCancel} size={buttonSize} />

@@ -73,7 +73,7 @@
 //   return socket;
 // };
 import { initializeSocket } from "@/lib/socket-client";
-import { AppSocket } from "@/models/socket";
+import { AppSocket } from "@/models/socket.types";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 

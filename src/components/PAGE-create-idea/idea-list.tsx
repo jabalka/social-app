@@ -1,7 +1,7 @@
 // components/PAGE-create-idea/idea-list.tsx
 "use client";
 import { radiusOptions } from "@/constants";
-import { Idea } from "@/models/idea";
+import { Idea } from "@/models/idea.types";
 import { useEffect, useState } from "react";
 import LeafletMapModal from "../leaflet-map-modal";
 import IdeaCard from "./idea-card";

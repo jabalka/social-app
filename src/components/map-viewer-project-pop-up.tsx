@@ -2,7 +2,7 @@
 
 import { UserDialogProvider } from "@/context/user-dialog-context";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
@@ -11,7 +11,7 @@ import CommentCreation from "./create-comment";
 import GlowingProgressBar from "./glowing-progress-bar";
 // import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
-import { Project } from "@/models/project";
+import { Project } from "@/models/project.types";
 import { useProjectModal } from "@/context/project-modal-context";
 
 interface ProjectPopupContentProps {

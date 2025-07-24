@@ -11,7 +11,7 @@ import MobileMenu from "../menu/mobile-menu";
 import MobileStickyHeader from "../menu/mobile-sticky-header";
 import SiteFooter from "../site-footer/site-footer";
 // import { SafeUser } from "./layout-client";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 
 interface Props {
   user: AuthUser | null;

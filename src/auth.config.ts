@@ -5,7 +5,7 @@ import { MESSAGES } from "./constants";
 
 import type { AdapterUser } from "next-auth/adapters";
 import prisma from "./lib/prisma";
-import { AuthUser } from "./models/auth";
+import { AuthUser } from "./models/auth.types";
 import { authSchema } from "./schemas/auth.schema";
 import { verifyPassword } from "./utils/crypto.utils";
 

@@ -1,6 +1,6 @@
 import { Category } from "@prisma/client";
-import { Collaborator } from "./collaboration";
-import { Like } from "./comment";
+import { Collaborator } from "./collaboration.types";
+import { Like } from "./comment.types";
 
 export type Idea = {
   id: string;

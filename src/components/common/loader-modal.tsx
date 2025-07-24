@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Loader from "./common/loader";
+import Loader from "./loader";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { cn } from "@/utils/cn.utils";
 import { Theme } from "@/types/theme.enum";

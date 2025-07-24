@@ -3,8 +3,8 @@
 import { useProjectModal } from "@/context/project-modal-context";
 import { useSafeUser } from "@/context/user-context";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
-import { AuthUser } from "@/models/auth";
-import { Project } from "@/models/project";
+import { AuthUser } from "@/models/auth.types";
+import { Project } from "@/models/project.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import Image from "next/image";

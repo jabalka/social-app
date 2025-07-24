@@ -1,4 +1,4 @@
-import { AppSocket } from "@/models/socket";
+import { AppSocket } from "@/models/socket.types";
 import { getSession } from "next-auth/react";
 import { io } from "socket.io-client";
 

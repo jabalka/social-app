@@ -4,13 +4,13 @@ import { useProjectContext } from "@/context/project-context";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { useProjectEdit } from "@/hooks/use-Project-Edit.hook";
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
-import { AuthUser } from "@/models/auth";
-import { Project } from "@/models/project";
+import { AuthUser } from "@/models/auth.types";
+import { Project } from "@/models/project.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { saveProjectChanges } from "@/utils/project-edit";
 import { useState } from "react";
-import ActionButtonsCancelSave from "./action-buttons-cancel-save";
+import ActionButtons from "./action-buttons";
 import CommentCreation from "./create-comment";
 import ModalOverlay from "./modal-overlay";
 import ProjectAllComments from "./project-all-comments";
@@ -259,7 +259,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
         />
 
         {(isAuthor || isAdmin) && anyFieldChanged && (
-          <ActionButtonsCancelSave onCancel={handleClose} onSave={handleSave} />
+          <ActionButtons onCancel={handleClose} onSubmit={handleSave} />
         )}
 
         {showCommentModal && (

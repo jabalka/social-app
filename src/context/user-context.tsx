@@ -1,6 +1,6 @@
 "use client";
 
-import type { AuthUser } from "@/models/auth";
+import type { AuthUser } from "@/models/auth.types";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface Props {

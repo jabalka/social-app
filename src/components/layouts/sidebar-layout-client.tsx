@@ -9,7 +9,7 @@ import React, { PropsWithChildren, useEffect } from "react";
 import ProfileHeader from "../menu/profile-header";
 // import { SafeUser } from "./layout-client";
 import { useGlobalUnreadCount } from "@/hooks/use-global-unread";
-import { AuthUser } from "@/models/auth";
+import { AuthUser } from "@/models/auth.types";
 import { useSession } from "next-auth/react";
 import Sidebar from "../profile-PAGE/sidebar/sidebar";
 import SiteFooter from "../site-footer/site-footer";
