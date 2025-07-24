@@ -8,7 +8,7 @@ type ProjectImage = { id?: string; url: string };
 interface Props {
   mode: "create" | "view" | "edit";
   theme?: string;
-  existingImages: { id?: string; url: string }[]; // Changed from ? to required
+  existingImages?: ProjectImage[];
   onImagesChange?: (files: File[]) => void;
   onRemoveImage?: (url: string) => void;
   maxImages?: number;
