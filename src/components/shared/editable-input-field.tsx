@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
 import { Pencil } from "lucide-react";
-import CancelEditButton from './cancel-edit-button';
-import KeepEditButton from './keep-edit-button';
-import IconWithTooltip from '../tooltip-with-icon';
-
+import React, { useEffect, useState } from "react";
+import IconWithTooltip from "../tooltip-with-icon";
+import CancelEditButton from "./cancel-edit-button";
+import KeepEditButton from "./keep-edit-button";
 
 interface Props {
   value: string;
@@ -12,40 +11,52 @@ interface Props {
   onCancel?: () => void;
   isEditable?: boolean;
   theme: string;
-  tooltipPlacement?: 'top' | 'right' | 'bottom' | 'left';
+  tooltipPlacement?: "top" | "right" | "bottom" | "left";
   editTooltip?: string;
   inputClassName?: string;
   displayClassName?: string;
   maxLength?: number;
   iconClassName?: string;
-  inputType?: 'text' | 'number' | 'email' | 'password';
+  inputType?: "text" | "number" | "email" | "password";
   multiline?: boolean;
-  buttonSize?: 'sm' | 'md' | 'lg';
+  buttonSize?: "sm" | "md" | "lg";
   placeholder?: string;
+  // Add these props to allow parent control of editing state
+  isEditing?: boolean;
+  setIsEditing?: (editing: boolean) => void;
 }
 
 const EditableInputField: React.FC<Props> = ({
   value,
-
+  originalValue,
   onSave,
   onCancel,
   isEditable = true,
   theme,
-  tooltipPlacement = 'top',
-  editTooltip = 'Edit',
+  tooltipPlacement = "top",
+  editTooltip = "Edit",
   inputClassName = "rounded border px-2 py-1 text-xl font-bold",
   displayClassName = "text-xl font-bold",
   iconClassName = "text-blue-500 h-4 w-4",
-  inputType = 'text',
+  inputType = "text",
   multiline = false,
-  buttonSize = 'md',
+  buttonSize = "md",
   maxLength,
-  placeholder
+  placeholder,
+  // Use these props if provided, otherwise use internal state
+  isEditing: externalIsEditing,
+  setIsEditing: externalSetIsEditing,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  // Use internal state if external control is not provided
+  const [internalIsEditing, setInternalIsEditing] = useState(false);
+
+  // Use either external or internal state management
+  const isEditingState = externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
+  const setIsEditingState = externalSetIsEditing || setInternalIsEditing;
+
   const [localValue, setLocalValue] = useState(value);
-  
-  // Important: Update local value when parent value changes
+
+  // Update local value when parent value changes
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
@@ -55,18 +66,18 @@ const EditableInputField: React.FC<Props> = ({
   };
 
   const handleSave = () => {
-    setIsEditing(false);
+    setIsEditingState(false);
     onSave(localValue);
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
-    setLocalValue(value); 
+    setIsEditingState(false);
+    setLocalValue(value);
     if (onCancel) onCancel();
   };
 
   // When in editing mode
-  if (isEditing) {
+  if (isEditingState) {
     return (
       <>
         {multiline ? (
@@ -91,9 +102,8 @@ const EditableInputField: React.FC<Props> = ({
           />
         )}
         <CancelEditButton onClick={handleCancel} size={buttonSize} />
-        {localValue !== value && (
-          <KeepEditButton onClick={handleSave} size={buttonSize} />
-        )}
+        {/* Compare with originalValue instead of value */}
+        {localValue !== originalValue && <KeepEditButton onClick={handleSave} size={buttonSize} />}
       </>
     );
   }
@@ -101,7 +111,7 @@ const EditableInputField: React.FC<Props> = ({
   return (
     <>
       {multiline ? (
-        <div className={displayClassName} style={{ whiteSpace: 'pre-line' }}>
+        <div className={displayClassName} style={{ whiteSpace: "pre-line" }}>
           {value || <span className="text-gray-400">No content yet...</span>}
         </div>
       ) : (
@@ -115,7 +125,7 @@ const EditableInputField: React.FC<Props> = ({
           theme={theme}
           tooltipPlacement={tooltipPlacement}
           iconClassName={iconClassName}
-          onClick={() => setIsEditing(true)}
+          onClick={() => setIsEditingState(true)}
         />
       )}
     </>

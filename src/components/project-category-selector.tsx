@@ -1,20 +1,24 @@
 import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { cn } from "@/utils/cn.utils";
-import { Control, Controller, useWatch } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 
 import { Check, Pencil, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import RequiredStar from "./required-star";
 import TooltipBubble from "./tooltip-bubble";
 import IconWithTooltip from "./tooltip-with-icon";
+
+import { Control, FieldValues } from "react-hook-form";
 
 interface CategorySelectorProps {
   mode: "create" | "view" | "edit";
   theme: string;
-  control: Control<{ categories: string[] }>;
+  control: Control<FieldValues>;
   watchedCategories: string[];
   onCategoriesChange?: (categories: string[]) => void;
   displayCategories?: { id: string; name: string }[];
   allowEdit?: boolean;
+  required?: boolean;
   onEditComplete?: (categories: string[]) => void;
   onCancel?: () => void;
 }
@@ -27,6 +31,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   onCategoriesChange,
   displayCategories = [],
   allowEdit = false,
+  required,
   onEditComplete,
   onCancel,
 }) => {
@@ -97,7 +102,10 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   return (
     <div className="mb-4">
       <div className="mb-1 flex items-center justify-between">
-        <label className="text-sm font-semibold">Categories</label>
+        <label className="text-sm font-semibold">
+          Categories
+          {required && <RequiredStar />}
+        </label>
         <span className="text-xs text-gray-500">Select up to 3</span>
       </div>
 

@@ -1,6 +1,6 @@
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 interface Props {
   children: React.ReactNode;
@@ -10,10 +10,9 @@ interface Props {
   className?: string;
   type?: "button" | "submit" | "reset";
   theme?: string;
-  form?: string;
 }
 
-const GlowingGreenButton: React.FC<Props> = ({
+const GlowingGreyButton: React.FC<Props> = ({
   children,
   onClick,
   onClickTwo,
@@ -21,7 +20,6 @@ const GlowingGreenButton: React.FC<Props> = ({
   className = "",
   type = "button",
   theme,
-  form
 }) => {
   const handleClick = () => {
     if (onClick) onClick();
@@ -29,14 +27,14 @@ const GlowingGreenButton: React.FC<Props> = ({
   };
   return (
     <>
-      <div className="group relative inline-flex overflow-hidden rounded-full p-[4px]">
+      <div className="group relative inline-flex overflow-hidden rounded-full p-[2px]">
         <Button
           onClick={handleClick}
           disabled={disabled}
           type={type}
-          form={form}
           className={cn(
-            "rounded-full bg-gradient-to-br from-[#359c33] via-[#185b17] to-[#359c33] text-sm text-white outline outline-[#359c33]/60 hover:from-[#185b17] hover:via-[#2a8829] hover:to-[#185b17] hover:outline-2 group-hover:bg-gradient-to-br",
+            "rounded-full bg-gradient-to-br from-[#b5b4b4] via-[#6a6967] to-[#b5b4b4] text-sm text-white outline outline-[#3b3b3a]", 
+            "hover:from-[#6f6d69] hover:via-[#9c9b9b] hover:to-[#6f6d69] hover:outline-2 group-hover:bg-gradient-to-br",
             className,
           )}
         >
@@ -44,9 +42,9 @@ const GlowingGreenButton: React.FC<Props> = ({
         </Button>
         {!disabled && (
           <span
-            className={cn(`pointer-events-none absolute inset-0 overflow-hidden rounded-full`, {
-              "group-hover:animate-snakeBorderGreen1sLight": theme === Theme.LIGHT,
-              "group-hover:animate-snakeBorderGreen1s": !theme || theme === Theme.DARK,
+            className={cn(`pointer-events-none absolute inset-[0px] overflow-hidden rounded-full`, {
+              "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+              "group-hover:animate-snakeBorderHoverDark": !theme || theme === Theme.DARK,
             })}
           />
         )}
@@ -55,4 +53,4 @@ const GlowingGreenButton: React.FC<Props> = ({
   );
 };
 
-export default GlowingGreenButton;
+export default GlowingGreyButton;

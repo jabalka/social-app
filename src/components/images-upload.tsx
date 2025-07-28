@@ -1,8 +1,11 @@
 "use client";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
-import { Pencil, Upload, X } from "lucide-react";
+import { Theme } from "@/types/theme.enum";
+import { showCustomToast } from "@/utils/show-custom-toast";
+import { Pencil, X } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import DragAndDropCustom from "./drag-and-drop";
 import { ImageItem } from "./images-review";
 
 interface Props {
@@ -14,27 +17,38 @@ interface Props {
   title?: string;
   description?: string;
   additionalContent?: React.ReactNode;
+  onEditStart?: () => void;
   onEditComplete?: () => void;
+  editingActive?: boolean;
+  value?: File[];
 }
 
 const ImagesUpload: React.FC<Props> = ({
   mode,
+  theme = Theme.LIGHT,
   onImagesChange,
   maxImages = 10,
   currentCount = 0,
   title = "Upload Images",
   description = "Add images to provide visual details",
   additionalContent,
+  onEditStart,
   onEditComplete,
+  editingActive = false,
+  value,
 }) => {
   const { confirm } = useConfirmation();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [editMode, setEditMode] = useState(mode === "create");
+  const [editMode, setEditMode] = useState(mode === "create" || editingActive);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [localNewImages, setLocalNewImages] = useState<File[]>([]);
   const [zoomedImage, setZoomedImage] = useState<ImageItem | null>(null);
 
-  // Generate previews for new images
+  const isInternalUpdate = useRef(false);
+
+  useEffect(() => {
+    setEditMode(mode === "create" || editingActive);
+  }, [editingActive, mode]);
+
   useEffect(() => {
     const urls = localNewImages.map((file) => URL.createObjectURL(file));
     setNewImagePreviews(urls);
@@ -44,38 +58,55 @@ const ImagesUpload: React.FC<Props> = ({
   }, [localNewImages]);
 
   useEffect(() => {
-    if (onImagesChange == null) return;
-    onImagesChange(localNewImages);
+    if (onImagesChange && localNewImages.length > 0) {
+      console.log("Notifying parent of image changes:", localNewImages.length);
+      onImagesChange(localNewImages);
+    }
+    isInternalUpdate.current = false;
   }, [localNewImages, onImagesChange]);
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  useEffect(() => {
+    if (value && JSON.stringify(value) !== JSON.stringify(localNewImages)) {
+      setLocalNewImages(value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
-    if (!files || files.length === 0) return;
-
+  const handleFilesSelected = (files: File[]) => {
     try {
       const currentTotal = currentCount + localNewImages.length;
       const slotsAvailable = maxImages - currentTotal;
-
+  
       if (slotsAvailable <= 0) {
-        alert(`Maximum of ${maxImages} images reached (${currentTotal} already added).`);
-        e.target.value = "";
+        showCustomToast(`Maximum of ${maxImages} images reached.`, {
+          action: {
+            label: "OK",
+            onClick: () => {
+              return true;
+            },
+          },
+        });
         return;
       }
-
-      const filesArray = Array.from(files);
-      const filesToAdd = filesArray.length > slotsAvailable ? filesArray.slice(0, slotsAvailable) : filesArray;
-
-      if (filesArray.length > slotsAvailable) {
-        alert(`Only adding ${slotsAvailable} of ${filesArray.length} images to stay within the limit of ${maxImages}.`);
+  
+      const filesToAdd = files.length > slotsAvailable ? files.slice(0, slotsAvailable) : files;
+  
+      if (files.length > slotsAvailable) {
+        showCustomToast(`Maximum of ${maxImages} images reached.`, {
+          action: {
+            label: "OK",
+            onClick: () => {
+              return true;
+            },
+          },
+        });
       }
 
+      isInternalUpdate.current = true;
       setLocalNewImages((prev) => [...prev, ...filesToAdd]);
     } catch (err) {
       console.error("Error handling files:", err);
     }
-
-    e.target.value = "";
   };
 
   const handleDeleteNewImage = async (idx: number) => {
@@ -91,24 +122,16 @@ const ImagesUpload: React.FC<Props> = ({
     }
   };
 
-  const handleEditComplete = () => {
-    setEditMode(false);
-    if (onEditComplete) {
-      onEditComplete();
-    }
-  };
-
   return (
     <div className="mb-4 flex flex-col">
-         <div className="mb-1 flex items-center justify-between">
-      <div className="mb-2">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="text-xs text-gray-500">{description}</p>
-      </div>
-      {additionalContent}
+      <div className="mb-1 flex items-center justify-between">
+        <div className="mb-2">
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <p className="text-xs text-gray-500">{description}</p>
+        </div>
+        {additionalContent}
       </div>
 
-      {/* New images preview */}
       {localNewImages.length > 0 && (
         <div className="mb-4 flex w-full flex-wrap gap-2">
           {localNewImages.map((file, idx) => {
@@ -116,14 +139,34 @@ const ImagesUpload: React.FC<Props> = ({
             if (!previewUrl) return null;
             return (
               <div key={idx} className="group relative">
-                <Image
-                  src={previewUrl}
-                  width={96}
-                  height={64}
-                  className="h-16 w-24 cursor-pointer rounded border object-cover"
-                  alt="preview"
-                  onClick={() => setZoomedImage({ url: previewUrl })}
-                />
+                <div className="relative">
+                  <Image
+                    src={previewUrl}
+                    width={96}
+                    height={64}
+                    className="h-16 w-24 cursor-pointer rounded border object-cover"
+                    alt="preview"
+                    onClick={() => setZoomedImage({ url: previewUrl })}
+                  />
+                  <div className="absolute bottom-1 right-1 rounded bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <polyline points="9 21 3 21 3 15"></polyline>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                  </div>
+                </div>
                 <button
                   type="button"
                   className="absolute right-1 top-1 z-10 rounded-full bg-white/80 p-1 text-red-500 hover:bg-red-500 hover:text-white"
@@ -142,7 +185,10 @@ const ImagesUpload: React.FC<Props> = ({
         {mode === "edit" && !editMode && (
           <button
             className="flex items-center gap-2 rounded bg-gray-200 px-3 py-1 text-blue-600 hover:bg-gray-300"
-            onClick={() => setEditMode(true)}
+            onClick={() => {
+              setEditMode(true);
+              if (onEditStart) onEditStart();
+            }}
           >
             <Pencil className="h-4 w-4" />
             Edit Images
@@ -151,25 +197,28 @@ const ImagesUpload: React.FC<Props> = ({
 
         {(mode === "create" || editMode) && (
           <div className="flex flex-col items-center">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 rounded bg-blue-100 px-4 py-2 text-blue-700 hover:bg-blue-200"
-            >
-              <Upload className="h-5 w-5" /> Add Images
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileInputChange}
-            />
+            {/* Replace button with DragAndDropArea */}
+            <div className="w-full">
+              <DragAndDropCustom
+                theme={theme}
+                onFilesSelected={handleFilesSelected}
+                maxImages={maxImages}
+                currentCount={currentCount + localNewImages.length}
+              />
+            </div>
+
             {mode === "edit" && editMode && (
-              <button 
-                className="mt-2 text-xs text-gray-600 underline" 
-                onClick={handleEditComplete}
+              <button
+                className="mt-2 text-xs text-gray-600 underline"
+                onClick={() => {
+                  if (onImagesChange && localNewImages.length > 0) {
+                    console.log("Finalizing image changes on Done click:", localNewImages.length);
+                    onImagesChange(localNewImages);
+                  }
+                  
+                  setEditMode(false);
+                  if (onEditComplete) onEditComplete();
+                }}
               >
                 Done Editing Images
               </button>

@@ -93,27 +93,25 @@ export const useProjectEdit = (project: Project, user: { id: string; roleId: str
     .map((img) => ({ id: img.id, url: img.url }));
 
   const anyFieldChanged = useMemo(() => {
-    // console.log("Checking field changes:", {
+    
+    const canEditTitleAndDescription = isAuthor || user.roleId === "admin";
+    
+    // const hasImageChanges = newImages.length > 0 || removedImageUrls.length > 0;
+    // console.log("Change detection debug:", {
     //   titleChanged,
     //   descriptionChanged,
-    //   progressNotes: progressNotes !== originalProgressNotes,
-    //   progress: progress !== originalProgress,
     //   progressChanged,
-    //   status: status !== originalStatus,
     //   statusChanged,
     //   categoriesChanged,
-    //   categoryCompare: {
-    //     watched: watchedCategories.sort().join(","),
-    //     project: originalCategories.sort().join(","),
-    //     different: watchedCategories.sort().join(",") !==
-    //               originalCategories.sort().join(",")
-    //   },
-    //   images: (newImages.length > 0 || removedImageUrls.length > 0)
+    //   newImages: newImages.length,
+    //   removedImages: removedImageUrls.length,
+    //   hasImageChanges,
+    //   isAllowedToEditImages: allowEditImages
     // });
 
     return (
-      (isAuthor && titleChanged) ||
-      (isAuthor && descriptionChanged) ||
+      (canEditTitleAndDescription && titleChanged) ||
+      (canEditTitleAndDescription && descriptionChanged) ||
       (allowEditProgressNotes && progressNotes !== originalProgressNotes) ||
       (allowEditProgress && (progress !== originalProgress || progressChanged)) ||
       (allowEditStatus && (status !== originalStatus || statusChanged)) ||
@@ -122,6 +120,7 @@ export const useProjectEdit = (project: Project, user: { id: string; roleId: str
       (allowEditImages && (newImages.length > 0 || removedImageUrls.length > 0))
     );
   }, [
+    user.roleId,
     titleChanged,
     descriptionChanged,
     progressNotes,

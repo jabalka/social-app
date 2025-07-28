@@ -8,7 +8,7 @@ import { cn } from "@/utils/cn.utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CommentCreation from "./create-comment";
-import GlowingProgressBar from "./glowing-progress-bar";
+import GlowingProgressBar from "./shared/glowing-progress-bar";
 // import ProjectDetailsDialog from "./project-details";
 import { Button } from "./ui/button";
 import { Project } from "@/models/project.types";

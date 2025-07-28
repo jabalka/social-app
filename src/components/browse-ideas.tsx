@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { radiusOptions } from "@/constants";
 import Link from "next/link";
 import IdeaCard from "./PAGE-create-idea/idea-card";
-import GlowingGreenButton from "./glowing-green-button";
+import GlowingGreenButton from "./shared/glowing-green-button";
 import LeafletMapModal from "./leaflet-map-modal";
 import Pagination from "./pagination";
 

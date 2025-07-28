@@ -4,8 +4,8 @@ import MapWrapper from "./map-wrapper";
 import axios from "axios";
 import { cn } from "@/utils/cn.utils";
 import { Theme } from "@/types/theme.enum";
-import GlowingGreenButton from "./glowing-green-button";
-import GlowingPinkButton from "./glowing-pink-button";
+import GlowingGreenButton from "./shared/glowing-green-button";
+import GlowingPinkButton from "./shared/glowing-pink-button";
 import { getPostcodeData } from "@/utils/postcode.utils";
 
 interface LeafletMapModalProps {

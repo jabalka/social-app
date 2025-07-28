@@ -2,7 +2,7 @@
 import Image from "next/image";
 import React from "react";
 import DefaultProjectImage from "../../public/images/project-image-dedfault.png";
-import GlowingProgressBar from "./glowing-progress-bar";
+import GlowingProgressBar from "./shared/glowing-progress-bar";
 
 const ProjectCardSkeleton: React.FC<{ theme?: string }> = ({  }) => {
   return (

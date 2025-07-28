@@ -20,6 +20,8 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
   // Show Idea Draft toast if sessionStorage flag is set.,
   // only needs to set the flag before navigation e.g. sessionStorage.setItem("showIdeaDraftToast", "true");
   // Show Idea Draft toast if sessionStorage flag is set
+
+  // IDEA TOASTS
   useSessionToast("showIdeaDraftToast", MESSAGES.IDEA_DRAFT_SAVED, {
     action: {
       label: "Go Back",
@@ -27,7 +29,44 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
     },
     id: "idea-draft-toast"
   });
+
+  useSessionToast(
+    "showIdeaCreateErrorToast", 
+    (errorMessage) => errorMessage || MESSAGES.IDEA_CREATE_ERROR, 
+    {
+      action: {
+        label: "Try Again",
+        onClick: () => {
+          // This will clear the error toast and let the user try again
+          sessionStorage.removeItem("showIdeaCreateErrorToast");
+          // Maybe I should get rid of the button!
+          router.push("/share-idea");
+        }
+      },
+      id: "idea-create-error-toast"
+    }
+  );
+
+  useSessionToast(
+    "showIdeaCreateSuccess", 
+    (errorMessage) => errorMessage || MESSAGES.IDEA_CREATE_SUCCESS, 
+    {
+      action: {
+        label: "View Idea",
+        onClick: () => {
+          const ideaId = sessionStorage.getItem("lastCreatedItemId");
+          sessionStorage.removeItem("lastCreatedItemId");
+          sessionStorage.removeItem("showIdeaCreateSuccess");
+          // We need to accept an argument with the newly created idea!!!
+          router.push(ideaId ? `/browse/idea/${ideaId}` : "/browse/ideas-list");
+        }
+      },
+      id: "idea-create-success-toast"
+    }
+  );
+  // ********************END IDEA TOASTS
   
+    // PROJECT TOASTS
   useSessionToast("showProjectDraftToast", MESSAGES.PROJECT_DRAFT_SAVED, {
     action: {
       label: "Go Back",
@@ -36,6 +75,43 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
     id: "project-draft-toast"
   });
 
+  useSessionToast(
+    "showProjectErrorToast", 
+    (errorMessage) => errorMessage || MESSAGES.PROJECT_CREATE_ERROR, 
+    {
+      action: {
+        label: "Try Again",
+        onClick: () => {
+          // This will clear the error toast and let the user try again
+          sessionStorage.removeItem("showProjectCreateError");
+          // router.push("/browse/projects");
+        }
+      },
+      id: "project-create-error-toast"
+    }
+  );
+
+  useSessionToast(
+    "showProjectCreateSuccess", 
+    (errorMessage) => errorMessage || MESSAGES.PROJECT_CREATE_SUCCESS, 
+    {
+      action: {
+        label: "View Project",
+        onClick: () => {
+          const projectId = sessionStorage.getItem("lastCreatedItemId");
+          sessionStorage.removeItem("lastCreatedItemId");
+          sessionStorage.removeItem("showProjectCreateSuccess");
+          // We need to accept an argument with the newly created idea!!!
+          router.push(projectId ? `/browse/project/${projectId}` : "/browse/projects-list");
+        }
+      },
+      id: "project-create-success-toast"
+    }
+  );
+
+  // ********************END PROJECT TOASTS
+
+  // ISSUE TOASTS
   useSessionToast("showIssueReportDraftToast", MESSAGES.ISSUE_REPORT_DRAFT_SAVED, {
     action: {
       label: "Go Back",
@@ -43,6 +119,22 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
     },
     id: "issue-report-draft-toast"
   });
+
+  useSessionToast(
+    "showIssueReportErrorToast", 
+    (errorMessage) => errorMessage || MESSAGES.ISSUE_REPORT_CREATE_ERROR, 
+    {
+      action: {
+        label: "Try Again",
+        onClick: () => {
+          // This will clear the error toast and let the user try again
+          sessionStorage.removeItem("showIssueReportErrorToast");
+          // router.push("/browse/projects");
+        }
+      },
+      id: "project-create-error-toast"
+    }
+  );
   
   // Needs to connect the logic to open the Reported-Issue Modal and the details to the certain one
   // Success toast for issue report submissions
@@ -51,11 +143,19 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
     {
       action: {
         label: "View Issues",
-        onClick: () => router.push("/browse/issues-list")
+        onClick: () => {
+          const issueId = sessionStorage.getItem("lastCreatedItemId");
+          sessionStorage.removeItem("lastCreatedItemId");
+          sessionStorage.removeItem("showIssueReportSuccess");
+
+          router.push(issueId ? `/browse/issue/${issueId}` : "/browse/issues-list");
+        }
       },
       id: "issue-report-success-toast"
     }
   );
+  // ********************END ISSUE TOASTS
+
   return (
     <>
       {children}
