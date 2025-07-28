@@ -1,5 +1,5 @@
 import { cn } from "@/utils/cn.utils";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 interface Props {
   children: React.ReactNode;

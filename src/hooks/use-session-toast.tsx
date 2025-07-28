@@ -12,6 +12,11 @@ interface ToastOptions {
   id?: string;
 }
 
+interface ToastData {
+  message: string;
+  itemId?: string; // New property for storing created item IDs
+}
+
 /**
  * Shows a toast if sessionStorage flag is set, then clears the flag.
  *
@@ -27,16 +32,47 @@ export function useSessionToast(
   const pathname = usePathname();
   const shownRef = useRef(false);
 
-  const processOptions = (): ToastOptions => {
+  const processOptions = (itemId?: string): ToastOptions => {
     if (typeof options === "string") {
       return { id: options };
     }
+    if (itemId && options?.action) {
+      const originalOnClick = options.action.onClick;
+      return {
+        ...options,
+        action: {
+          ...options.action,
+          onClick: () => {
+            // Store the ID for the component to use
+            sessionStorage.setItem("lastCreatedItemId", itemId);
+            originalOnClick();
+          },
+        },
+      };
+    }
+
     return options || {};
   };
 
-  useEffect(() => {
+  const showToastIfNeeded = () => {
     const flagValue = sessionStorage.getItem(key);
-    if (flagValue) {
+    if (!flagValue) return;
+
+    try {
+      // Try to parse as JSON to get both message and itemId
+      const data = JSON.parse(flagValue) as ToastData;
+      const msg = typeof message === "function" ? message(data.message) : data.message || message;
+      const opts = processOptions(data.itemId);
+
+      showCustomToast(
+        msg,
+        {
+          action: opts.action,
+        },
+        opts.id || key,
+      );
+    } catch {
+      // If not JSON, treat as simple string (backward compatibility)
       const msg = typeof message === "function" ? message(flagValue) : message;
       const opts = processOptions();
 
@@ -47,36 +83,29 @@ export function useSessionToast(
         },
         opts.id || key,
       );
-
-      sessionStorage.removeItem(key);
     }
-        // eslint-disable-next-line
+
+    sessionStorage.removeItem(key);
+  };
+
+  // Show on mount
+  useEffect(() => {
+    showToastIfNeeded();
+    // eslint-disable-next-line
   }, [key, message, options]);
 
+  // Show on path change, with duplicate prevention
   useEffect(() => {
-    // Only show toast ONCE per path (prevents duplicate on re-render)
     if (shownRef.current) return;
-    const flagValue = sessionStorage.getItem(key);
-    if (flagValue) {
-      const msg = typeof message === "function" ? message(flagValue) : message;
-      const opts = processOptions();
 
-      showCustomToast(
-        msg,
-        {
-          action: opts.action,
-        },
-        opts.id || key,
-      );
+    showToastIfNeeded();
+    shownRef.current = true;
 
-      sessionStorage.removeItem(key);
-      shownRef.current = true;
-      // Reset for future path changes
-      setTimeout(() => {
-        shownRef.current = false;
-      }, 500); // small delay to allow future toasts on further navigations
-    }
-    // reset shownRef when path changes
+    // Reset for future path changes
+    setTimeout(() => {
+      shownRef.current = false;
+    }, 500);
+
     // eslint-disable-next-line
   }, [pathname, key, message, options]);
 }

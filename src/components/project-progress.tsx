@@ -4,7 +4,7 @@ import { cn } from "@/utils/cn.utils";
 import { useState, useEffect } from "react";
 import TooltipBubble from "./tooltip-bubble";
 import IconWithTooltip from "./tooltip-with-icon";
-import GlowingProgressBar from "./glowing-progress-bar";
+import GlowingProgressBar from "./shared/glowing-progress-bar";
 import CancelEditButton from "./shared/cancel-edit-button";
 import KeepEditButton from "./shared/keep-edit-button";
 import { Pencil } from "lucide-react";

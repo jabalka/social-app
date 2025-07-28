@@ -26,7 +26,9 @@ const ProjectDescription: React.FC<ProjectDescriptionProps> = ({
 }) => {
   const handleSaveDescription = (newDescription: string) => {
     setDescriptionInput(newDescription);
-    setDescriptionChanged(newDescription !== project.description);
+
+    const hasChanged = newDescription !== project.description;
+    setDescriptionChanged(hasChanged);
   };
 
   return (

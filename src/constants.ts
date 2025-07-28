@@ -59,10 +59,27 @@ export const MESSAGES = {
 
   //Toast
   IDEA_DRAFT_SAVED: "Idea saved as draft. You can resume later.",
+  IDEA_CREATE_ERROR: "An error occurred while creating your idea.",
+  IDEA_CREATE_SUCCESS : "Your idea has been successfully created!",
+
   PROJECT_DRAFT_SAVED: "Project saved as draft. You can resume later.",
+  PROJECT_CREATE_ERROR: "An error occurred while creating your project.",
+  PROJECT_CREATE_SUCCESS : "Your project has been successfully created!",
+
   ISSUE_REPORT_DRAFT_SAVED: "Your issue report draft has been saved",
+  ISSUE_REPORT_CREATE_ERROR: "An error occurred while creating your report.",
   ISSUE_REPORT_SUCCESS : "Your issue report has been successfully created!",
 }
+
+export const Z_INDEX = {
+  BASE: 1,
+  DROPDOWN: 10,
+  STICKY: 20,
+  MODAL_BACKDROP: 40,
+  MODAL: 50,
+  LOADER: 100,
+  TOOLTIP: 1000,
+};
 
 
 export const radiusOptions = [

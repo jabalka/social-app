@@ -11,7 +11,7 @@ import Image from "next/image";
 import React from "react";
 import DefaultProjectImage from "../../public/images/project-image-dedfault.png";
 import CommentCreation from "./create-comment";
-import GlowingProgressBar from "./glowing-progress-bar";
+import GlowingProgressBar from "./shared/glowing-progress-bar";
 import { Button } from "./ui/button";
 
 interface ProjectCardProps {

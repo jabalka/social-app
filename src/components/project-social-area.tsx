@@ -2,9 +2,9 @@ import { useSocketContext } from "@/context/socket-context";
 import { AuthUser } from "@/models/auth.types";
 import { Project } from "@/models/project.types";
 import { useCallback, useEffect, useState } from "react";
-import GlowingPinkButton from "./glowing-pink-button";
-import GlowingGreenButton from "./glowing-green-button";
-import GlowingVioletButton from "./glowing-violet-button";
+import GlowingPinkButton from "./shared/glowing-pink-button";
+import GlowingGreenButton from "./shared/glowing-green-button";
+import GlowingVioletButton from "./shared/glowing-violet-button";
 
 
 // Props from social section (lines 750-784)

@@ -1,7 +1,8 @@
 import React from "react";
-import GlowingVioletButton from "./glowing-violet-button";
+import GlowingVioletButton from "./shared/glowing-violet-button";
 import RequiredStar from "./required-star";
 import IconWithTooltip from "./tooltip-with-icon";
+import { Trash2 } from "lucide-react";
 
 interface Props {
   theme: string;
@@ -11,6 +12,7 @@ interface Props {
   addressLines: string[];
   addressCoords: string | null;
   required?: boolean;
+  resetLocation?: () => void;
 }
 const LocationPostcodePickup: React.FC<Props> = ({
   theme,
@@ -20,7 +22,10 @@ const LocationPostcodePickup: React.FC<Props> = ({
   addressLines,
   addressCoords,
   required,
+  resetLocation,
 }) => {
+  const hasLocation = addressLines.filter(Boolean).length > 0;
+
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
@@ -49,13 +54,19 @@ const LocationPostcodePickup: React.FC<Props> = ({
           onChange={handlePostcodeChange}
         />
         <GlowingVioletButton onClick={() => setShowMap(true)}>Pick on Map</GlowingVioletButton>
-        {/* <button
-                    type="button"
-                 
-                    className="rounded bg-blue-500 px-3 py-2 text-white"
-                >
-                    Pick on Map
-                </button> */}
+        <button
+          type="button"
+          onClick={resetLocation}
+          disabled={!hasLocation || !resetLocation}
+          className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+            hasLocation && resetLocation
+              ? "bg-red-500 text-white hover:bg-red-600 active:bg-red-700"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          } transition-colors duration-200`}
+          title="Reset location"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
       </div>
       {addressLines.filter(Boolean).length > 0 && (
         <div className="mb-1 rounded border bg-[#00000039] px-3 py-2 text-xs">

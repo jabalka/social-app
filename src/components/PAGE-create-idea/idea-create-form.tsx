@@ -4,23 +4,23 @@ import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { useInterceptAnchorNavigation } from "@/hooks/use-intercept-anchor-navigation";
 import { usePostcodeAddress } from "@/hooks/use-postcode-address.hook";
 import { useShowToastOnBrowserBack } from "@/hooks/use-show-toast-on-browser-back";
-import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { IdeaDraft } from "@/models/idea.types";
 import { IdeaFormFields, isIdeaFormEmpty } from "@/utils/create-idea-form.utils";
 import { clearDraft, loadDraft, saveDraft } from "@/utils/save-to-draft.utils";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Controller, FormProvider, useForm } from "react-hook-form";
-import ActionButtons from "../action-buttons";
-import DragAndDropArea from "../drag-and-drop-area";
+import { Control, FieldValues, FormProvider, useForm } from "react-hook-form";
+import LoaderModal from "../common/loader-modal";
 import LeafletMapModal from "../leaflet-map-modal";
 import LocationPostcodePickup from "../location-postode-pick-up";
-import RequiredStar from "../required-star";
+import CategorySelector from "../project-category-selector";
+import ActionButtons from "../shared/action-buttons";
 import DescriptionField from "../shared/description-field";
-import IconWithTooltip from "../tooltip-with-icon";
+import CollaborationCheckbox from "./idea-collaboration-check";
+import IdeaImageUpload from "./idea-image-upload";
+import IdeaTitleField from "./idea-title-field";
 
 const DRAFT_KEY = "IDEA_FORM_DRAFT";
-const CATEGORIES = PROJECT_CATEGORIES;
 
 interface IdeaCreateFormProps {
   open?: boolean;
@@ -140,43 +140,82 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
     if (data?.postcode) setValue("postcode", data.postcode, { shouldValidate: true });
   };
 
+  const resetLocation = () => {
+    setValue("postcode", "");
+
+    resetAddressState();
+  };
+
   const onSubmit = async (data: IdeaFormFields) => {
     setLoading(true);
-    const res = await fetch("/api/ideas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: data.title,
-        content: data.content,
-        allowCollab: data.allowCollab,
-        latitude: lat,
-        longitude: lng,
-        postcode: data.postcode,
-        what3words,
-        categories: data.categories,
-      }),
-    });
-    if (!res.ok) {
-      setLoading(false);
-      return;
-    }
-    const result = await res.json();
-    const ideaId = result.data?.id;
-    if (ideaId && data.images && data.images.length > 0) {
-      for (const file of data.images.slice(0, 10)) {
-        const formData = new FormData();
-        formData.append("image", file);
-        formData.append("ideaId", ideaId);
-        await fetch("/api/ideas/upload-image", { method: "POST", body: formData });
+
+    try {
+      const res = await fetch("/api/ideas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title,
+          content: data.content,
+          allowCollab: data.allowCollab,
+          latitude: lat,
+          longitude: lng,
+          postcode: data.postcode,
+          what3words,
+          categories: data.categories,
+        }),
+      });
+      if (!res.ok) {
+        sessionStorage.setItem("showIdeaCreateErrorToast", "An error occurred while creating your idea.");
+        return;
       }
+
+      const result = await res.json();
+      const ideaId = result.data?.id;
+
+      if (ideaId && data.images && data.images.length > 0) {
+        for (const file of data.images.slice(0, 10)) {
+          const formData = new FormData();
+          formData.append("image", file);
+          formData.append("ideaId", ideaId);
+          await fetch("/api/ideas/upload-image", { method: "POST", body: formData });
+        }
+      }
+
+      reset();
+      resetAddressState();
+      setPreviewUrls([]);
+      clearDraft(DRAFT_KEY);
+
+      onIdeaCreated?.();
+
+      sessionStorage.setItem("showIdeaCreateSuccess", `Your idea "${data.title}" has been successfully created!`);
+      sessionStorage.setItem("lastCreatedItemId", ideaId);
+
+      if (onClose) {
+        onClose();
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
+      } else {
+        const destination = "/browse/ideas-list";
+
+        setTimeout(() => {
+          router.push(destination);
+        }, 300);
+
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
+
+        return;
+      }
+    } catch {
+      sessionStorage.setItem("showIdeaCreateErrorToast", "An error occurred while creating your idea.");
+
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    reset();
-    resetAddressState();
-    setPreviewUrls([]);
-    clearDraft(DRAFT_KEY);
-    onIdeaCreated?.();
-    onClose?.();
   };
 
   const handleBackButton = async () => {
@@ -285,27 +324,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
       <FormProvider {...methods}>
         <div className="rounded-xl bg-gradient-to-b from-[#d9b8a71a] via-[#514e4d45] to-[#00000065]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-xl p-6 shadow">
-            {/* Title */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold">
-                  Idea Title
-                  <RequiredStar />
-                </label>
-                <IconWithTooltip
-                  theme={theme}
-                  id="title"
-                  tooltipPlacement="left"
-                  content="A short, descriptive title for your idea. E.g. 'New Playground in Riverside Park'."
-                />
-              </div>
-              <input
-                className="w-full rounded border p-2"
-                placeholder="Idea title"
-                {...methods.register("title", { required: true })}
-              />
-            </div>
-            {/* Description */}
+            <IdeaTitleField theme={theme} />
+
             <DescriptionField
               formMode={true}
               fieldName="content"
@@ -319,7 +339,6 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
               showCharCount={true}
             />
 
-            {/* Postcode & map */}
             <LocationPostcodePickup
               theme={theme}
               watch={watch}
@@ -328,83 +347,20 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
               addressLines={addressLines}
               addressCoords={addressCoords}
               required
+              resetLocation={resetLocation}
             />
-            {/* Categories */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold">
-                  Categories
-                  <RequiredStar />
-                </label>
-                <IconWithTooltip
-                  id="categories"
-                  tooltipPlacement="left"
-                  theme={theme}
-                  content="Select all categories that fit your idea."
-                />
-              </div>
-              <div className="flex flex-wrap gap-4">
-                {CATEGORIES.map((cat) => (
-                  <label key={cat.id} className="flex cursor-pointer items-center gap-2 text-sm">
-                    <Controller
-                      control={control}
-                      name="categories"
-                      render={({ field }) => (
-                        <input
-                          type="checkbox"
-                          value={cat.id}
-                          checked={field.value?.includes(cat.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              field.onChange([...(field.value || []), cat.id]);
-                            } else {
-                              field.onChange((field.value || []).filter((id: string) => id !== cat.id));
-                            }
-                          }}
-                        />
-                      )}
-                    />
-                    {cat.name}
-                  </label>
-                ))}
-              </div>
-            </div>
-            {/* Images upload */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold">Idea Images</label>
-                <IconWithTooltip
-                  theme={theme}
-                  tooltipPlacement="left"
-                  id="images"
-                  content="Attach up to 10 images that help explain your idea. Drag and drop or click to browse."
-                />
-              </div>
-              <Controller
-                name="images"
-                control={control}
-                render={({ field }) => (
-                  <DragAndDropArea
-                    theme={theme}
-                    previewUrls={previewUrls}
-                    onPreviewUrlsChange={setPreviewUrls}
-                    {...field}
-                  />
-                )}
-              />
-            </div>
-            {/* Allow Collaboration */}
-            <label className="flex items-center gap-2">
-              <input type="checkbox" {...methods.register("allowCollab")} />
-              Allow collaboration requests
-              <IconWithTooltip
-                theme={theme}
-                tooltipPlacement="left"
-                id="collab"
-                content="If enabled, others can request to join and help with your idea."
-              />
-            </label>
-            {/* Buttons */}
+
+            <CategorySelector
+              mode="create"
+              theme={theme}
+              control={control as unknown as Control<FieldValues>}
+              watchedCategories={watchedCategories}
+              required
+            />
+
+            <IdeaImageUpload theme={theme} previewUrls={previewUrls} onPreviewUrlsChange={setPreviewUrls} />
+
+            <CollaborationCheckbox theme={theme} />
 
             <ActionButtons
               cancelText="Back"
@@ -428,6 +384,8 @@ export const IdeaCreateForm: React.FC<IdeaCreateFormProps> = ({ open = true, onC
           defaultPosition={lat && lng ? [lat, lng] : [51.505, -0.09]}
         />
       </FormProvider>
+
+      {loading && <LoaderModal />}
     </>
   );
 };

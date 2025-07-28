@@ -10,19 +10,21 @@ import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { saveProjectChanges } from "@/utils/project-edit";
 import { useState } from "react";
-import ActionButtons from "./action-buttons";
+import { Control, FieldValues } from "react-hook-form";
+import LoaderModal from "./common/loader-modal";
 import CommentCreation from "./create-comment";
 import ModalOverlay from "./modal-overlay";
 import ProjectAllComments from "./project-all-comments";
 import CategorySelector from "./project-category-selector";
 import ProjectDelete from "./project-delete-element";
 import ProjectDescription from "./project-description";
-import ProjectHeader from "./project-details-header";
+import ProjectDetailsHeader from "./project-details-header";
 import ProjectImageUpload from "./project-image-upload";
 import ProjectProgress from "./project-progress";
 import ProjectProgressNotes from "./project-progress-notes";
 import ProjectSocial from "./project-social-area";
 import ProjectStatus from "./project-status";
+import ActionButtons from "./shared/action-buttons";
 
 interface ProjectDetailsDialogProps {
   user: AuthUser;
@@ -39,6 +41,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
 
   const { refreshProjects } = useProjectContext();
   const { confirm } = useConfirmation();
+  const [isLoading, setLoading] = useState(false);
 
   const {
     allowEditProgressNotes,
@@ -115,6 +118,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
 
   const handleSave = async () => {
     try {
+      setLoading(true);
       const latestCategories = control._formValues.categories || [];
 
       await saveProjectChanges({
@@ -132,160 +136,162 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
       });
 
       refreshProjects();
-      onClose();
       resetEditStates();
+      onClose();
     } catch (error) {
       console.error("Failed to save project changes:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <ModalOverlay open={open} onClose={handleClose}>
-      <div
-        className={cn("relative max-h-[90vh] max-w-2xl overflow-y-auto p-6", {
-          "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
-          "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
-        })}
-      >
+    <>
+      <ModalOverlay open={open} onClose={handleClose}>
+        <div
+          className={cn("relative max-h-[90vh] max-w-2xl overflow-y-auto p-6", {
+            "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
+            "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
+          })}
+        >
+          {(isAuthor || isAdmin) && (
+            <ProjectDelete
+              showDeleteSection={showDeleteSection}
+              setShowDeleteSection={setShowDeleteSection}
+              theme={theme}
+              projectId={project.id}
+              refreshProjects={refreshProjects}
+            />
+          )}
 
-        {(isAuthor || isAdmin) && (
-          <ProjectDelete
-            showDeleteSection={showDeleteSection}
-            setShowDeleteSection={setShowDeleteSection}
+          <ProjectDetailsHeader
+            project={project}
+            titleInput={titleInput}
+            setTitleInput={setTitleInput}
+            editingTitle={editingTitle}
+            setEditingTitle={setEditingTitle}
+            isEditable={(isAuthor && isEditable) || isAdmin}
             theme={theme}
-            projectId={project.id}
-            refreshProjects={refreshProjects}
+            titleChanged={titleChanged}
+            setTitleChanged={setTitleChanged}
+            onCancel={resetTitleToOriginal}
           />
-        )}
 
-        <ProjectHeader
-          project={project}
-          titleInput={titleInput}
-          setTitleInput={setTitleInput}
-          editingTitle={editingTitle}
-          setEditingTitle={setEditingTitle}
-          isEditable={(isAuthor && isEditable) || isAdmin}
-          theme={theme}
-          titleChanged={titleChanged}
-          setTitleChanged={setTitleChanged}
-          onCancel={resetTitleToOriginal}
-        />
+          <CategorySelector
+            mode="edit"
+            control={control as unknown as Control<FieldValues>}
+            watchedCategories={watchedCategories}
+            displayCategories={displayCategories}
+            allowEdit={allowEditCategories}
+            theme={theme}
+            // Update parent state immediately on checkbox changes
+            onCategoriesChange={(categories) => {
+              console.log("Categories changed:", categories);
+              setCategoriesChanged(true);
+            }}
+            onEditComplete={(categories) => {
+              console.log("Categories edit complete:", categories);
+              setCategoriesChanged(true);
+              setDisplayCategories(
+                categories.map((id) => {
+                  const cat = PROJECT_CATEGORIES.find((c) => c.id === id);
+                  return { id, name: cat?.name || "" };
+                }),
+              );
+            }}
+            onCancel={resetCategoriesToOriginal}
+          />
 
-        <CategorySelector
-          mode="edit"
-          theme={theme}
-          control={control}
-          watchedCategories={watchedCategories}
-          displayCategories={displayCategories}
-          allowEdit={allowEditCategories}
-          // Update parent state immediately on checkbox changes
-          onCategoriesChange={(categories) => {
-            console.log("Categories changed:", categories);
-            setCategoriesChanged(true);
-          }}
-          onEditComplete={(categories) => {
-            console.log("Categories edit complete:", categories);
-            setCategoriesChanged(true);
-            setDisplayCategories(
-              categories.map((id) => {
-                const cat = PROJECT_CATEGORIES.find((c) => c.id === id);
-                return { id, name: cat?.name || "" };
-              }),
-            );
-          }}
-          onCancel={resetCategoriesToOriginal}
-        />
+          <ProjectStatus
+            project={project}
+            status={status}
+            setStatus={setStatus}
+            editingStatus={editingStatus}
+            setEditingStatus={setEditingStatus}
+            theme={theme}
+            setStatusChanged={setStatusChanged}
+            allowEditStatus={allowEditStatus}
+            onCancel={resetStatusToOriginal}
+          />
 
-        <ProjectStatus
-          project={project}
-          status={status}
-          setStatus={setStatus}
-          editingStatus={editingStatus}
-          setEditingStatus={setEditingStatus}
-          theme={theme}
-          setStatusChanged={setStatusChanged}
-          allowEditStatus={allowEditStatus}
-          onCancel={resetStatusToOriginal}
-        />
+          <ProjectImageUpload
+            mode="edit"
+            theme={theme}
+            existingImages={existingImages}
+            onImagesChange={setNewImages}
+            onRemoveImage={(url) => setRemovedImageUrls((prev) => [...prev, url])}
+            allowEdit={allowEditImages}
+            // onCancel={resetImagesToOriginal}
+          />
 
-        <ProjectImageUpload
-          mode="edit"
-          theme={theme}
-          existingImages={existingImages}
-          onImagesChange={setNewImages}
-          onRemoveImage={(url) => setRemovedImageUrls((prev) => [...prev, url])}
-          allowEdit={allowEditImages}
-          // onCancel={resetImagesToOriginal}
-        />
+          <ProjectProgress
+            project={project}
+            progress={progress}
+            setProgress={setProgress}
+            editingProgress={editingProgress}
+            setEditingProgress={setEditingProgress}
+            theme={theme}
+            setProgressChanged={setProgressChanged}
+            allowEditProgress={allowEditProgress}
+            onCancel={resetProgressToOriginal}
+          />
 
-        <ProjectProgress
-          project={project}
-          progress={progress}
-          setProgress={setProgress}
-          editingProgress={editingProgress}
-          setEditingProgress={setEditingProgress}
-          theme={theme}
-          setProgressChanged={setProgressChanged}
-          allowEditProgress={allowEditProgress}
-          onCancel={resetProgressToOriginal}
-        />
+          <ProjectDescription
+            project={project}
+            descriptionInput={descriptionInput}
+            setDescriptionInput={setDescriptionInput}
+            isAuthor={isAuthor}
+            isAdmin={isAdmin}
+            isEditable={isEditable}
+            theme={theme}
+            setDescriptionChanged={setDescriptionChanged}
+            onCancel={resetDescriptionToOriginal}
+          />
 
-        <ProjectDescription
-          project={project}
-          descriptionInput={descriptionInput}
-          setDescriptionInput={setDescriptionInput}
-          isAuthor={isAuthor}
-          isAdmin={isAdmin}
-          isEditable={isEditable}
-          theme={theme}
-          setDescriptionChanged={setDescriptionChanged}
-          onCancel={resetDescriptionToOriginal}
-        />
+          <ProjectProgressNotes
+            project={project}
+            progressNotes={progressNotes}
+            setProgressNotes={setProgressNotes}
+            allowEditProgressNotes={allowEditProgressNotes}
+            onCancel={resetProgressNotesToOriginal}
+          />
 
-        <ProjectProgressNotes
-          project={project}
-          progressNotes={progressNotes}
-          setProgressNotes={setProgressNotes}
-          allowEditProgressNotes={allowEditProgressNotes}
-          onCancel={resetProgressNotesToOriginal}
-        />
+          <ProjectSocial
+            project={project}
+            user={user}
+            theme={theme}
+            setShowCommentModal={setShowCommentModal}
+            setShowAllComments={setShowAllComments}
+          />
 
-        <ProjectSocial
-          project={project}
-          user={user}
-          theme={theme}
-          setShowCommentModal={setShowCommentModal}
-          setShowAllComments={setShowAllComments}
-        />
+          {(isAuthor || isAdmin) && anyFieldChanged && <ActionButtons onCancel={handleClose} onSubmit={handleSave} />}
 
-        {(isAuthor || isAdmin) && anyFieldChanged && (
-          <ActionButtons onCancel={handleClose} onSubmit={handleSave} />
-        )}
+          {showCommentModal && (
+            <ModalOverlay open={showCommentModal} onClose={() => setShowCommentModal(false)}>
+              <CommentCreation
+                user={user}
+                projectId={project.id}
+                onClose={() => setShowCommentModal(false)}
+                theme={theme}
+              />
+            </ModalOverlay>
+          )}
 
-        {showCommentModal && (
-          <ModalOverlay open={showCommentModal} onClose={() => setShowCommentModal(false)}>
-            <CommentCreation
-              user={user}
-              projectId={project.id}
-              onClose={() => setShowCommentModal(false)}
-              theme={theme}
-            />
-          </ModalOverlay>
-        )}
-
-        {showAllComments && (
-          <ModalOverlay open={showAllComments} onClose={() => setShowAllComments(false)}>
-            <ProjectAllComments
-              projectId={project.id}
-              user={user}
-              open={showAllComments}
-              onClose={() => setShowAllComments(false)}
-              theme={theme}
-            />
-          </ModalOverlay>
-        )}
-      </div>
-    </ModalOverlay>
+          {showAllComments && (
+            <ModalOverlay open={showAllComments} onClose={() => setShowAllComments(false)}>
+              <ProjectAllComments
+                projectId={project.id}
+                user={user}
+                open={showAllComments}
+                onClose={() => setShowAllComments(false)}
+                theme={theme}
+              />
+            </ModalOverlay>
+          )}
+        </div>
+      </ModalOverlay>
+      {isLoading && <LoaderModal />}
+    </>
   );
 };
 

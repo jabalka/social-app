@@ -5,7 +5,7 @@ import { Theme } from "@/types/theme.enum";
 import React from "react";
 import TooltipBubble from "./tooltip-bubble";
 import IconWithTooltip from "./tooltip-with-icon";
-import GlowingProgressBar from "./glowing-progress-bar";
+import GlowingProgressBar from "./shared/glowing-progress-bar";
 import { Project } from "@/models/project.types";
 
 interface EditableProgressProps {

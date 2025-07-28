@@ -13,7 +13,7 @@ import { clearDraft } from "@/utils/save-to-draft.utils";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { useIssueFormDraft } from "@/hooks/use-issue-form-draft";
 import { defaultValues, isFormEmpty, IssueFormFields } from "@/models/issue.types";
-import ActionButtons from "./action-buttons";
+import ActionButtons from "./shared/action-buttons";
 import LoaderModal from "./common/loader-modal";
 import ImagesUpload from "./images-upload";
 import LocationPostcodePickup from "./location-postode-pick-up";
@@ -139,6 +139,12 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
     if (data?.postcode) setValue("postcode", data.postcode, { shouldValidate: true });
   };
 
+  const resetLocation = () => {
+    setValue("postcode", "");
+
+    resetAddressState();
+  };
+
   const handleImageChange = useCallback(
     (files: File[]) => {
       setValue("images", files);
@@ -173,7 +179,8 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to create issue: ${res.status}`);
+        sessionStorage.setItem("showIssueReportErrorToast", "An error occurred while creating your report.");
+        return;
       }
 
       const result = await res.json();
@@ -196,17 +203,29 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
       setPreviewUrls([]);
       clearDraft(DRAFT_KEY);
 
-      sessionStorage.removeItem("showIssueReportDraftToast");
+      onIssueCreated?.();
 
       sessionStorage.setItem("showIssueReportSuccess", data.title);
+      sessionStorage.setItem("lastCreatedItemId", issueId);
 
-      onIssueCreated?.();
-      onClose?.();
+      if (onClose) {
+        onClose();
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
+      } else {
+        setTimeout(() => {
+          router.push("/browse/issues-list");
+        }, 300);
 
-      router.push("/browse/issues-list");
-    } catch (error) {
-      console.error("Error submitting issue report:", error);
-      alert("Failed to submit issue report. Please try again.");
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
+
+        return;
+      }
+    } catch {
+      sessionStorage.setItem("showIssueReportErrorToast", "An error occurred while creating your report.");
     } finally {
       setLoading(false);
     }
@@ -276,6 +295,7 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
               addressLines={addressLines}
               addressCoords={addressCoords}
               required
+              resetLocation={resetLocation}
             />
 
             <LandmarkInput />

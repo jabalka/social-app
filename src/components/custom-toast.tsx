@@ -5,7 +5,7 @@ import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import React, { useEffect, useState } from "react";
 import { Toast } from "react-hot-toast";
-import GlowingGreenButton from "./glowing-green-button";
+import GlowingGreenButton from "./shared/glowing-green-button";
 
 interface CustomToastProps {
   t: Toast;
@@ -32,7 +32,7 @@ const CustomToast: React.FC<CustomToastProps> = ({ t, message, action }) => {
     <div className="absolute mt-20 overflow-hidden rounded-lg">
       <div
         className={cn(
-          "relative flex min-w-[320px] items-center justify-center rounded-lg px-4 py-3 font-medium text-white shadow backdrop-blur-md",
+          "relative flex min-w-[320px] flex-col items-center justify-center rounded-lg px-4 py-3 font-medium text-white shadow backdrop-blur-md", // Changed to flex-col
           {
             "border-[#b8a299] bg-gradient-to-br from-[#57504d85] via-[#57504dc1] to-[#57504dce] text-zinc-100":
               theme === Theme.LIGHT,
@@ -44,17 +44,19 @@ const CustomToast: React.FC<CustomToastProps> = ({ t, message, action }) => {
           minWidth: 320,
         }}
       >
-        <span>{message}</span>
+        <span className="mb-1 text-center">{message}</span>
         {action && (
-          <GlowingGreenButton
-            onClick={() => {
-              action.onClick();
-              window.toast.dismiss(t.id);
-            }}
-            type="button"
-          >
-            {action.label}
-          </GlowingGreenButton>
+          <div className="mt-1">
+            <GlowingGreenButton
+              onClick={() => {
+                action.onClick();
+                window.toast.dismiss(t.id);
+              }}
+              type="button"
+            >
+              {action.label}
+            </GlowingGreenButton>
+          </div>
         )}
         <button
           onClick={() => window.toast.dismiss(t.id)}

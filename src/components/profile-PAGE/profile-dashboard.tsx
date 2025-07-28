@@ -11,8 +11,8 @@ import Image from "next/image";
 import DefaultAvatar from "public/images/default-avatar.png";
 
 import React, { useEffect, useRef, useState } from "react";
-import GlowingGreenButton from "../glowing-green-button";
-import GlowingPinkButton from "../glowing-pink-button";
+import GlowingGreenButton from "../shared/glowing-green-button";
+import GlowingPinkButton from "../shared/glowing-pink-button";
 import IconWithTooltip from "../tooltip-with-icon";
 
 const ProfileDashboard: React.FC = () => {

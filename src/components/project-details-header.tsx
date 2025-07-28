@@ -1,8 +1,7 @@
 import { Project } from "@/models/project.types";
 import EditableInputField from "./shared/editable-input-field";
 
-
-interface ProjectHeaderProps {
+interface Props {
   project: Project;
   titleInput: string;
   setTitleInput: (title: string) => void;
@@ -15,26 +14,31 @@ interface ProjectHeaderProps {
   onCancel?: () => void;
 }
 
-const ProjectHeader: React.FC<ProjectHeaderProps> = ({
+const ProjectDetailsHeader: React.FC<Props> = ({
   project,
   titleInput,
   setTitleInput,
+  editingTitle,
+  setEditingTitle,
   isEditable,
   theme,
   setTitleChanged,
   onCancel,
 }) => {
-  // Use the parent component's state instead of local state
   const handleSaveTitle = (newTitle: string) => {
+
     setTitleInput(newTitle);
-    setTitleChanged(newTitle !== project.title);
+
+    const hasChanged = newTitle !== project.title;
+
+    setTitleChanged(hasChanged);
   };
 
   return (
     <>
       <div className="mb-2 mt-2 flex items-center gap-2">
         <label className="text-sm font-medium">Project Title:</label>
-        <EditableInputField 
+        <EditableInputField
           value={titleInput}
           originalValue={project.title}
           onSave={handleSaveTitle}
@@ -42,6 +46,8 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           theme={theme}
           editTooltip="Edit Title"
           onCancel={onCancel}
+          isEditing={editingTitle}
+          setIsEditing={setEditingTitle}
         />
       </div>
 
@@ -54,4 +60,4 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   );
 };
 
-export default ProjectHeader;
+export default ProjectDetailsHeader;

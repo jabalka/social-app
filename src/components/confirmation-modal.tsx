@@ -2,8 +2,8 @@
 
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
-import GlowingPinkButton from "./glowing-pink-button";
-import GlowingGreenButton from "./glowing-green-button";
+import GlowingPinkButton from "./shared/glowing-pink-button";
+import GlowingGreenButton from "./shared/glowing-green-button";
 import {
   Dialog,
   DialogContent,

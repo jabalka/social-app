@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import GlowingPinkButton from "./glowing-pink-button";
 import GlowingGreenButton from "./glowing-green-button";
-import RequiredStar from "./required-star";
+import RequiredStar from "../required-star";
 
 type ButtonPosition = "start" | "center" | "end";
 

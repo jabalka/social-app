@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Trash } from "lucide-react";
 import React from "react";
 import IconWithTooltip from "./tooltip-with-icon";
-import GlowingPinkButton from "./glowing-pink-button";
+import GlowingPinkButton from "./shared/glowing-pink-button";
 
 interface ProjectDeleteProps {
   showDeleteSection: boolean;
