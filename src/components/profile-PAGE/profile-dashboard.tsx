@@ -10,6 +10,7 @@ import { ChartColumn, Check, Pencil, X } from "lucide-react";
 import Image from "next/image";
 import DefaultAvatar from "public/images/default-avatar.png";
 
+import { showCustomToast } from "@/utils/show-custom-toast";
 import React, { useEffect, useRef, useState } from "react";
 import GlowingGreenButton from "../shared/glowing-green-button";
 import GlowingPinkButton from "../shared/glowing-pink-button";
@@ -30,6 +31,7 @@ const ProfileDashboard: React.FC = () => {
   const [nameInput, setNameInput] = useState(user?.name ?? "");
   const [usernameInput, setUsernameInput] = useState(user?.username ?? "");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
   const [nameError, setNameError] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -38,6 +40,15 @@ const ProfileDashboard: React.FC = () => {
   const [commentLikeCount, setCommentLikeCount] = useState<number>(0);
 
   const fileImageInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (selectedImage) {
+      const objectUrl = URL.createObjectURL(selectedImage);
+      setPreviewImageUrl(objectUrl);
+
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  }, [selectedImage]);
 
   useEffect(() => {
     const fetchLikes = async () => {
@@ -125,7 +136,14 @@ const ProfileDashboard: React.FC = () => {
     });
 
     if (!res.ok) {
-      console.error("Image upload failed");
+      showCustomToast(`Image Upload Unsuccessful`, {
+        action: {
+          label: "OK",
+          onClick: () => {
+            return true;
+          },
+        },
+      });
       return null;
     }
 
@@ -158,7 +176,16 @@ const ProfileDashboard: React.FC = () => {
         }),
       });
 
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) {
+        showCustomToast(`Image Upload Unsuccessful`, {
+          action: {
+            label: "OK",
+            onClick: () => {
+              return true;
+            },
+          },
+        });
+      }
 
       const updated = await res.json();
       setUser(updated);
@@ -166,13 +193,52 @@ const ProfileDashboard: React.FC = () => {
 
       setHasUnsavedChanges(false);
       setSelectedImage(null);
+      setPreviewImageUrl(null);
       setEditName(false);
       setEditUsername(false);
+    } catch {
+      showCustomToast(`Image Upload Unsuccessful`, {
+        action: {
+          label: "OK",
+          onClick: () => {
+            return true;
+          },
+        },
+      });
+    } finally {
+      showCustomToast(`Changes Saved Successfully`, {
+        action: {
+          label: "OK",
+          onClick: () => {
+            return true;
+          },
+        },
+      });
+    }
+  };
 
-      // Optionally: toast("Saved!") instead of reload
-    } catch (err) {
-      console.error("Failed to save", err);
-      alert("Update failed. Try again.");
+  const handleCancel = () => {
+    setNameInput(initialUserRef.current?.name ?? "");
+    setUsernameInput(initialUserRef.current?.username ?? "");
+    setSelectedImage(null);
+    setPreviewImageUrl(null);
+    setEditName(false);
+    setEditUsername(false);
+    setHasUnsavedChanges(false);
+    setNameError(null);
+    setUsernameError(null);
+
+    if (fileImageInputRef.current) {
+      fileImageInputRef.current.value = "";
+    }
+  };
+
+  const handleCancelImage = () => {
+    setSelectedImage(null);
+    setPreviewImageUrl(null);
+    // Reset the file input to allow re-selecting the same file
+    if (fileImageInputRef.current) {
+      fileImageInputRef.current.value = "";
     }
   };
 
@@ -189,41 +255,54 @@ const ProfileDashboard: React.FC = () => {
         <div className="flex w-full flex-col items-center justify-between gap-8 md:flex-row md:items-start">
           {/* Profile Image */}
           <div className="relative rounded-full p-[1px]">
-            <div className="group">
+            <div className="group relative w-full overflow-hidden duration-300 hover:scale-[1.8] hover:z-20">
               <div
                 className={cn(
-                  "relative h-48 w-32 overflow-hidden rounded-full outline-2 outline-offset-[2px] transition-transform duration-300 hover:scale-105 md:flex-shrink-0",
+                  "relative h-48 w-32 overflow-hidden rounded-full outline-2 outline-offset-[2px] transition-transform",
                   {
-                    "bg-[#bda69c66] hover:outline-[#3c2f27]": theme === Theme.LIGHT,
-                    "bg-[#6f6561c4] hover:outline-[#3c2f27]": theme === Theme.DARK,
+                    "bg-[#bda69c66]": theme === Theme.LIGHT,
+                    "bg-[#6f6561c4]": theme === Theme.DARK,
                   },
                 )}
               >
                 <Image
-                  src={user?.image ?? DefaultAvatar}
+                  src={previewImageUrl || user?.image || DefaultAvatar}
                   alt="Profile"
                   width={320}
                   height={320}
                   className="h-full w-full object-cover"
                   priority
                 />
+
+                      <span
+                  className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-full", {
+                    "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+                    "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
+                  })}
+                />
               </div>
-              <span
-                className={cn("pointer-events-none absolute -inset-[5px] rounded-full", {
-                  "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-                  "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
-                })}
+
+ 
+            </div>
+            <div className="absolute -bottom-5 left-0">
+              <IconWithTooltip
+                id="edit-image"
+                icon={Pencil}
+                content="Change Image"
+                theme={theme}
+                iconClassName="text-blue-500 h-4 w-4"
+                tooltipPlacement="bottom"
+                onClick={() => fileImageInputRef.current?.click()}
               />
             </div>
 
-            <IconWithTooltip
-              id="edit-image"
-              icon={Pencil}
-              content="Change Image"
-              theme={theme}
-              iconClassName="text-blue-500 h-4 w-4"
-              onClick={() => fileImageInputRef.current?.click()}
-            />
+            {previewImageUrl && (
+              <div className="absolute -bottom-6 right-0">
+                <button onClick={handleCancelImage}>
+                  <X className="h-6 w-6 cursor-pointer text-red-600 hover:text-red-700" />
+                </button>
+              </div>
+            )}
           </div>
 
           <input
@@ -468,19 +547,7 @@ const ProfileDashboard: React.FC = () => {
         </div>
         {hasInitialized && hasUnsavedChanges && (
           <div className="flex justify-center gap-4 pt-8">
-            <GlowingPinkButton
-              onClick={() => {
-                setNameInput(initialUserRef.current?.name ?? "");
-                setUsernameInput(initialUserRef.current?.username ?? "");
-                setSelectedImage(null);
-                setEditName(false);
-                setEditUsername(false);
-                setHasUnsavedChanges(false);
-                setNameError(null);
-                setUsernameError(null);
-              }}
-              className="h-8 w-24"
-            >
+            <GlowingPinkButton onClick={handleCancel} className="h-8 w-24">
               CANCEL
             </GlowingPinkButton>
 
