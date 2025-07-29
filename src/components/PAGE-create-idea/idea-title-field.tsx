@@ -2,7 +2,7 @@ import {} from "@/context/safe-theme-context";
 import { useFormContext } from "react-hook-form";
 
 import RequiredStar from "../required-star";
-import IconWithTooltip from "../tooltip-with-icon";
+import IconWithTooltip from "../icon-with-tooltip";
 
 interface IdeaTitleFieldProps {
   theme: string;

@@ -308,6 +308,55 @@ export async function uploadUserProfileImage(req: Request) {
   return { data: { url: publicUrl }, status: 200 };
 }
 
+export async function deleteUserProfileImage(req: Request) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { error: "Unauthorized", status: 401 };
+  }
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { image: true },
+    });
+
+    if (!user?.image) {
+      return { error: "No profile image found", status: 404 };
+    }
+
+    if (!user.image.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/`)) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { image: null },
+      });
+      
+      return { data: { message: "Profile image removed" }, status: 200 };
+    }
+
+    const storagePath = user.image.replace(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/`,
+      ""
+    );
+
+    const { error } = await supabase.storage.from("profile-pictures").remove([storagePath]);
+
+    if (error) {
+      console.error("Failed to delete from storage:", error);
+    }
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { image: null },
+    });
+
+    return { data: { message: "Profile image deleted successfully" }, status: 200 };
+  } catch (error) {
+    console.error("Error deleting profile image:", error);
+    return { error: "Failed to delete profile image", status: 500 };
+  }
+}
+
 export async function uploadMessageFile(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {

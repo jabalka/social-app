@@ -2,7 +2,7 @@ import { Project } from "@/models/project.types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import TooltipBubble from "./tooltip-bubble";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 
 import { Pencil } from "lucide-react";
 import CancelEditButton from "./shared/cancel-edit-button";

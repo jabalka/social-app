@@ -1,7 +1,7 @@
 import React from "react";
 import GlowingVioletButton from "./shared/glowing-violet-button";
 import RequiredStar from "./required-star";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 import { Trash2 } from "lucide-react";
 
 interface Props {

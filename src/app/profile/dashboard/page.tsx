@@ -1,5 +1,5 @@
 
-import ProfileDashboard from "@/components/profile-PAGE/profile-dashboard";
+import ProfileDashboard from "@/components/profile-PAGE/dashboard/profile-dashboard";
 import React from "react"; 
 
 

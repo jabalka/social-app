@@ -6,7 +6,7 @@ import { Info } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-interface InfoWithTooltipProps {
+interface Props {
   id: string;
   content: React.ReactNode;
   className?: string;
@@ -18,7 +18,7 @@ interface InfoWithTooltipProps {
   onClick?: () => void;
 }
 
-const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
+const IconWithTooltip: React.FC<Props> = ({
   id,
   content,
   className,

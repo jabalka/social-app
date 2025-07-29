@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import IconWithTooltip from "../tooltip-with-icon";
+import IconWithTooltip from "../icon-with-tooltip";
 import ImagesUpload from "../images-upload";
 
 

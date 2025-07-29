@@ -1,6 +1,6 @@
 import React from "react";
 
-import ProjectListOverview from "../projects-list-overview";
+import ProjectListOverview from "../../projects-list-overview";
 
 const ProfileProjects: React.FC = () => {
   return (
