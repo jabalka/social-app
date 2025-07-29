@@ -11,7 +11,7 @@ interface InfoWithTooltipProps {
   content: React.ReactNode;
   className?: string;
   theme: string;
-  icon?: React.ElementType; // could be any Lucide or custom icon component
+  icon?: React.ElementType;
   iconClassName?: string;
   tooltipClassName?: string;
   tooltipPlacement?: "top" | "right" | "bottom" | "left";
@@ -23,16 +23,18 @@ const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
   content,
   className,
   theme,
-  icon: Icon = Info, // info is default icon
+  icon: Icon = Info,
   iconClassName,
   tooltipClassName,
   tooltipPlacement = "top",
   onClick,
 }) => {
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [animationKey, setAnimationKey] = useState<number>(0);
+  const [tooltipStyle, setTooltipStyle] = useState({});
+  
   const iconRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (animationKey === 0) return;
@@ -44,115 +46,94 @@ const IconWithTooltip: React.FC<InfoWithTooltipProps> = ({
     return () => clearTimeout(timeout);
   }, [animationKey]);
 
-  const showTooltip = () => {
-    if (iconRef.current) {
-      const rect = iconRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX,
+  useEffect(() => {
+    if (!showTooltip || !iconRef.current) return;
+
+    function updatePosition() {
+      if (!iconRef.current || !tooltipRef.current) return;
+      
+      const iconRect = iconRef.current.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      const gap = 10;
+      
+      let top = 0;
+      let left = 0;
+      
+      switch (tooltipPlacement) {
+        case "right":
+          left = iconRect.right + gap;
+          top = iconRect.top + (iconRect.height / 2) - (tooltipRect.height / 2);
+          break;
+        case "bottom":
+          top = iconRect.bottom + gap;
+          left = iconRect.left + (iconRect.width / 2) - (tooltipRect.width / 2);
+          break;
+        case "left":
+          left = iconRect.left - tooltipRect.width - gap;
+          top = iconRect.top + (iconRect.height / 2) - (tooltipRect.height / 2);
+          break;
+        case "top":
+        default:
+          top = iconRect.top - tooltipRect.height - gap;
+          left = iconRect.left + (iconRect.width / 2) - (tooltipRect.width / 2);
+          break;
+      }
+      
+      // Prevent tooltip from going off-screen
+      if (left < 0) left = 0;
+      if (left + tooltipRect.width > viewportWidth) {
+        left = viewportWidth - tooltipRect.width;
+      }
+      
+      if (top < 0) top = 0;
+      if (top + tooltipRect.height > viewportHeight) {
+        top = viewportHeight - tooltipRect.height;
+      }
+      
+      setTooltipStyle({
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${left}px`,
+        zIndex: 9999,
       });
-      setActiveTooltip(id);
     }
-  };
+    
+    updatePosition();
+    
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [showTooltip, tooltipPlacement]);
 
-  const hideTooltip = () => setActiveTooltip(null);
-
-function getTooltipPlacementStyles(
-  tooltipPlacement: "top" | "right" | "bottom" | "left",
-  coords: { top: number; left: number },
-  iconRef: React.RefObject<HTMLButtonElement>
-) {
-  const gap = 116; // Increased gap for better visibility
-  const iconWidth = iconRef.current?.offsetWidth ?? 0;
-  const iconHeight = iconRef.current?.offsetHeight ?? 0;
-  
-  switch (tooltipPlacement) {
-    case "right":
-      return {
-        top: coords.top + iconHeight / 2,
-        left: coords.left + iconWidth + gap,
-        transform: "translate(0, -50%)",
-      };
-    case "bottom":
-      return {
-        top: coords.top + iconHeight + gap,
-        left: coords.left + iconWidth / 2,
-        transform: "translate(-50%, 0)",
-      };
-    case "left":
-      return {
-        top: coords.top + iconHeight / 2,
-        left: coords.left - gap,
-        transform: "translate(-100%, -50%)",
-      };
-    case "top":
-    default:
-
-      return {
-        top: Math.max(0, coords.top - gap), // if bug persist and tooltip appears way below then consider fixed offset of some px
-        left: coords.left + iconWidth / 2,
-        transform: "translate(-50%, -100%)", 
-      };
-  }
-}
-
-  const tooltip = activeTooltip === id && coords
-  ? createPortal(
-      <div
-        className={cn(
-          "fixed z-[9999] overflow-hidden rounded-md px-2 py-1 text-xs shadow-lg transition-all",
-          {
-            "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
-            "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
-          },
-          tooltipClassName
-        )}
-        style={{
-          ...getTooltipPlacementStyles(tooltipPlacement, coords, iconRef),
-          pointerEvents: "auto",
-          minWidth: 'max-content',
-          maxWidth: 300,
-          whiteSpace: 'normal',
-        }}
-      >
-        {formatTooltipContent(content)}
-        <span
-          key={animationKey}
-          className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-md", {
-            "animate-snakeBorderHoverLight": theme === Theme.LIGHT,
-            "animate-snakeBorderHoverDark": theme === Theme.DARK,
-          })}
-        />
-        <span
-          className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-md border-[2px]", {
-            "border-zinc-700": theme === Theme.LIGHT,
-            "border-zinc-500": theme === Theme.DARK,
-          })}
-        />
-      </div>,
-      document.body
-    )
-  : null;
+  const handleShowTooltip = () => setShowTooltip(true);
+  const handleHideTooltip = () => setShowTooltip(false);
 
   const handleIconClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    setActiveTooltip(activeTooltip === id ? null : id);
-    // Fire action if present
+    setShowTooltip(!showTooltip);
     if (onClick) onClick();
   };
 
   return (
-    <div className={`group relative ${className ?? ""}`}>
+    <div id={id} className={`group relative ${className ?? ""}`}>
       <button
         ref={iconRef}
         type="button"
         tabIndex={-1}
         aria-label="icon-action"
         onClick={handleIconClick}
-        onMouseEnter={showTooltip}
-        onFocus={showTooltip}
-        onMouseLeave={hideTooltip}
-        onBlur={hideTooltip}
+        onMouseEnter={handleShowTooltip}
+        onFocus={handleShowTooltip}
+        onMouseLeave={handleHideTooltip}
+        onBlur={handleHideTooltip}
         className={cn("m-0 border-none bg-transparent p-0", iconClassName)}
         style={{ lineHeight: 0 }}
       >
@@ -167,7 +148,42 @@ function getTooltipPlacementStyles(
           )}
         />
       </button>
-      {tooltip}
+      
+      {showTooltip && createPortal(
+        <div
+          ref={tooltipRef}
+          className={cn(
+            "overflow-hidden rounded-md px-2 py-1 text-xs shadow-lg transition-all",
+            {
+              "bg-[#dbccc5] text-zinc-700": theme === Theme.LIGHT,
+              "bg-[#5e5753] text-zinc-200": theme === Theme.DARK,
+            },
+            tooltipClassName
+          )}
+          style={{
+            ...tooltipStyle,
+            minWidth: 'max-content',
+            maxWidth: 300,
+            whiteSpace: 'normal',
+          }}
+        >
+          {formatTooltipContent(content)}
+          <span
+            key={animationKey}
+            className={cn("pointer-events-none absolute -inset-[0px] z-20 rounded-md", {
+              "animate-snakeBorderHoverLight": theme === Theme.LIGHT,
+              "animate-snakeBorderHoverDark": theme === Theme.DARK,
+            })}
+          />
+          <span
+            className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-md border-[2px]", {
+              "border-zinc-700": theme === Theme.LIGHT,
+              "border-zinc-500": theme === Theme.DARK,
+            })}
+          />
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
