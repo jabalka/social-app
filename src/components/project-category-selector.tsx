@@ -6,7 +6,7 @@ import { Check, Pencil, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import RequiredStar from "./required-star";
 import TooltipBubble from "./tooltip-bubble";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 
 import { Control, FieldValues } from "react-hook-form";
 

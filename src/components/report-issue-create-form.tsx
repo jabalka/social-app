@@ -23,7 +23,7 @@ import PriorityLevelSelect from "./report-issue-priority-select";
 import TitleInputWithAutofill from "./report-issue-title-input";
 import DescriptionField from "./shared/description-field";
 import SafetyWarning from "./shared/safety-warning";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 
 const DRAFT_KEY = "ISSUE_REPORT_DRAFT";
 

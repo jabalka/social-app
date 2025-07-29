@@ -3,7 +3,7 @@ import { ISSUE_PRIORITY_LEVELS } from "@/lib/report-issue";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import RequiredStar from "./required-star";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 
 const PriorityLevelSelect: React.FC = () => {
   const { theme } = useSafeThemeContext();

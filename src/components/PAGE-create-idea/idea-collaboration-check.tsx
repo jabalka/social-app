@@ -1,6 +1,6 @@
 import React from "react";
 import { useFormContext } from "react-hook-form";
-import IconWithTooltip from "../tooltip-with-icon";
+import IconWithTooltip from "../icon-with-tooltip";
 
 interface CollaborationCheckboxProps {
   theme: string;

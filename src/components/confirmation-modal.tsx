@@ -30,7 +30,7 @@ const ConfirmationModal: React.FC = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent aria-describedby="confirmation-content">
+      <DialogContent aria-describedby="confirmation-content" className="z-[9999]">
         <DialogHeader>
           <DialogTitle className="text-center w-full">{title}</DialogTitle>
           <DialogDescription className="pt-8 text-center w-full">

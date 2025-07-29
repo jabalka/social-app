@@ -4,7 +4,7 @@ import { IssueType } from "@prisma/client";
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import RequiredStar from "./required-star";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 
 interface IssueTypeSelectProps {
   watchedIssueType: IssueType;

@@ -1,7 +1,7 @@
 import React from "react";
 import { useFormContext } from "react-hook-form";
 import RequiredStar from "./required-star";
-import IconWithTooltip from "./tooltip-with-icon";
+import IconWithTooltip from "./icon-with-tooltip";
 
 interface ProjectTitleFieldProps {
   theme: string;

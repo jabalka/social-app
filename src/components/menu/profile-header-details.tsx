@@ -6,7 +6,7 @@ import { cn } from "@/utils/cn.utils";
 import { Home, List, LogOut, User } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
-import DefaultAvatar from "public/images/default-avatar.png";
+import DefaultAvatar from "public/images/profile-default-avatar.png";
 import React, { useEffect, useState } from "react";
 import DropdownItem from "../menu-dropdown-item";
 

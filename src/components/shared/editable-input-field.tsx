@@ -1,6 +1,6 @@
 import { Pencil } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import IconWithTooltip from "../tooltip-with-icon";
+import IconWithTooltip from "../icon-with-tooltip";
 import CancelEditButton from "./cancel-edit-button";
 import KeepEditButton from "./keep-edit-button";
 

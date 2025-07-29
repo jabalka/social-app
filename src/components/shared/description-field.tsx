@@ -2,7 +2,7 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import React from "react";
 import { useFormContext } from "react-hook-form";
 import RequiredStar from "../required-star";
-import IconWithTooltip from "../tooltip-with-icon";
+import IconWithTooltip from "../icon-with-tooltip";
 import EditableInputField from "./editable-input-field";
 
 interface DescriptionFieldProps {
