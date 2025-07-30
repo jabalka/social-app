@@ -12,9 +12,10 @@ interface Props {
   image: string | null;
   theme: string;
   onImageChange: (file: File | null) => void;
+  onImageDelete?: () => void;
 }
 
-const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange }) => {
+const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange, onImageDelete  }) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const fileImageInputRef = useRef<HTMLInputElement | null>(null);
@@ -49,6 +50,12 @@ const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange }) => {
       cancelText: "Cancel",
     });
     if(result){
+      if (onImageDelete) {
+        onImageDelete();
+      } else {
+        // If no delete handler provided, set image to null
+        onImageChange(null);
+      }
       console.log("Need to implement Back-End logic to delete user image!")
 
       // try {
