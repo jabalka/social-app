@@ -179,6 +179,60 @@ const ProfileDashboard: React.FC = () => {
     }
   };
 
+  const handleImageDelete = async () => {
+    try {
+      const res = await fetch("/api/user/upload-profile-image", {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        showCustomToast(`Failed to delete profile image`, {
+          action: {
+            label: "OK",
+            onClick: () => {
+              return true;
+            },
+          },
+        });
+        return;
+      }
+
+      await res.json();
+
+      if (user) {
+        const updatedUser = {
+          ...user,
+          image: null,
+        };
+
+        setUser(updatedUser);
+
+        if (initialUserRef.current) {
+          initialUserRef.current = updatedUser;
+        }
+      }
+
+      showCustomToast(`Profile image deleted successfully`, {
+        action: {
+          label: "OK",
+          onClick: () => {
+            return true;
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting profile image:", error);
+      showCustomToast(`An error occurred while deleting profile image`, {
+        action: {
+          label: "OK",
+          onClick: () => {
+            return true;
+          },
+        },
+      });
+    }
+  };
+
   const disableSave = !hasUnsavedChanges || !!validateName(nameInput) || !!validateUsername(usernameInput);
 
   return (
@@ -190,7 +244,12 @@ const ProfileDashboard: React.FC = () => {
 
         <div className="flex w-full flex-col items-center justify-between gap-8 md:flex-row md:items-start">
           {/* Left Column */}
-          <ProfileImage image={user?.image ?? null} theme={theme} onImageChange={setSelectedImage} />
+          <ProfileImage
+            image={user?.image ?? null}
+            theme={theme}
+            onImageChange={setSelectedImage}
+            onImageDelete={handleImageDelete}
+          />
 
           {/* Right Column */}
           <div className="flex w-full flex-col gap-4">
@@ -228,11 +287,15 @@ const ProfileDashboard: React.FC = () => {
           </div>
         </div>
         {hasInitialized && hasUnsavedChanges && (
-          <div className="mt-8  flex justify-center">
-
-            <ActionButtons onSubmit={handleSave} onCancel={handleCancel} disabled={disableSave}   cancelText = "Cancel"
-            submitText = "Save" position="center"/>
-
+          <div className="mt-8 flex justify-center">
+            <ActionButtons
+              onSubmit={handleSave}
+              onCancel={handleCancel}
+              disabled={disableSave}
+              cancelText="Cancel"
+              submitText="Save"
+              position="center"
+            />
           </div>
         )}
       </div>
