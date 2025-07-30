@@ -2,7 +2,6 @@
 
 import { useProjectModal } from "@/context/project-modal-context";
 import { useSafeUser } from "@/context/user-context";
-import { PROJECT_CATEGORIES } from "@/lib/project-categories";
 import { AuthUser } from "@/models/auth.types";
 import { Project } from "@/models/project.types";
 import { Theme } from "@/types/theme.enum";
@@ -13,6 +12,7 @@ import DefaultProjectImage from "../../public/images/project-image-dedfault.png"
 import CommentCreation from "./create-comment";
 import GlowingProgressBar from "./shared/glowing-progress-bar";
 import { Button } from "./ui/button";
+import CategorySelector from "./project-category-selector";
 
 interface ProjectCardProps {
   project: Project;
@@ -51,25 +51,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
             {/* Categories */}
             <div className="mt-2 flex flex-wrap gap-2">
-              {project.categories.map(({ id, name }) => {
-                const matched = PROJECT_CATEGORIES.find((cat) => cat.id === id);
-                const Icon = matched?.icon;
-                return (
-                  Icon && (
-                    <div key={id} className="group relative flex items-center justify-center">
-                      <Icon
-                        className={cn("h-5 w-5", {
-                          "text-gray-700 group-hover:text-orange-700": theme === Theme.LIGHT,
-                          "text-zinc-200 group-hover:text-orange-700": theme === Theme.DARK,
-                        })}
-                      />
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 scale-0 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white transition-all group-hover:scale-100">
-                        {name}
-                      </div>
-                    </div>
-                  )
-                );
-              })}
+          <CategorySelector
+            mode="view"
+            displayCategories={project.categories}
+            theme={theme}
+            watchedCategories={project.categories.map((cat) => cat.id)}
+          /> 
+ 
             </div>
 
             {/* Progress */}
