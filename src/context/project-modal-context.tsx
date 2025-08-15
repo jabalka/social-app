@@ -53,7 +53,6 @@ export const ProjectModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setFetchedProject(null);
           }
 
-          console.log("ProjectModalProvider, openProjectModal project***:", project, "user***", user, "loading?***", loading);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [projects, setProjects],

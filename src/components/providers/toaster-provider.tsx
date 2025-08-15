@@ -109,6 +109,16 @@ const ToasterProviders: React.FC<PropsWithChildren> = ({ children }) => {
     }
   );
 
+  // No needed for now, but can be used in the future
+  // useSessionToast(
+  //   "showProjectUpdateSuccess", 
+  //   (errorMessage) => errorMessage || MESSAGES.PROJECT_UPDATE_SUCCESS, 
+  //   {
+  //     action: undefined,
+  //     id: "project-update-success-toast"
+  //   }
+  // );
+
   // ********************END PROJECT TOASTS
 
   // ISSUE TOASTS

@@ -14,7 +14,7 @@ const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ user, projects, ref
   const [MapComponent, setMapComponent] = useState<React.ComponentType<ProjectMapViewerProps> | null>(null);
 
   useEffect(() => {
-    import("./map-viewer").then((mod) => {
+    import("./project-map-viewer").then((mod) => {
       setMapComponent(() => mod.default);
     });
   }, []);

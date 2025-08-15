@@ -9,6 +9,7 @@ import { Project } from "@/models/project.types";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { saveProjectChanges } from "@/utils/project-edit";
+import { showCustomToast } from "@/utils/show-custom-toast";
 import { useState } from "react";
 import { Control, FieldValues } from "react-hook-form";
 import LoaderModal from "./common/loader-modal";
@@ -134,12 +135,29 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
         newImages,
         removedImageUrls,
       });
+      showCustomToast(
+        "Your project was successfully updated!",
+        {
+          action: {
+            label: "OK",
+            onClick: () => true,
+          },
+        },
+        "project-update-success-toast",
+      );
 
       refreshProjects();
       resetEditStates();
       onClose();
-    } catch (error) {
-      console.error("Failed to save project changes:", error);
+    } catch {
+      showCustomToast(`Failed to save project changes, \nplease try again later!`, {
+        action: {
+          label: "OK",
+          onClick: () => {
+            return true;
+          },
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -147,9 +165,9 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
 
   return (
     <>
-      <ModalOverlay open={open} onClose={handleClose}>
+      <ModalOverlay open={open} onClose={handleClose} theme={theme}>
         <div
-          className={cn("relative max-h-[90vh] max-w-2xl overflow-y-auto p-6", {
+          className={cn("relative overflow-y-auto rounded-xl p-6", {
             "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
             "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
           })}
@@ -267,7 +285,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
           {(isAuthor || isAdmin) && anyFieldChanged && <ActionButtons onCancel={handleClose} onSubmit={handleSave} />}
 
           {showCommentModal && (
-            <ModalOverlay open={showCommentModal} onClose={() => setShowCommentModal(false)}>
+            <ModalOverlay open={showCommentModal} onClose={() => setShowCommentModal(false)} theme={theme}>
               <CommentCreation
                 user={user}
                 projectId={project.id}
@@ -278,7 +296,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
           )}
 
           {showAllComments && (
-            <ModalOverlay open={showAllComments} onClose={() => setShowAllComments(false)}>
+            <ModalOverlay open={showAllComments} onClose={() => setShowAllComments(false)} theme={theme}>
               <ProjectAllComments
                 projectId={project.id}
                 user={user}

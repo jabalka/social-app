@@ -64,7 +64,8 @@ export const MESSAGES = {
 
   PROJECT_DRAFT_SAVED: "Project saved as draft. You can resume later.",
   PROJECT_CREATE_ERROR: "An error occurred while creating your project.",
-  PROJECT_CREATE_SUCCESS : "Your project has been successfully created!",
+  PROJECT_CREATE_SUCCESS : "Your project has been successfully created!",  
+  PROJECT_UPDATE_SUCCESS : "Your project was successfully updated!",
 
   ISSUE_REPORT_DRAFT_SAVED: "Your issue report draft has been saved",
   ISSUE_REPORT_CREATE_ERROR: "An error occurred while creating your report.",

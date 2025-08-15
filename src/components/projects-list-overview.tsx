@@ -1,5 +1,6 @@
 "use client";
 import { radiusOptions } from "@/constants";
+import { useModalContext } from "@/context/modal-context";
 import { useProjectContext } from "@/context/project-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
@@ -9,12 +10,12 @@ import { getPostcodeData } from "@/utils/postcode.utils";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import CreateProjectModal from "./create-project-modal";
-import GlowingGreenButton from "./shared/glowing-green-button";
-import GlowingGreyButton from "./shared/glowing-grey-button";
-import GlowingVioletButton from "./shared/glowing-violet-button";
 import LeafletMapModal from "./leaflet-map-modal";
 import Pagination from "./pagination";
 import ProjectList from "./project-list";
+import GlowingGreenButton from "./shared/glowing-green-button";
+import GlowingGreyButton from "./shared/glowing-grey-button";
+import GlowingVioletButton from "./shared/glowing-violet-button";
 
 interface Props {
   showOwnedOnly?: boolean;
@@ -25,6 +26,7 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
   const { theme } = useSafeThemeContext();
   const { projects, refreshProjects, currentPage, setCurrentPage, totalProjects, pageSize } = useProjectContext();
   const { user } = useSafeUser();
+  const { isInModal } = useModalContext();
 
   const [sortBy, setSortBy] = useState<"createdAt" | "likes" | "comments">("createdAt");
 
@@ -158,26 +160,32 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
   };
 
   return (
-    <div className={cn("flex w-full flex-col justify-between")}>
-      <div className="mx-auto mt-2 rounded-3xl border-2 border-zinc-400/10 bg-[#f0e3dd] px-8 py-8 shadow-2xl backdrop-blur-md dark:border-zinc-700/40 dark:bg-[#f0e3dd]/10 md:max-w-5xl">
+    <div className={cn("flex w-full flex-col", { "h-full": isInModal })}>
+      <div
+        className={cn( "mx-auto mt-2 flex h-full w-full flex-col rounded-3xl border-2 px-8 py-8 shadow-2xl backdrop-blur-md",
+           {
+          "border-zinc-400/10 bg-[#f0e3dd] dark:border-zinc-700/40 dark:bg-[#f0e3dd]/10 md:max-w-5xl": !isInModal,
+          "border-transparent bg-transparent": isInModal,
+        })}
+      >
         {/* Top controls row */}
-        <div className="grid grid-cols-3 items-center mb-6">
+        <div className="mb-6 grid grid-cols-3 items-center shrink-0">
           <div className="flex min-w-[220px] flex-col items-start pt-2">
             <GlowingGreenButton onClick={() => setShowCreateModal(true)} className="h-8 p-2">
-              + Create New Project
+              + Create New
             </GlowingGreenButton>
           </div>
 
           <div className="flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalCount={totalProjects}
-            pageSize={pageSize}
-            onPageChange={setCurrentPage}
-            theme={theme}
-          />
+            <Pagination
+              currentPage={currentPage}
+              totalCount={totalProjects}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              theme={theme}
+            />
           </div>
-          
+
           <div className="relative flex flex-col items-end">
             <div className="pt-2">
               <GlowingGreyButton theme={theme} className="h-8 p-2" onClick={() => setShowFilters((prev) => !prev)}>
@@ -276,14 +284,16 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false }) => {
         </div>
 
         {/* Project list */}
-        <ProjectList
-      projects={projects || []}
-      theme={theme}
-      loading={loading}
-      commentModalProjectId={commentModalProjectId}
-      setCommentModalProjectId={setCommentModalProjectId}
-      refreshProjects={refreshProjects}
-        />
+        <div className="flex-1">
+          <ProjectList
+            projects={projects || []}
+            theme={theme}
+            loading={loading}
+            commentModalProjectId={commentModalProjectId}
+            setCommentModalProjectId={setCommentModalProjectId}
+            refreshProjects={refreshProjects}
+          />
+        </div>
 
         {showCreateModal && (
           <CreateProjectModal

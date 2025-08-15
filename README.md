@@ -133,9 +133,79 @@ and if to change project status a user must be one of following roles:
 and to change the project categories (if assigned wrong by creator)., user must be one of the following roles:
 "admin", "council", "mayor", "planner", "inspector"
 
+## Toaster Notifications
+    -for same page toaster notifications we use the showCustomToast as there is no re-direction
+    
+    -for different direction path we use the use-Session_toast that saves the current toaster into the session and the provider hook reads it then deletes it after the specific duration.
 
 ## TODO
 -ToDO
+user can collect sticker achievements and reach milestones
+stickers will be rewarded as user reach some criteria 
+    (User Receive 10/100/1 000/10 000 likes on comment)
+    (User receive 10/100/1 000/10 000 likes on Project)
+    (User receive 10/100/1 000/10 000 likes on Idea)
+    (User receive 10/100/1 000/10 000 likes on Issue)
+
+    (User Receive 10/100/1 000/10 000 comments on comment)
+    (User receive 10/100/1 000/10 000 comments on Project)
+    (User receive 10/100/1 000/10 000 comments on Idea)
+    (User receive 10/100/1 000/10 000 comments on Issue)
+
+    (User receive 20/50/100/1 000/ 10 000 reviews for project)
+    (User receive 20/50/100/1 000/ 10 000 reviews for idea)
+    (User receive 20/50/100/1 000/ 10 000 reviews for issue)
+
+
+another user's profile picture is hovered => visualize user with stickers, total likes, total comments, total projects, total issues, total reported issues
+
+Users can vote from 1-10 on each project/idea/issue
+(Importance 1-10., Structure Quality e.g. description, title, images 1-10., some more feedback topics)
+
+#       PAGES
+*-Profile/Dashboard*
+              |Stickers|
+    (stickers go under profile image)
+
+           |Statistics|
+    |Projects|Ideas|Issues|
+    Icon related to each
+    (when clicked => opens modal)
+    Visualized-Total Count,
+
+    |Comments|Likes|
+    Icon related to each
+    (maybe when clicked => does something)
+
+*-Profile/Lists*
+            (Different Tabs)
+    |My Projects|My Ideas|Reported Issues
+    Icon related to each
+    (when tab clicked => renders the specific component)
+    
+    |Map| - depends on tab open
+    |Projects Map|    |Ideas Map|       |Reported Issues Map|
+            |             |                      |
+      (project icons)  (ideas icons)     (issues with specific icon)
+    (can be filtered each map to show according to the search filters set)
+
+*-Profile/Collaborations*   
+            |Show Collaborations|
+        (can be filtered accordingly)
+
+*-Profile/Settings*
+    |Password Change|
+
+*-Home / Dashboard*
+              (Different Tabs)
+            
+        |Leader Board|
+    (users with top contribution points)
+        |Top Project, Top Ideas, Top Reported Issues|
+        (Date of Creation, Most Likes/Comments)
+
+
+
 
 ` \*Giving some issue when assigning categories to a project when created so when to visualize the categories gives an empty array []
 
