@@ -42,14 +42,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <>
-      <div className="flex h-[360px] w-full flex-col justify-between rounded border p-4 shadow">
+      <div className="flex w-full min-h-[300px] flex-col justify-between rounded border p-4 shadow">
         <div className="flex flex-col gap-3 md:flex-row">
           {/* LEFT COLUMN */}
           <div className="flex-1">
             <h2 className="mb-1 text-sm font-bold">{project.title}</h2>
             <p className="line-clamp-3 text-xs">{project.description}</p>
 
-            {/* Categories */}
             <div className="mt-2 flex flex-wrap gap-2">
           <CategorySelector
             mode="view"
@@ -60,11 +59,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
  
             </div>
 
-            {/* Progress */}
             <GlowingProgressBar project={project} className="mt-3 h-3 w-full border border-gray-400 bg-gray-200" />
             <p className="mt-1 text-xs text-gray-500">{project.progress}% completed</p>
 
-            {/* View Details Button */}
             <div className="group relative mt-2 inline-flex w-44 overflow-hidden rounded-full p-[1px]">
               <Button
                 className={cn(
@@ -125,7 +122,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
         </div>
       </div>
-      {/* Modals */}
+
       {showCommentModal && currentUser && (
         <CommentCreation
           user={currentUser}

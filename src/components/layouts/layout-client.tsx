@@ -24,7 +24,7 @@ const PATHS_WITH_MENU_LAYOUT = [
   "/about/contact"
 ];
 
-const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard", "/profile/projects", "/profile/messages"];
+const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard", "/profile/lists", "/profile/messages"];
 
 export type SafeUser = {
   id: string;

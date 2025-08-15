@@ -11,7 +11,7 @@ import ProfileHeader from "../menu/profile-header";
 import { useGlobalUnreadCount } from "@/hooks/use-global-unread";
 import { AuthUser } from "@/models/auth.types";
 import { useSession } from "next-auth/react";
-import Sidebar from "../profile-PAGE/sidebar/sidebar";
+import Sidebar from "../menu/sidebar/sidebar";
 import SiteFooter from "../site-footer/site-footer";
 
 const SidebarLayoutClient: React.FC<PropsWithChildren> = ({ children }) => {

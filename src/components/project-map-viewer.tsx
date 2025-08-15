@@ -37,7 +37,7 @@ const getMarkerIcon = (status: ProjectStatus): L.Icon => {
   });
 };
 
-const MapViewer: React.FC<ProjectMapViewerProps> = ({
+const ProjectMapViewer: React.FC<ProjectMapViewerProps> = ({
   user,
   projects,
   refreshProjects,
@@ -98,4 +98,4 @@ const MapViewer: React.FC<ProjectMapViewerProps> = ({
   );
 };
 
-export default MapViewer;
+export default ProjectMapViewer;

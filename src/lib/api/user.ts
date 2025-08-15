@@ -206,3 +206,46 @@ export async function getUserProjects(req: Request) {
     return { error: "Failed to fetch user's projects", status: 500 };
   }
 }
+
+
+export async function getUserIdeas(req: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized", status: 401 };
+
+  const url = new URL(req.url);
+  const sort = (url.searchParams.get("sort") || "newest") as "newest" | "oldest" | "top";
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "5", 10);
+  const skip = (page - 1) * limit;
+
+  let orderBy: Prisma.IdeaOrderByWithRelationInput | Prisma.IdeaOrderByWithRelationInput[] = { createdAt: "desc" };
+  if (sort === "oldest") {
+    orderBy = { createdAt: "asc" };
+  } else if (sort === "top") {
+    orderBy = [{ likes: { _count: "desc" } }, { createdAt: "desc" }];
+  }
+
+  try {
+    const [ideas, totalCount] = await Promise.all([
+      prisma.idea.findMany({
+        where: { authorId: session.user.id },
+        include: {
+          likes: true,
+          comments: true,
+          author: {
+            select: { id: true, name: true, image: true },
+          },
+        },
+        orderBy: orderBy,
+        skip,
+        take: limit,
+      }),
+      prisma.idea.count({ where: { authorId: session.user.id } }),
+    ]);
+
+    return { data: { ideas, totalCount }, status: 200 };
+  } catch (error) {
+    console.error("[USER_IDEAS_GET_ERROR]", error);
+    return { error: "Failed to fetch user's ideas", status: 500 };
+  }
+}

@@ -29,7 +29,7 @@ const SidebarNavigation: React.FC<Props> = ({ theme, sidebarExpanded, className,
   const navItems: NavItem[] = [
     { icon: <Home className="h-5 w-5" />, label: "Home", href: "/dashboard" },
     { icon: <User className="h-5 w-5" />, label: "Profile", href: "/profile/dashboard" },
-    { icon: <LucideSquareStack className="h-5 w-5" />, label: "My Projects", href: "/profile/projects" },
+    { icon: <LucideSquareStack className="h-5 w-5" />, label: "My Lists", href: "/profile/lists" },
     {
       icon: <MessageCircleIcon className="h-5 w-5" />,
       label: "Messages",

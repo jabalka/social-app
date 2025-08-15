@@ -14,7 +14,7 @@ export interface IdeaListProps {
 
 type SortType = "newest" | "oldest" | "top";
 
-const IdeaList: React.FC<IdeaListProps> = ({ open = true, onClose, onIdeaSelected }) => {
+const IdeaListTEST: React.FC<IdeaListProps> = ({ open = true, onClose, onIdeaSelected }) => {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [sort, setSort] = useState<SortType>("newest");
   const [radius, setRadius] = useState(5000);
@@ -118,4 +118,4 @@ const IdeaList: React.FC<IdeaListProps> = ({ open = true, onClose, onIdeaSelecte
   );
 };
 
-export default IdeaList;
+export default IdeaListTEST;

@@ -150,7 +150,7 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
               </DropdownItem>
 
               <DropdownItem
-                href="/dashboard"
+                href="/profile/lists"
                 className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
               >
                 <List className="h-5 w-5" />
