@@ -65,7 +65,7 @@ const ProfileMap: React.FC<Props> = ({ activeTab, showOwnedOnly = false, ownerId
   }, [ideas, showOwnedOnly, effectiveOwnerId]);
 
   return (
-    <div className="h-[460px] w-full rounded border">
+    <div className="h-[240px] w-full rounded border">
       {activeTab === "projects" && user && (
         <ProjectMapViewer user={user} projects={projectsToShow} refreshProjects={refetchProjects} />
       )}

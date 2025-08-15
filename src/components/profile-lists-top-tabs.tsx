@@ -40,10 +40,10 @@ const TopTabs: React.FC<TopTabsProps> = ({ tabs, activeKey, onChange, theme }) =
       <div
         role="tablist"
         className={cn(
-          "flex items-end gap-2 border-b",
+          "flex items-end gap-2 border-b-2",
           {
-            "border-zinc-300/70": theme === Theme.LIGHT,
-            "border-zinc-700/70": theme === Theme.DARK,
+            "border-zinc-300/60": theme === Theme.LIGHT,
+            "border-zinc-700/90": theme === Theme.DARK,
           }
         )}
       >
