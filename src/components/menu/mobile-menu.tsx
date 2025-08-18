@@ -149,7 +149,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu, theme }) =>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto nf-scrollbar">
               <div className="px-4">
                 {menuItems.map((item, index) => (
                   <MenuItem

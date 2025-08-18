@@ -56,28 +56,30 @@ export const ProjectProvider: React.FC<{ initialProjects?: Project[]; children: 
         const page = options?.page ?? currentPage;
         const limit = options?.limit ?? pageSize;
         const sort = options?.sort ? `&sort=${options.sort}` : "";
+        const near =
+          options?.lat !== undefined && options?.lng !== undefined && options?.radius
+            ? `&near=${options.lat},${options.lng}&radius=${options.radius}`
+            : "";
+
         let url = "";
 
         if (options?.type === "user" && options.ownerId) {
-          url = `/api/user/projects?page=${page}&limit=${limit}${sort}`;
+          url = `/api/user/projects?page=${page}&limit=${limit}${sort}${near}`;
         } else {
           url = `/api/projects?page=${page}&limit=${limit}${sort}`;
           if (options?.ownerId) url += `&ownerId=${options.ownerId}`;
-          if (options?.lat !== undefined && options?.lng !== undefined && options?.radius) {
-            url += `&near=${options.lat},${options.lng}&radius=${options.radius}`;
-          }
+          url += near;
         }
 
         const res = await fetch(url);
-
         const data = await res.json();
-        setProjects(data.projects);
-        setTotalProjects(data.totalCount);
+        setProjects(data.projects ?? data.data?.projects ?? []);
+        setTotalProjects(data.totalCount ?? data.data?.totalCount ?? 0);
       } catch (err) {
         console.error("Failed to refresh projects:", err);
       }
     },
-    [currentPage, pageSize]
+    [currentPage, pageSize],
   );
 
   return (

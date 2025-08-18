@@ -12,6 +12,20 @@ import ProfileImage from "./profile-image";
 import ProfileRoleDisplay from "./profile-role-display";
 import ProfileStatistics from "./profile-statistics";
 
+// Safely derive a "report" count without using `any`
+function getReportCount(user: unknown): number {
+  if (!user || typeof user !== "object") return 0;
+
+  const record = user as Record<string, unknown>;
+  const reports = record["reports"];
+  if (Array.isArray(reports)) return reports.length;
+
+  const issues = record["issues"];
+  if (Array.isArray(issues)) return issues.length;
+
+  return 0;
+}
+
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
   const { user, setUser } = useSafeUser();
@@ -31,10 +45,10 @@ const ProfileDashboard: React.FC = () => {
     const fetchLikes = async () => {
       try {
         const res = await fetch("/api/user/comments-likes");
-        const data = await res.json();
+        const data: { comments: CommentWithLikes[]; projectLikeCount: number } = await res.json();
 
         const commentLikes = data.comments.reduce((total: number, comment: CommentWithLikes) => {
-          const replyLikes = comment.replies?.reduce((sum: number, reply: Reply) => sum + reply.likes.length, 0);
+          const replyLikes = comment.replies?.reduce((sum: number, reply: Reply) => sum + reply.likes.length, 0) ?? 0;
           return total + comment.likes.length + replyLikes;
         }, 0);
 
@@ -105,9 +119,7 @@ const ProfileDashboard: React.FC = () => {
       showCustomToast(`Image Upload Unsuccessful`, {
         action: {
           label: "OK",
-          onClick: () => {
-            return true;
-          },
+          onClick: () => true,
         },
       });
       return null;
@@ -189,9 +201,7 @@ const ProfileDashboard: React.FC = () => {
         showCustomToast(`Failed to delete profile image`, {
           action: {
             label: "OK",
-            onClick: () => {
-              return true;
-            },
+            onClick: () => true,
           },
         });
         return;
@@ -215,9 +225,7 @@ const ProfileDashboard: React.FC = () => {
       showCustomToast(`Profile image deleted successfully`, {
         action: {
           label: "OK",
-          onClick: () => {
-            return true;
-          },
+          onClick: () => true,
         },
       });
     } catch (error) {
@@ -225,9 +233,7 @@ const ProfileDashboard: React.FC = () => {
       showCustomToast(`An error occurred while deleting profile image`, {
         action: {
           label: "OK",
-          onClick: () => {
-            return true;
-          },
+          onClick: () => true,
         },
       });
     }
@@ -279,7 +285,10 @@ const ProfileDashboard: React.FC = () => {
 
             <ProfileStatistics
               theme={theme}
+              userId={user?.id}
               projectCount={user?.projects.length ?? 0}
+              ideaCount={user?.ideas?.length ?? 0}
+              reportCount={getReportCount(user)}
               commentCount={user?.comments.length ?? 0}
               projectLikeCount={projectLikeCount}
               commentLikeCount={commentLikeCount}

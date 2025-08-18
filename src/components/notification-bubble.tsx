@@ -210,7 +210,7 @@ const NotificationBubble = () => {
             <div className="p-3 font-semibold">Notifications</div>
             {unreadCount === 0 && <div className="p-4 text-center text-sm">No new notifications</div>}
             {unread.length > 0 && (
-              <div className="max-h-48 overflow-y-auto rounded border border-[#595b5e] pr-1">
+              <div className="max-h-48 overflow-y-auto nf-scrollbar rounded border border-[#595b5e] pr-1">
                 {Object.entries(groupedUnread).map(([type, items]) => {
                   // Capitalize and replace 'collab' with 'collaboration' for the type label
                   let displayType = type.replace("-", " ").toUpperCase();
@@ -262,7 +262,7 @@ const NotificationBubble = () => {
                     Delete All
                   </button>
                 </div>
-                <div className="max-h-48 overflow-y-auto rounded border border-[#595b5e] pr-1">
+                <div className="max-h-48 overflow-y-auto nf-scrollbar rounded border border-[#595b5e] pr-1">
                   {Object.entries(groupedRead).map(([type, items]) => {
                     let displayType = type.replace("-", " ").toUpperCase();
                     if (displayType.startsWith("COLLAB ")) {

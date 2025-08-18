@@ -1,10 +1,10 @@
 "use client";
 
+import { useIdeaContext } from "@/context/idea-context";
+import { useProjectContext } from "@/context/project-context";
+import { useSafeUser } from "@/context/user-context";
 import dynamic from "next/dynamic";
 import React, { useCallback, useEffect, useMemo } from "react";
-import { useProjectContext } from "@/context/project-context";
-import { useIdeaContext } from "@/context/idea-context";
-import { useSafeUser } from "@/context/user-context";
 
 const ProjectMapViewer = dynamic(() => import("@/components/project-map-viewer"), { ssr: false });
 const IdeaMapViewer = dynamic(() => import("@/components/idea-map-viewer"), { ssr: false });
@@ -13,9 +13,21 @@ interface Props {
   activeTab: "projects" | "ideas" | "issues";
   showOwnedOnly?: boolean;
   ownerId?: string;
+  selectedProjectId?: string;
+  selectedIdeaId?: string;
+  onSelectProject?: (id: string) => void;
+  onSelectIdea?: (id: string) => void;
 }
 
-const ProfileMap: React.FC<Props> = ({ activeTab, showOwnedOnly = false, ownerId }) => {
+const ProfileMap: React.FC<Props> = ({
+  activeTab,
+  showOwnedOnly = false,
+  ownerId,
+  selectedProjectId,
+  selectedIdeaId,
+  onSelectProject,
+  onSelectIdea,
+}) => {
   const { user } = useSafeUser();
   const { projects, refreshProjects } = useProjectContext();
   const { ideas, refreshIdeas } = useIdeaContext();
@@ -27,33 +39,19 @@ const ProfileMap: React.FC<Props> = ({ activeTab, showOwnedOnly = false, ownerId
 
   const refetchProjects = useCallback(() => {
     const type = showOwnedOnly && effectiveOwnerId ? "user" : "all";
-    return refreshProjects({
-      page: 1,
-      sort: "createdAt",
-      type,
-      ownerId: effectiveOwnerId,
-    });
+    return refreshProjects({ page: 1, sort: "newest", type, ownerId: effectiveOwnerId });
   }, [refreshProjects, showOwnedOnly, effectiveOwnerId]);
 
   const refetchIdeas = useCallback(() => {
     const type = showOwnedOnly && effectiveOwnerId ? "user" : "all";
-    return refreshIdeas({
-      page: 1,
-      sort: "newest",
-      type,
-      ownerId: effectiveOwnerId,
-    });
+    return refreshIdeas({ page: 1, sort: "newest", type, ownerId: effectiveOwnerId });
   }, [refreshIdeas, showOwnedOnly, effectiveOwnerId]);
 
   useEffect(() => {
-    if (activeTab === "projects") {
-      refetchProjects().catch(() => undefined);
-    } else if (activeTab === "ideas") {
-      refetchIdeas().catch(() => undefined);
-    }
+    if (activeTab === "projects") refetchProjects().catch(() => undefined);
+    if (activeTab === "ideas") refetchIdeas().catch(() => undefined);
   }, [activeTab, refetchProjects, refetchIdeas]);
 
-  // in case API returns more than expected, this filters the client-side
   const projectsToShow = useMemo(() => {
     if (!showOwnedOnly || !effectiveOwnerId) return projects;
     return projects.filter((p) => p.author?.id === effectiveOwnerId);
@@ -65,12 +63,25 @@ const ProfileMap: React.FC<Props> = ({ activeTab, showOwnedOnly = false, ownerId
   }, [ideas, showOwnedOnly, effectiveOwnerId]);
 
   return (
-    <div className="h-[460px] w-full rounded border">
+    <div className="h-full w-full rounded">
       {activeTab === "projects" && user && (
-        <ProjectMapViewer user={user} projects={projectsToShow} refreshProjects={refetchProjects} />
+        <ProjectMapViewer
+          user={user}
+          projects={projectsToShow}
+          refreshProjects={refetchProjects}
+          selectable={true}
+          selectedProjectId={selectedProjectId}
+          onSelectProject={onSelectProject}
+        />
       )}
       {activeTab === "ideas" && (
-        <IdeaMapViewer ideas={ideasToShow} refreshIdeas={refetchIdeas} />
+        <IdeaMapViewer
+          ideas={ideasToShow}
+          refreshIdeas={refetchIdeas}
+          selectable={true}
+          selectedIdeaId={selectedIdeaId}
+          onSelectIdea={onSelectIdea}
+        />
       )}
       {activeTab === "issues" && (
         <div className="flex h-full items-center justify-center text-sm opacity-70">

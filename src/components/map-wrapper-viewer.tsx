@@ -8,13 +8,14 @@ export interface ProjectMapViewerProps {
   user: AuthUser;
   projects: Project[];
   refreshProjects(): void;
+
 }
 
 const MapViewerWrapper: React.FC<ProjectMapViewerProps> = ({ user, projects, refreshProjects }) => {
   const [MapComponent, setMapComponent] = useState<React.ComponentType<ProjectMapViewerProps> | null>(null);
 
   useEffect(() => {
-    import("./project-map-viewer").then((mod) => {
+    import("./project-map-viewer-dashboard").then((mod) => {
       setMapComponent(() => mod.default);
     });
   }, []);

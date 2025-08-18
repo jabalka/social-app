@@ -3,7 +3,7 @@
 import { Idea } from "@/models/idea.types";
 import { createContext, useCallback, useContext, useState } from "react";
 
-type SortType = "newest" | "oldest" | "top";
+export type SortType = "newest" | "oldest" | "likes" | "comments";
 
 interface IdeaContextType {
   ideas: Idea[];
@@ -59,16 +59,19 @@ export const IdeaProvider: React.FC<{ initialIdeas?: Idea[]; children: React.Rea
         const limit = options?.limit ?? pageSize;
         const sort = options?.sort ? `&sort=${options.sort}` : "";
 
+        const near =
+          options?.lat !== undefined && options?.lng !== undefined && options?.radius
+            ? `&near=${options.lat},${options.lng}&radius=${options.radius}`
+            : "";
+
         let url = "";
 
-          if (options?.type === "user" && options.ownerId) {
-          url = `/api/user/ideas?page=${page}&limit=${limit}${sort}`;
+        if (options?.type === "user" && options.ownerId) {
+          url = `/api/user/ideas?page=${page}&limit=${limit}${sort}${near}`;
         } else {
           url = `/api/ideas?page=${page}&limit=${limit}${sort}`;
           if (options?.ownerId) url += `&ownerId=${options.ownerId}`;
-          if (options?.lat !== undefined && options?.lng !== undefined && options?.radius) {
-            url += `&near=${options.lat},${options.lng}&radius=${options.radius}`;
-          }
+          url += near;
         }
 
         const res = await fetch(url);

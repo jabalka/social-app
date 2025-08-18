@@ -167,7 +167,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({ user, proje
     <>
       <ModalOverlay open={open} onClose={handleClose} theme={theme}>
         <div
-          className={cn("relative overflow-y-auto rounded-xl p-6", {
+          className={cn("relative overflow-y-auto nf-scrollbar rounded-xl p-6", {
             "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
             "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
           })}

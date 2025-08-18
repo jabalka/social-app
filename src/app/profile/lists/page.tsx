@@ -1,24 +1,32 @@
 "use client";
 
-import IdeaListOverviewModal from "@/components/idea-list-overview-modal";
+import IdeaListOverview from "@/components/idea-list-overview";
 import TopTabs, { TopTabItem } from "@/components/profile-lists-top-tabs";
 import ProfileMap from "@/components/profile-map";
-// import ProfileIdeas from "@/components/profile-PAGE/ideas-list/profile-ideas";
-// import ProfileProjects from "@/components/profile-PAGE/projects-list/profile-projects";
-import ProjectListOverviewModal from "@/components/project-list-overview-modal";
-import GlowingBrownButton from "@/components/shared/glowing-brown-button";
+import ProjectListOverview from "@/components/project-list-overview";
+// If you plan to add issues later, create IssuesListOverview and import it here.
+
+// import { ProjectProvider } from "@/context/project-context";
+// import { IdeaProvider } from "@/context/idea-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
+
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { Building2, Lightbulb, MessageSquareWarning } from "lucide-react";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
+const LG_QUERY = "(min-width: 1024px)"; // Tailwind 'lg'
 
 const ProfileListsPage: React.FC = () => {
   const { theme } = useSafeThemeContext();
   const [activeTab, setActiveTab] = useState<"projects" | "ideas" | "issues">("projects");
 
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
+
+  const listPanelRef = useRef<HTMLDivElement | null>(null);
+  const mapPanelInnerRef = useRef<HTMLDivElement | null>(null);
+  const [mapHeight, setMapHeight] = useState<number>(260);
 
   const tabs: TopTabItem[] = useMemo(
     () => [
@@ -29,86 +37,102 @@ const ProfileListsPage: React.FC = () => {
     [],
   );
 
-  const ActiveIcon = useMemo(() => {
-    switch (activeTab) {
-      case "projects":
-        return Building2;
-      case "ideas":
-        return Lightbulb;
-      case "issues":
-        return MessageSquareWarning;
-      default:
-        return Building2;
+  const applyHeights = () => {
+    const mql = window.matchMedia(LG_QUERY);
+    if (!mql.matches) {
+      setMapHeight(260);
+      return;
     }
+    const listEl = listPanelRef.current;
+    if (!listEl) return;
+    const h = listEl.offsetHeight;
+    if (h > 0) setMapHeight(h);
+  };
+
+  useEffect(() => {
+    applyHeights();
+    const onResize = () => applyHeights();
+    window.addEventListener("resize", onResize);
+
+    const listEl = listPanelRef.current;
+    let ro: ResizeObserver | null = null;
+    if (listEl) {
+      ro = new ResizeObserver(() => applyHeights());
+      ro.observe(listEl);
+    }
+    return () => {
+      window.removeEventListener("resize", onResize);
+      ro?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // When tab changes, re-apply heights after render
+    const id = setTimeout(applyHeights, 0);
+    return () => clearTimeout(id);
   }, [activeTab]);
 
   const handleTabChange = (key: string) => {
     const mapped = key as "projects" | "ideas" | "issues";
     setActiveTab(mapped);
+
+    if (mapped !== "projects") setSelectedProjectId(null);
+    if (mapped !== "ideas") setSelectedIdeaId(null);
   };
 
-  const openActiveModal = useCallback(() => {
-    switch (activeTab) {
-      case "projects":
-        setIsProjectModalOpen(true);
-        break;
-      case "ideas":
-        setIsIdeaModalOpen(true);
-        break;
-      case "issues":
-        // setIsIssuesModalOpen(true);
-        break;
-      default:
-        break;
-    }
-  }, [activeTab]);
-
   return (
-    <>
-      <div
-        className={cn(
-          "mx-auto mt-8 rounded-3xl border-2 px-6 pb-8 pt-4 shadow-2xl backdrop-blur-md",
-          theme === Theme.DARK ? "border-zinc-700/40 bg-[#f0e3dd]/10" : "border-zinc-400/10 bg-[#f0e3dd]",
-          "md:max-w-2xl lg:max-w-4xl xl:max-w-5xl",
+    <div
+    className={cn(
+      "mx-auto mt-1 rounded-3xl border-2 px-6 pb-8 pt-4 shadow-2xl backdrop-blur-md",
+      theme === Theme.DARK ? "border-zinc-700/40 bg-[#f0e3dd]/10" : "border-zinc-400/10 bg-[#f0e3dd]",
+      "md:max-w-2xl lg:max-w-6xl xl:max-w-7xl",
+    )}
+  >
+    <TopTabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} theme={theme} />
+
+    {/* On lg+: 2/3 list (left) and 1/3 map (right). On small: stacked, map fixed height. */}
+    <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+      {/* LEFT: List panel (spans 2 columns on lg) */}
+      <div ref={listPanelRef} className="order-2 lg:order-1 lg:col-span-2">
+        {activeTab === "projects" && (
+          <ProjectListOverview
+            showOwnedOnly
+            selectedId={selectedProjectId ?? undefined}
+            onSelect={(id) => setSelectedProjectId((prev) => (prev === id ? null : id))}
+            minBodyHeightClass="min-h-[520px]"
+          />
         )}
-      >
-        <TopTabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} theme={theme} />
-
-        <div className="flex items-center justify-center py-2">
-          <div className="space-y-3 text-center">
-            <p className="text-sm opacity-80">Select the button below to view your {activeTab}.</p>
-
-            <GlowingBrownButton onClick={openActiveModal} theme={theme}>
-              <span className="inline-flex items-center gap-2">
-                <ActiveIcon className="h-4 w-4" />
-                <span> View All Your {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</span>
-              </span>
-            </GlowingBrownButton>
+        {activeTab === "ideas" && (
+          <IdeaListOverview
+            showOwnedOnly
+            selectedId={selectedIdeaId ?? undefined}
+            onSelect={(id) => setSelectedIdeaId((prev) => (prev === id ? null : id))}
+            minBodyHeightClass="min-h-[520px]"
+          />
+        )}
+        {activeTab === "issues" && (
+          <div className="flex h-[520px] items-center justify-center rounded-xl border border-dashed text-sm opacity-70">
+            Reported Issues list coming soon…
           </div>
-        </div>
-
-        <div className="mt-6">
-          <ProfileMap activeTab={activeTab} showOwnedOnly={true} />
-        </div>
+        )}
       </div>
 
-      {/* Modals */}
-      <ProjectListOverviewModal
-        open={isProjectModalOpen}
-        onClose={() => setIsProjectModalOpen(false)}
-        theme={theme}
-        showOwnedOnly={true}
-      />
-
-      <IdeaListOverviewModal
-        open={isIdeaModalOpen}
-        onClose={() => setIsIdeaModalOpen(false)}
-        theme={theme}
-        showOwnedOnly={true}
-      />
-
-      {/* <IssuesListOverviewModal open={isIssuesModalOpen} onClose={() => setIsIssuesModalOpen(false)} theme={theme} /> */}
-    </>
+      {/* RIGHT: Map panel (1 column on lg) */}
+      <div className="order-1 lg:order-2 lg:col-span-1">
+        <div ref={mapPanelInnerRef} className="w-full rounded-xl border" style={{ height: `${mapHeight}px` }}>
+          <ProfileMap
+            activeTab={activeTab}
+            showOwnedOnly
+            selectedProjectId={selectedProjectId ?? undefined}
+            selectedIdeaId={selectedIdeaId ?? undefined}
+            onSelectProject={(id) => setSelectedProjectId((prev) => (prev === id ? null : id))}
+            onSelectIdea={(id) => setSelectedIdeaId((prev) => (prev === id ? null : id))}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
   );
 };
 

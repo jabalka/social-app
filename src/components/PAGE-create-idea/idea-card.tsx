@@ -1,16 +1,20 @@
 "use client";
+
 import { useSocketContext } from "@/context/socket-context";
 import { Idea } from "@/models/idea.types";
+import { cn } from "@/utils/cn.utils";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 
 interface Props {
   idea: Idea;
+
+  // selection
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
-// const what3wordsApiKey = process.env.NEXT_PUBLIC_W3W_API_KEY;
-
-const IdeaCard: React.FC<Props> = ({ idea }) => {
+const IdeaCard: React.FC<Props> = ({ idea, selected, onSelect }) => {
   const { data: session } = useSession();
   const myCollab = idea.collaborators?.find((c) => c.userId === session?.user?.id);
   const [collabId, setCollabId] = useState<string | null>(myCollab?.id ?? null);
@@ -20,7 +24,7 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
   const [displayAddress, setDisplayAddress] = useState<string | null>(idea.postcode ?? null);
   const { socket } = useSocketContext();
 
-  // Fetch postcode/address if not provided, but w3w or coords exist
+  // Fetch postcode/address if not provided, but coordinates exist
   useEffect(() => {
     if (idea.postcode) {
       setDisplayAddress(idea.postcode);
@@ -28,24 +32,7 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
     }
     const fetchAddress = async () => {
       try {
-        // if (idea.what3words && !idea.postcode) {
-        //   // Get coords from w3w, then fetch address/postcode
-        //   const w3wRes = await fetch(
-        //     `https://api.what3words.com/v3/convert-to-coordinates?words=${idea.what3words}&key=${what3wordsApiKey}`
-        //   );
-        //   const w3wData = await w3wRes.json();
-        //   if (w3wData.coordinates) {
-        //     const { lat, lng } = w3wData.coordinates;
-        //     // Get postcode from coords (using UK postcodes.io, or fallback)
-        //     const postRes = await fetch(`https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}`);
-        //     const postData = await postRes.json();
-        //     const postcode = postData.result?.[0]?.postcode;
-        //     if (postcode) setDisplayAddress(postcode);
-        //     else setDisplayAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-        //   }
-        // }
         if (idea.latitude && idea.longitude) {
-          // No w3w, but have coords
           const postRes = await fetch(`https://api.postcodes.io/postcodes?lon=${idea.longitude}&lat=${idea.latitude}`);
           const postData = await postRes.json();
           const postcode = postData.result?.[0]?.postcode;
@@ -58,9 +45,10 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
       }
     };
     fetchAddress();
-  }, [idea.postcode, idea.what3words, idea.latitude, idea.longitude]);
+  }, [idea.postcode, idea.latitude, idea.longitude, idea.what3words]);
 
-  const requestCollab = async () => {
+  const requestCollab = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     const res = await fetch(`/api/ideas/${idea.id}/collaborate`, { method: "POST" });
     if (res.ok) {
       setCollabStatus("PENDING");
@@ -68,25 +56,35 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
       const collab = data.data;
 
       setCollabId(collab.id);
-      console.log("Emitting idea:collab-request", { ideaId: idea.id, requestId: collab.id }, socket?.connected);
-
       socket?.emit("idea:collab-request", { ideaId: idea.id, requestId: collab.id });
     }
   };
 
-  // Cancel collaboration
-  const cancelCollab = async () => {
+  const cancelCollab = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     const res = await fetch(`/api/ideas/${idea.id}/collaborate/${collabId}`, { method: "DELETE" });
     if (res.ok) {
-      // for now there is no such socket event but in future it can be added
-      // socket?.emit("idea:collab-cancel", { ideaId: idea.id });
       setCollabId(null);
     }
   };
 
+  const toggleComments = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowComments((c) => !c);
+  };
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-white p-5 shadow">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect?.()}
+      className={cn(
+        "flex flex-col gap-2 rounded-xl p-5 shadow transition",
+        "hover:border-sky-400/60 hover:shadow-md",
+        selected ? "border bg-white ring-2 ring-sky-500/70" : "border bg-white ring-0",
+      )}
+    >
       <div className="flex items-center gap-2">
         <span className="text-lg font-semibold">{idea.title}</span>
         {displayAddress && <span className="ml-2 text-xs text-gray-600">({displayAddress})</span>}
@@ -103,7 +101,7 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
         <span>· {idea.comments?.length ?? 0} comments</span>
       </div>
       <div className="mt-2 flex gap-2">
-        <button className="rounded bg-blue-50 px-3 py-1 hover:bg-blue-100" onClick={() => setShowComments((c) => !c)}>
+        <button className="rounded bg-blue-50 px-3 py-1 hover:bg-blue-100" onClick={toggleComments}>
           {showComments ? "Hide" : "Show"} Comments
         </button>
         {idea.allowCollab && !idea.isConverted && !collabId && (
@@ -118,14 +116,17 @@ const IdeaCard: React.FC<Props> = ({ idea }) => {
         )}
         {collabStatus && <span className="text-xs">Collab: {collabStatus}</span>}
         {idea.isConverted && (
-          <a href={`/projects/${idea.projectId}`} className="ml-auto text-green-600 underline">
+          <a
+            href={`/projects/${idea.projectId}`}
+            className="ml-auto text-green-600 underline"
+            onClick={(e) => e.stopPropagation()}
+          >
             View Project
           </a>
         )}
       </div>
       {showComments && (
-        <div className="mt-2 rounded bg-gray-50 p-3">
-          {/* Map comments, add new comment form, etc. */}
+        <div className="mt-2 rounded bg-gray-50 p-3" onClick={(e) => e.stopPropagation()}>
           <div className="text-sm text-gray-500">Comments feature goes here...</div>
         </div>
       )}

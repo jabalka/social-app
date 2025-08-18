@@ -1,81 +1,84 @@
-@keyframes scrollbarGlow {
-  0% {
-    background-position-x: 0%;
-  }
-  100% {
-    background-position-x: 100%;
-  }
+/* Netflix-like minimal scrollbar
+   - Thin, no track
+   - Thumb appears on hover/scroll
+   - Light/Dark aware via .dark on <html> or <body>
+*/
+
+/* Tweak layout so showing/hiding scrollbars doesn't shift content */
+html {
+  scrollbar-gutter: stable both-edges;
 }
 
-/* Scrollbar thickness */
-*::-webkit-scrollbar {
-  height: 0.6rem;
-  width: 0.6rem;
+/* Theme tokens */
+:root {
+  --nf-sb-size: 10px;                /* scrollbar thickness */
+  --nf-sb-radius: 999px;             /* fully rounded thumb */
+  --nf-sb-track: transparent;        /* hidden track */
+  --nf-sb-thumb: rgba(0, 0, 0, 0.35);
+  --nf-sb-thumb-hover: rgba(0, 0, 0, 0.55);
+  --nf-sb-thumb-active: rgba(0, 0, 0, 0.7);
 }
 
-/* Light Theme scrollbar */
-*::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #fff 0%, #af6915 40%, #904e07 60%, #fff 100%);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 1.2s linear infinite;
+/* Dark theme overrides */
+.dark {
+  --nf-sb-thumb: rgba(255, 255, 255, 0.28);
+  --nf-sb-thumb-hover: rgba(255, 255, 255, 0.45);
+  --nf-sb-thumb-active: rgba(255, 255, 255, 0.6);
 }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, #fff 0%, #818cf8 40%, #a5b4fc 60%, #fff 100%);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 1s linear infinite;
+/* Apply to any scrollable element (including body) by adding .nf-scrollbar */
+.nf-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: transparent var(--nf-sb-track);
 }
 
-*::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(90deg, #fff 0%, #6366f1 40%, #a5b4fc 60%, #fff 100%);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 0.8s linear infinite;
+/* Reveal the thumb on hover or while scrolling (see .nf-scrolling utility below) */
+.nf-scrollbar:hover,
+.nf-scrolling .nf-scrollbar {
+  scrollbar-color: var(--nf-sb-thumb) var(--nf-sb-track);
 }
 
-*::-webkit-scrollbar-track {
-  border-left: 1px solid #e4e4e7;
-  border-right: 1px solid #e4e4e7;
-  border-top: 0;
-  border-bottom: 0;
-  background: #fff;
+/* WebKit/Blink */
+.nf-scrollbar::-webkit-scrollbar {
+  width: var(--nf-sb-size);
+  height: var(--nf-sb-size);
 }
 
-/* Dark Theme scrollbar */
-.dark *::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #fff 0%, #312e81 40%, #818cf8 60%, #fff 100%);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 1.2s linear infinite;
+.nf-scrollbar::-webkit-scrollbar-track {
+  background: var(--nf-sb-track);
 }
 
-.dark *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, #fff 0%, #3730a3 40%, #a5b4fc 60%, #fff 100%);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 1s linear infinite;
+.nf-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;        /* hidden by default */
+  border-radius: var(--nf-sb-radius);
+  border: 3px solid transparent;        /* creates a pill look with less visual weight */
 }
 
-.dark *::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(90deg, #fff 0%, #6366f1 40%, #a5b4fc 60%, #fff 100%);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 0.8s linear infinite;
+/* Show thumb on hover or while scrolling */
+.nf-scrollbar:hover::-webkit-scrollbar-thumb,
+.nf-scrolling .nf-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--nf-sb-thumb);
 }
 
-.dark *::-webkit-scrollbar-track {
-  border-left: 1px solid #d4d4d8;
-  border-right: 1px solid #d4d4d8;
-  border-top: 0;
-  border-bottom: 0;
-  background: #d4d4d8;
+.nf-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--nf-sb-thumb-hover);
 }
 
-.animated-scrollbar-thumb {
-  background: linear-gradient(90deg, #a5b4fc, #818cf8, #a5b4fc);
-  background-size: 200% 100%;
-  background-position-x: 0%;
-  animation: scrollbarGlow 2s linear infinite;
+.nf-scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: var(--nf-sb-thumb-active);
 }
+
+/* Optional: hide corner filler (where both bars meet) */
+.nf-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Respect reduced motion users (no fades/animations to worry about here) */
+@media (prefers-reduced-motion: reduce) {
+  /* No changes needed, but kept for extensibility */
+}
+
+/* Utility: body gets .nf-scrolling briefly when user scrolls (added via tiny JS below)
+   This reveals the thumb even if the user isn't hovering the scrollbar track.
+*/

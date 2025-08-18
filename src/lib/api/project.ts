@@ -9,6 +9,7 @@ import {
   ALLOWED_ROLES_FOR_PROJECT_STATUS,
 } from "@/constants";
 import { ProjectUpdateInput } from "@/models/project.types";
+import { parseGeoParamsFromUrl, queryProjectIdsWithinRadius } from "@/utils/geo.utils";
 import { Prisma, ProjectStatus } from "@prisma/client";
 import { hasPermission } from "../role-permissions";
 
@@ -159,7 +160,6 @@ export const updateProject = async (
       });
     }
 
-
     return { data: updatedProject, status: 200 };
   } catch (error) {
     console.error("[PROJECT_UPDATE_ERROR]", error);
@@ -244,48 +244,28 @@ export const deleteProject = async (id: string) => {
 
 export const getProjects = async (req: Request) => {
   const url = new URL(req.url);
-  const near = url.searchParams.get("near");
-  const radius = parseInt(url.searchParams.get("radius") || "5000", 10);
-  const sort = url.searchParams.get("sort") || "createdAt";
+  const sort = (url.searchParams.get("sort") || "newest") as "newest" | "oldest" | "likes" | "comments";
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const limit = parseInt(url.searchParams.get("limit") || "10", 10);
   const skip = (page - 1) * limit;
 
-  let orderBy: Prisma.ProjectOrderByWithRelationInput = { createdAt: "desc" };
-  if (sort === "likes") {
-    orderBy = { likes: { _count: "desc" } };
-  } else if (sort === "comments") {
-    orderBy = { comments: { _count: "desc" } };
-  }
+  let orderBy: Prisma.ProjectOrderByWithRelationInput | Prisma.ProjectOrderByWithRelationInput[] = { createdAt: "desc" };
+  if (sort === "oldest") orderBy = { createdAt: "asc" };
+  if (sort === "likes") orderBy = [{ likes: { _count: "desc" } }, { createdAt: "desc" }];
+  if (sort === "comments") orderBy = [{ comments: { _count: "desc" } }, { createdAt: "desc" }];
+
+  const { hasGeo, centerLat, centerLng, radiusMeters } = parseGeoParamsFromUrl(url);
 
   try {
-    if (near) {
-      const [lat, lng] = near.split(",").map(Number);
-      if (isNaN(lat) || isNaN(lng) || isNaN(radius)) {
-        throw new Error("Invalid coordinates or radius");
-      }
-
-      // Use raw SQL query to calculate distances
-      const raw = await prisma.$queryRaw<{ id: string }[]>`
-        SELECT id
-        FROM "Project"
-        WHERE (
-          6371000 * acos(
-            cos(radians(${lat})) * cos(radians("latitude"))
-            * cos(radians("longitude") - radians(${lng}))
-            + sin(radians(${lat})) * sin(radians("latitude"))
-          )
-        ) < ${radius}
-      `;
-
-      const projectIds = raw.map((r) => r.id);
-
-      // If no projects found, return empty array
+    if (hasGeo && centerLat !== null && centerLng !== null && radiusMeters > 0) {
+      const projectIds = await queryProjectIdsWithinRadius(centerLat, centerLng, radiusMeters, prisma);
       if (!projectIds.length) return { data: { projects: [], totalCount: 0 }, status: 200 };
+
+      const where: Prisma.ProjectWhereInput = { id: { in: projectIds } };
 
       const [projects, totalCount] = await Promise.all([
         prisma.project.findMany({
-          where: { id: { in: projectIds } },
+          where,
           include: {
             categories: true,
             images: true,
@@ -297,13 +277,7 @@ export const getProjects = async (req: Request) => {
                 name: true,
                 email: true,
                 image: true,
-                role: {
-                  select: {
-                    id: true,
-                    name: true,
-                    icon: true,
-                  },
-                },
+                role: { select: { id: true, name: true, icon: true } },
               },
             },
           },
@@ -311,15 +285,12 @@ export const getProjects = async (req: Request) => {
           skip,
           take: limit,
         }),
-        prisma.project.count({
-          where: { id: { in: projectIds } },
-        }),
+        prisma.project.count({ where }),
       ]);
 
       return { data: { projects, totalCount }, status: 200 };
     }
 
-    // Default behavior: fetch all projects
     const [projects, totalCount] = await Promise.all([
       prisma.project.findMany({
         include: {
@@ -333,13 +304,7 @@ export const getProjects = async (req: Request) => {
               name: true,
               email: true,
               image: true,
-              role: {
-                select: {
-                  id: true,
-                  name: true,
-                  icon: true,
-                },
-              },
+              role: { select: { id: true, name: true, icon: true } },
             },
           },
         },

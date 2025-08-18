@@ -225,7 +225,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </Button>
             </div>
           )}
-          <div ref={scrollRef} className="h-full flex-1 space-y-2 overflow-y-auto px-4 py-6 pt-14">
+          <div ref={scrollRef} className="h-full flex-1 space-y-2 overflow-y-auto nf-scrollbar px-4 py-6 pt-14">
             {!isLoadingMessages && uniqueMessages.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">No messages yet. Start the conversation!</p>
             ) : (
