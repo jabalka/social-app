@@ -69,7 +69,7 @@ export default FeatureCard;
 // "w-full relative h-[20px]  rounded-full  hover:outline outline outline-2 outline-offset-[2px] outline-white transition-all duration-300 hover:outline-2 ",
 // isDark ? "bg-[#6f6561c4] hover:outline-[#3c2f27]" : "bg-[#bda69c66] hover:outline-[#3c2f27]",
 
-//   className={cn("max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6", {
+//   className={cn("max-h-[90vh] w-full max-w-2xl overflow-y-auto nf-scrollbar p-6", {
 //     "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
 //     "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
 //   })}

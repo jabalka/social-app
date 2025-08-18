@@ -10,9 +10,9 @@ import Image from "next/image";
 import React from "react";
 import DefaultProjectImage from "../../public/images/project-image-dedfault.png";
 import CommentCreation from "./create-comment";
+import CategorySelector from "./project-category-selector";
 import GlowingProgressBar from "./shared/glowing-progress-bar";
 import { Button } from "./ui/button";
-import CategorySelector from "./project-category-selector";
 
 interface ProjectCardProps {
   project: Project;
@@ -21,6 +21,8 @@ interface ProjectCardProps {
   commentModalProjectId: string | null;
   setCommentModalProjectId: (id: string | null) => void;
   refreshProjects: () => void;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -28,7 +30,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   theme,
   commentModalProjectId,
   setCommentModalProjectId,
-  // refreshProjects,
+  selected,
+  onSelect,
 }) => {
   const { openProjectModal } = useProjectModal();
   const { user: currentUser } = useSafeUser();
@@ -40,23 +43,35 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     await openProjectModal(project.id);
   };
 
+  const rootClass = cn(
+    "flex w-full min-h-[300px] cursor-pointer flex-col justify-between rounded border p-4 shadow transition",
+    "hover:border-violet-400/60 hover:shadow-md",
+    selected ? "ring-2 ring-violet-500/70" : "ring-0",
+    theme === Theme.DARK ? "bg-zinc-900/60" : "bg-white",
+  );
+
   return (
     <>
-      <div className="flex w-full min-h-[300px] flex-col justify-between rounded border p-4 shadow">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onSelect}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect?.()}
+        className={rootClass}
+      >
         <div className="flex flex-col gap-3 md:flex-row">
           {/* LEFT COLUMN */}
           <div className="flex-1">
             <h2 className="mb-1 text-sm font-bold">{project.title}</h2>
             <p className="line-clamp-3 text-xs">{project.description}</p>
 
-            <div className="mt-2 flex flex-wrap gap-2">
-          <CategorySelector
-            mode="view"
-            displayCategories={project.categories}
-            theme={theme}
-            watchedCategories={project.categories.map((cat) => cat.id)}
-          /> 
- 
+            <div className="mt-2 flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+              <CategorySelector
+                mode="view"
+                displayCategories={project.categories}
+                theme={theme}
+                watchedCategories={project.categories.map((cat) => cat.id)}
+              />
             </div>
 
             <GlowingProgressBar project={project} className="mt-3 h-3 w-full border border-gray-400 bg-gray-200" />
@@ -87,8 +102,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
 
           {/* RIGHT COLUMN (Image) */}
-          {project.images[0]?.url ? (
-            <div className="h-32 overflow-hidden rounded-2xl md:ml-6 md:h-auto md:w-1/3">
+          <div
+            className="h-32 overflow-hidden rounded-2xl md:ml-6 md:h-auto md:w-1/3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {project.images[0]?.url ? (
               <Image
                 src={project.images[0].url}
                 alt={`${project.title} preview`}
@@ -96,9 +114,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 height={240}
                 className="h-full w-full object-cover"
               />
-            </div>
-          ) : (
-            <div className="h-32 overflow-hidden rounded-2xl md:ml-6 md:h-auto md:w-1/3">
+            ) : (
               <Image
                 src={DefaultProjectImage}
                 alt={`${project.title} preview`}
@@ -106,12 +122,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 height={240}
                 className="h-full w-full object-cover"
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Bottom row: Likes & Comments */}
-        <div className="mt-4 flex justify-between text-sm">
+        <div className="mt-4 flex justify-between text-sm" onClick={(e) => e.stopPropagation()}>
           <div className="flex flex-col items-center">
             <span>❤️ {project.likes.length}</span>
             <span className="text-xs">Likes</span>

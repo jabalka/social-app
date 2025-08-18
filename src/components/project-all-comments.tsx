@@ -211,7 +211,7 @@ const ProjectAllComments: React.FC<ProjectAllCommentsProps> = ({ projectId, user
 
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent
-          className={cn("max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6", {
+          className={cn("max-h-[90vh] w-full max-w-2xl overflow-y-auto nf-scrollbar p-6", {
             "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,
             "bg-[#332f2d] text-zinc-200": theme === Theme.DARK,
           })}

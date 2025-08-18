@@ -7,6 +7,7 @@ import React, { PropsWithChildren } from "react";
 import MenuLayout from "./menu-layout";
 import SidebarLayoutClient from "./sidebar-layout-client";
 import WelcomeLayout from "./welcome-layout";
+import { useScrollbarReveal } from "@/hooks/use-scrollbar-reveal";
 
 // import { AuthUser } from "@/models/auth";
 
@@ -47,7 +48,7 @@ interface Props {
 
 const LayoutClient: React.FC<PropsWithChildren<Props>> = ({ user, children }) => {
   const pathname = usePathname();
-
+  useScrollbarReveal();
   // if (pathname === "/") {
   //   return <WelcomeLayout>{children}</WelcomeLayout>;
   // }

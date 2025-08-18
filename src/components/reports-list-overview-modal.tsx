@@ -2,10 +2,9 @@
 
 import { ModalProvider } from "@/context/modal-context";
 import React from "react";
-import ModalOverlay from "./modal-overlay";
-import ProjectListOverview from "./project-list-overview";
+import ModalOverlay from "@/components/modal-overlay";
 
-interface ProjectListOverviewModalProps {
+interface Props {
   open: boolean;
   onClose: () => void;
   theme: string;
@@ -13,12 +12,14 @@ interface ProjectListOverviewModalProps {
   userId?: string;
 }
 
-const ProjectListOverviewModal: React.FC<ProjectListOverviewModalProps> = ({
+/**
+ * Placeholder modal for reported issues.
+ * Replace the inner content with your real Issues/Reports overview when ready.
+ */
+const ReportsListOverviewModal: React.FC<Props> = ({
   open,
   onClose,
   theme,
-  showOwnedOnly = false,
-  userId,
 }) => {
   return (
     <ModalOverlay
@@ -29,10 +30,12 @@ const ProjectListOverviewModal: React.FC<ProjectListOverviewModalProps> = ({
       modalWidthClasses="sm:max-w-xl md:max-w-3xl w-full"
     >
       <ModalProvider isModal={true}>
-        <ProjectListOverview showOwnedOnly={showOwnedOnly} userId={userId} />
+        <div className="flex min-h-[300px] items-center justify-center">
+          <p className="opacity-80">Reported Issues coming soon…</p>
+        </div>
       </ModalProvider>
     </ModalOverlay>
   );
 };
 
-export default ProjectListOverviewModal;
+export default ReportsListOverviewModal;

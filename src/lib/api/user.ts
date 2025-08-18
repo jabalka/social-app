@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { parseGeoParamsFromUrl, queryIdeaIdsWithinRadius, queryProjectIdsWithinRadius } from "@/utils/geo.utils";
 import { Prisma } from "@prisma/client";
 
 export async function getUserById(id: string) {
@@ -145,37 +146,36 @@ export async function getUserCommentsAndLikes(request: Request) {
 
 export async function getUserProjects(req: Request) {
   const session = await auth();
-
-  if (!session?.user?.id) {
-    return { error: "Unauthorized", status: 401 };
-  }
+  if (!session?.user?.id) return { error: "Unauthorized", status: 401 };
 
   const url = new URL(req.url);
-  const sort = url.searchParams.get("sort"); // 'date' | 'likes' | 'comments'
+  const sort = (url.searchParams.get("sort") || "newest") as "newest" | "oldest" | "likes" | "comments";
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const limit = parseInt(url.searchParams.get("limit") || "5", 10);
   const skip = (page - 1) * limit;
 
-  let orderBy: Prisma.ProjectOrderByWithRelationInput = { createdAt: "desc" };
+  let orderBy: Prisma.ProjectOrderByWithRelationInput | Prisma.ProjectOrderByWithRelationInput[] = { createdAt: "desc" };
+  if (sort === "oldest") orderBy = { createdAt: "asc" };
+  if (sort === "likes") orderBy = [{ likes: { _count: "desc" } }, { createdAt: "desc" }];
+  if (sort === "comments") orderBy = [{ comments: { _count: "desc" } }, { createdAt: "desc" }];
 
-  if (sort === "likes") {
-    orderBy = {
-      likes: {
-        _count: "desc",
-      },
-    };
-  } else if (sort === "comments") {
-    orderBy = {
-      comments: {
-        _count: "desc",
-      },
-    };
-  }
+  const { hasGeo, centerLat, centerLng, radiusMeters } = parseGeoParamsFromUrl(url);
 
   try {
+    let radiusIds: string[] | null = null;
+    if (hasGeo && centerLat !== null && centerLng !== null && radiusMeters > 0) {
+      radiusIds = await queryProjectIdsWithinRadius(centerLat, centerLng, radiusMeters, prisma);
+      if (!radiusIds.length) return { data: { projects: [], totalCount: 0 }, status: 200 };
+    }
+
+    const where: Prisma.ProjectWhereInput = {
+      authorId: session.user.id,
+      ...(radiusIds ? { id: { in: radiusIds } } : {}),
+    };
+
     const [projects, totalCount] = await Promise.all([
       prisma.project.findMany({
-        where: { authorId: session.user.id },
+        where,
         include: {
           images: true,
           categories: true,
@@ -195,9 +195,7 @@ export async function getUserProjects(req: Request) {
         skip,
         take: limit,
       }),
-      prisma.project.count({
-        where: { authorId: session.user.id },
-      }),
+      prisma.project.count({ where }),
     ]);
 
     return { data: { projects, totalCount }, status: 200 };
@@ -213,34 +211,43 @@ export async function getUserIdeas(req: Request) {
   if (!session?.user?.id) return { error: "Unauthorized", status: 401 };
 
   const url = new URL(req.url);
-  const sort = (url.searchParams.get("sort") || "newest") as "newest" | "oldest" | "top";
+  const sort = (url.searchParams.get("sort") || "newest") as "newest" | "oldest" | "likes" | "comments";
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const limit = parseInt(url.searchParams.get("limit") || "5", 10);
   const skip = (page - 1) * limit;
 
   let orderBy: Prisma.IdeaOrderByWithRelationInput | Prisma.IdeaOrderByWithRelationInput[] = { createdAt: "desc" };
-  if (sort === "oldest") {
-    orderBy = { createdAt: "asc" };
-  } else if (sort === "top") {
-    orderBy = [{ likes: { _count: "desc" } }, { createdAt: "desc" }];
-  }
+  if (sort === "oldest") orderBy = { createdAt: "asc" };
+  if (sort === "likes") orderBy = [{ likes: { _count: "desc" } }, { createdAt: "desc" }];
+  if (sort === "comments") orderBy = [{ comments: { _count: "desc" } }, { createdAt: "desc" }];
+
+  const { hasGeo, centerLat, centerLng, radiusMeters } = parseGeoParamsFromUrl(url);
 
   try {
+    let radiusIds: string[] | null = null;
+    if (hasGeo && centerLat !== null && centerLng !== null && radiusMeters > 0) {
+      radiusIds = await queryIdeaIdsWithinRadius(centerLat, centerLng, radiusMeters, prisma);
+      if (!radiusIds.length) return { data: { ideas: [], totalCount: 0 }, status: 200 };
+    }
+
+    const where: Prisma.IdeaWhereInput = {
+      authorId: session.user.id,
+      ...(radiusIds ? { id: { in: radiusIds } } : {}),
+    };
+
     const [ideas, totalCount] = await Promise.all([
       prisma.idea.findMany({
-        where: { authorId: session.user.id },
+        where,
         include: {
           likes: true,
           comments: true,
-          author: {
-            select: { id: true, name: true, image: true },
-          },
+          author: { select: { id: true, name: true, image: true } },
         },
-        orderBy: orderBy,
+        orderBy,
         skip,
         take: limit,
       }),
-      prisma.idea.count({ where: { authorId: session.user.id } }),
+      prisma.idea.count({ where }),
     ]);
 
     return { data: { ideas, totalCount }, status: 200 };

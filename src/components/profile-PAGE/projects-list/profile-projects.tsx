@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import ProjectListOverview from "../../projects-list-overview";
+import ProjectListOverview from "../../project-list-overview";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import ProjectListOverviewModal from "@/components/project-list-overview-modal";
 

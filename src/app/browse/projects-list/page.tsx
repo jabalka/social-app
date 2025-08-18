@@ -1,6 +1,6 @@
 "use client";
 
-import ProjectListOverview from "@/components/projects-list-overview";
+import ProjectListOverview from "@/components/project-list-overview";
 import React from "react";
 
 const ProjectsListPage: React.FC = () => {

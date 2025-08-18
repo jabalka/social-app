@@ -12,7 +12,7 @@ const HtmlProviders: React.FC<PropsWithChildren> = ({ children }) => {
       <head>
         <link rel="mask-icon" href="/images/favicons/safari-pinned-tab.svg" color="#5bbad5" />
       </head>
-      <body className={`${poppins.className} antialiased`}>{children}</body>
+      <body className={`${poppins.className} antialiased nf-scrollbar`}>{children}</body>
     </html>
   );
 };

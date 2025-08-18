@@ -53,7 +53,7 @@ const ChatBox: React.FC = () => {
 
   return (
     <div className="w-full max-w-lg mx-auto p-4">
-      <div className="mb-4 h-64 overflow-y-auto border p-2 bg-gray-50 rounded">
+      <div className="mb-4 h-64 overflow-y-auto nf-scrollbar border p-2 bg-gray-50 rounded">
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
             <span className="font-bold">{m.role === "user" ? "You" : "AI"}:</span> {m.content}

@@ -75,7 +75,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
             </button>
           )}
           <div
-            className={cn("relative w-full overflow-y-auto",
+            className={cn("relative w-full overflow-y-auto nf-scrollbar",
               modalHeightClasses,
                {
               "bg-[#f0e3dd] text-zinc-700": theme === Theme.LIGHT,

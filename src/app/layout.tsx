@@ -1,8 +1,8 @@
 import "@/assets/styles/index.css";
-import "@/styles/leaflet.css";
-import "leaflet/dist/leaflet.css";
 import LayoutClient from "@/components/layouts/layout-client";
 import Providers from "@/components/providers/providers";
+import "@/styles/leaflet.css";
+import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import type React from "react";
 import { getCurrentUser } from "./actions/common.actions";
