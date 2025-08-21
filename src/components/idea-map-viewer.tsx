@@ -16,7 +16,9 @@ export interface IdeaMapViewerProps {
   ideas: Idea[];
   refreshIdeas: () => void;
   selectedIdeaId?: string;
-  onSelectIdea?: (id: string) => void;
+  // Allow clearing via undefined, and an explicit clear handler for map blank clicks
+  onSelectIdea?: (id?: string) => void;
+  onClearIdeaSelection?: () => void;
   selectable?: boolean;
   enablePopup?: boolean; // default true
 }
@@ -32,7 +34,10 @@ const ideaIcon = L.icon({
   popupAnchor: [0, -36],
 });
 
-// Cluster icon: shows the idea bulb + count badge, zooms in on click until markers spread, then spiderfies at max zoom
+// Dim level for non-selected markers
+const NON_SELECTED_OPACITY = 0.6;
+
+// Cluster icon: shows the idea bulb + count badge
 const buildIdeaClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
   const total = cluster.getAllChildMarkers().length;
 
@@ -73,6 +78,7 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
   ideas,
   selectedIdeaId,
   onSelectIdea,
+  onClearIdeaSelection,
   selectable = true,
   enablePopup = true,
 }) => {
@@ -83,6 +89,22 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const highlightRef = useRef<L.CircleMarker | null>(null);
   const popupRootRef = useRef<Root | null>(null);
+
+  // Refs for latest values to avoid stale closures
+  const selectedIdRef = useRef<string | undefined>(selectedIdeaId);
+  useEffect(() => {
+    selectedIdRef.current = selectedIdeaId;
+  }, [selectedIdeaId]);
+
+  const onSelectIdeaRef = useRef<IdeaMapViewerProps["onSelectIdea"]>(onSelectIdea);
+  useEffect(() => {
+    onSelectIdeaRef.current = onSelectIdea;
+  }, [onSelectIdea]);
+
+  const onClearRef = useRef<IdeaMapViewerProps["onClearIdeaSelection"]>(onClearIdeaSelection);
+  useEffect(() => {
+    onClearRef.current = onClearIdeaSelection;
+  }, [onClearIdeaSelection]);
 
   const closePopup = () => {
     try {
@@ -135,13 +157,13 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
 
-    // Clustering: combine overlapping ideas; clicking cluster zooms in until spread; spiderfy at max zoom
+    // Clustering: combine overlapping ideas
     const clusterGroup = L.markerClusterGroup({
       showCoverageOnHover: false,
-      zoomToBoundsOnClick: false,       // we handle zoom-in manually
+      zoomToBoundsOnClick: false,
       maxClusterRadius: 60,
       spiderfyOnMaxZoom: true,
-      disableClusteringAtZoom: 18,      // fully separate at high zoom
+      disableClusteringAtZoom: 18,
       iconCreateFunction: (cluster) => buildIdeaClusterIcon(cluster),
     });
 
@@ -157,6 +179,32 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
     clusterGroup.addTo(map);
     clusterGroupRef.current = clusterGroup;
 
+    // Clicking empty map area clears selection in parent (so list also clears)
+    const handleMapClick = () => {
+      if (!selectedIdRef.current) return;
+
+      if (onClearRef.current) {
+        onClearRef.current();
+      } else if (onSelectIdeaRef.current) {
+        onSelectIdeaRef.current(undefined); // fallback: clear via onSelect(undefined)
+      }
+
+      // Local visual cleanup
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+        highlightRef.current = null;
+      }
+    };
+    map.on("click", handleMapClick);
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
@@ -164,6 +212,7 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
       try {
         ro.disconnect();
       } catch {}
+      map.off("click", handleMapClick);
 
       // Remove markers from the cluster group
       markerMapRef.current.forEach(({ marker }) => {
@@ -179,6 +228,14 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
         } catch {}
       }
       highlightRef.current = null;
+
+      // restore opacity/z-index
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
 
       closePopup();
 
@@ -210,7 +267,7 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
     const markerMap = markerMapRef.current;
     const nextIds = new Set(ideas.map((i) => i.id));
 
-    // Remove markers that no longer exist
+    // Remove destroyed markers
     for (const [id, entry] of markerMap.entries()) {
       if (!nextIds.has(id)) {
         try {
@@ -220,7 +277,7 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
       }
     }
 
-    const hasSelectionHandler = typeof onSelectIdea === "function";
+    const hasSelectionHandler = typeof onSelectIdeaRef.current === "function";
 
     // Add/update markers
     ideas
@@ -234,9 +291,15 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
             if (enablePopup) openPopupAt(idea, (markerMap.get(idea.id) as MarkerEntry).marker);
             return;
           }
-          // Select-first behavior
-          if (selectedIdeaId !== idea.id) onSelectIdea?.(idea.id);
-          else if (enablePopup) openPopupAt(idea, (markerMap.get(idea.id) as MarkerEntry).marker);
+          // Select-first behavior, using latest selected id
+          if (selectedIdRef.current !== idea.id) {
+            onSelectIdeaRef.current?.(idea.id);
+          } else if (enablePopup) {
+            openPopupAt(idea, (markerMap.get(idea.id) as MarkerEntry).marker);
+          } else {
+            // re-affirm selection if no popup
+            onSelectIdeaRef.current?.(idea.id);
+          }
         };
 
         if (!existing) {
@@ -250,38 +313,65 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
           existing.marker.on("click", handleClick);
         }
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ideas, selectable, selectedIdeaId, onSelectIdea, enablePopup]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ideas, selectable, enablePopup]);
 
-  // Selection pan/highlight
+  // Selection pan/highlight + zoomToShowLayer + dim non-selected
   useEffect(() => {
     const map = mapRef.current;
+    const clusterGroup = clusterGroupRef.current;
     if (!map || !map.getPane("markerPane")) return;
 
     if (highlightRef.current) {
       try {
         highlightRef.current.remove();
       } catch {}
+      highlightRef.current = null;
     }
-    highlightRef.current = null;
+
+    // Reset all marker opacities and z-index by default
+    markerMapRef.current.forEach(({ marker }) => {
+      try {
+        marker.setOpacity(1);
+        marker.setZIndexOffset(0);
+      } catch {}
+    });
 
     if (!selectedIdeaId) return;
 
     const entry = markerMapRef.current.get(selectedIdeaId);
     if (!entry) return;
 
-    const latlng = entry.marker.getLatLng();
-    map.panTo(latlng, { animate: true });
+    const showSelected = () => {
+      const latlng = entry.marker.getLatLng();
 
-    const circle = L.circleMarker(latlng, {
-      radius: 12,
-      color: "#0EA5E9",
-      weight: 3,
-      opacity: 0.9,
-      fillColor: "#93C5FD",
-      fillOpacity: 0.3,
-    }).addTo(map);
-    highlightRef.current = circle;
+      map.panTo(latlng, { animate: true });
+      try {
+        entry.marker.setZIndexOffset(1000);
+      } catch {}
+
+      markerMapRef.current.forEach((e, id) => {
+        try {
+          e.marker.setOpacity(id === selectedIdeaId ? 1 : NON_SELECTED_OPACITY);
+        } catch {}
+      });
+
+      const circle = L.circleMarker(latlng, {
+        radius: 12,
+        color: "#0EA5E9",
+        weight: 3,
+        opacity: 0.9,
+        fillColor: "#93C5FD",
+        fillOpacity: 0.3,
+      }).addTo(map);
+      highlightRef.current = circle;
+    };
+
+    if (clusterGroup) {
+      clusterGroup.zoomToShowLayer(entry.marker, showSelected);
+    } else {
+      showSelected();
+    }
   }, [selectedIdeaId]);
 
   return (

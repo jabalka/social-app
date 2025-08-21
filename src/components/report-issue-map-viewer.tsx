@@ -30,11 +30,13 @@ const STATUS_COLOR: Record<IssueStatus | "UNDER_REVIEW", string> = {
 };
 
 export interface Props {
-  user: AuthUser;
+  user?: AuthUser;
   reportIssues: ReportIssueReport[];
-  refreshReportIssues: () => void;
+  refreshReportIssues?: () => void;
   selectedIssueId?: string;
-  onSelectIssue?: (id: string) => void;
+  // Allow clearing via undefined and provide explicit clearer
+  onSelectIssue?: (id?: string) => void;
+  onClearIssueSelection?: () => void;
   selectable?: boolean;
   enablePopup?: boolean; // false on profile/lists
 }
@@ -44,6 +46,8 @@ type ReportIssueMarker = L.Marker & {
   __reportIssueType?: IssueTypeValue;
   __reportIssueStatus?: IssueStatus;
 };
+
+const NON_SELECTED_OPACITY = 0.6;
 
 const getIssueEmoji = (issueType?: string | null): string =>
   (issueType && ISSUE_TYPE_EMOJI[issueType as IssueTypeValue]) || "❓";
@@ -171,6 +175,7 @@ const ReportIssueMapViewer: React.FC<Props> = ({
   //   refreshReportIssues,
   selectedIssueId,
   onSelectIssue,
+  onClearIssueSelection,
   selectable = true,
   enablePopup = true,
 }) => {
@@ -180,6 +185,22 @@ const ReportIssueMapViewer: React.FC<Props> = ({
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const highlightRef = useRef<L.CircleMarker | null>(null);
   const popupRootRef = useRef<Root | null>(null);
+
+  // Refs to avoid stale closures
+  const selectedIdRef = useRef<string | undefined>(selectedIssueId);
+  useEffect(() => {
+    selectedIdRef.current = selectedIssueId;
+  }, [selectedIssueId]);
+
+  const onSelectRef = useRef<Props["onSelectIssue"]>(onSelectIssue);
+  useEffect(() => {
+    onSelectRef.current = onSelectIssue;
+  }, [onSelectIssue]);
+
+  const onClearRef = useRef<Props["onClearIssueSelection"]>(onClearIssueSelection);
+  useEffect(() => {
+    onClearRef.current = onClearIssueSelection;
+  }, [onClearIssueSelection]);
 
   const closePopup = () => {
     try {
@@ -221,6 +242,7 @@ const ReportIssueMapViewer: React.FC<Props> = ({
     marker.openPopup();
   };
 
+  // Init map once
   useEffect(() => {
     const container = document.getElementById(containerId);
     if (!container || mapRef.current) return;
@@ -247,6 +269,32 @@ const ReportIssueMapViewer: React.FC<Props> = ({
     clusterGroup.addTo(map);
     clusterGroupRef.current = clusterGroup;
 
+    // Click empty map => clear selection (so list also clears)
+    const handleMapClick = () => {
+      if (!selectedIdRef.current) return;
+
+      if (onClearRef.current) {
+        onClearRef.current();
+      } else if (onSelectRef.current) {
+        onSelectRef.current(undefined); // fallback: clear via onSelect(undefined)
+      }
+
+      // Local visual cleanup
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+        highlightRef.current = null;
+      }
+    };
+    map.on("click", handleMapClick);
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
@@ -254,6 +302,7 @@ const ReportIssueMapViewer: React.FC<Props> = ({
       try {
         ro.disconnect();
       } catch {}
+      map.off("click", handleMapClick);
 
       markerMapRef.current.forEach(({ marker }) => {
         try {
@@ -268,6 +317,14 @@ const ReportIssueMapViewer: React.FC<Props> = ({
         } catch {}
       }
       highlightRef.current = null;
+
+      // restore marker visuals
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
 
       closePopup();
 
@@ -288,6 +345,7 @@ const ReportIssueMapViewer: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId]);
 
+  // Sync markers
   useEffect(() => {
     const map = mapRef.current;
     const clusterGroup = clusterGroupRef.current;
@@ -305,7 +363,7 @@ const ReportIssueMapViewer: React.FC<Props> = ({
       }
     }
 
-    const hasSelectionHandler = typeof onSelectIssue === "function";
+    const hasSelectionHandler = typeof onSelectRef.current === "function";
 
     reportIssues
       .filter((p) => typeof p.latitude === "number" && typeof p.longitude === "number")
@@ -318,8 +376,13 @@ const ReportIssueMapViewer: React.FC<Props> = ({
             if (enablePopup) openPopupAt(ri, (markerMap.get(ri.id) as MarkerEntry).marker);
             return;
           }
-          if (selectedIssueId !== ri.id) onSelectIssue?.(ri.id);
-          else if (enablePopup) openPopupAt(ri, (markerMap.get(ri.id) as MarkerEntry).marker);
+          if (selectedIdRef.current !== ri.id) {
+            onSelectRef.current?.(ri.id);
+          } else if (enablePopup) {
+            openPopupAt(ri, (markerMap.get(ri.id) as MarkerEntry).marker);
+          } else {
+            onSelectRef.current?.(ri.id);
+          }
         };
 
         if (!existing) {
@@ -342,10 +405,12 @@ const ReportIssueMapViewer: React.FC<Props> = ({
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportIssues, selectable, selectedIssueId, onSelectIssue, enablePopup]);
+  }, [reportIssues, selectable, enablePopup]);
 
+  // Selection pan/highlight + zoomToShowLayer + dim others
   useEffect(() => {
     const map = mapRef.current;
+    const clusterGroup = clusterGroupRef.current;
     if (!map || !map.getPane("markerPane")) return;
 
     if (highlightRef.current) {
@@ -355,22 +420,47 @@ const ReportIssueMapViewer: React.FC<Props> = ({
       highlightRef.current = null;
     }
 
+    // reset visuals
+    markerMapRef.current.forEach(({ marker }) => {
+      try {
+        marker.setOpacity(1);
+        marker.setZIndexOffset(0);
+      } catch {}
+    });
+
     if (!selectedIssueId) return;
     const entry = markerMapRef.current.get(selectedIssueId);
     if (!entry) return;
 
-    const latlng = entry.marker.getLatLng();
-    map.panTo(latlng, { animate: true });
+    const showSelected = () => {
+      const latlng = entry.marker.getLatLng();
+      map.panTo(latlng, { animate: true });
+      try {
+        entry.marker.setZIndexOffset(1000);
+      } catch {}
 
-    const circle = L.circleMarker(latlng, {
-      radius: 14,
-      color: "#7C3AED",
-      weight: 3,
-      opacity: 0.9,
-      fillColor: "#C4B5FD",
-      fillOpacity: 0.3,
-    }).addTo(map);
-    highlightRef.current = circle;
+      markerMapRef.current.forEach((e, id) => {
+        try {
+          e.marker.setOpacity(id === selectedIssueId ? 1 : NON_SELECTED_OPACITY);
+        } catch {}
+      });
+
+      const circle = L.circleMarker(latlng, {
+        radius: 14,
+        color: "#7C3AED",
+        weight: 3,
+        opacity: 0.9,
+        fillColor: "#C4B5FD",
+        fillOpacity: 0.3,
+      }).addTo(map);
+      highlightRef.current = circle;
+    };
+
+    if (clusterGroup) {
+      clusterGroup.zoomToShowLayer(entry.marker, showSelected);
+    } else {
+      showSelected();
+    }
   }, [selectedIssueId]);
 
   return (

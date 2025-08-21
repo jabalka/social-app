@@ -18,7 +18,8 @@ interface Props {
   selectedProjectId?: string;
   selectedIdeaId?: string;
   selectedIssueId?: string;
-  onSelectProject?: (id: string) => void;
+  // Allow clearing by passing undefined
+  onSelectProject?: (id?: string) => void;
   onSelectIdea?: (id: string) => void;
   onSelectIssue?: (id: string) => void;
 }
@@ -90,6 +91,9 @@ const ProfileMap: React.FC<Props> = ({
           selectable
           selectedProjectId={selectedProjectId}
           onSelectProject={onSelectProject}
+          // IMPORTANT: this clears selection in parent when clicking empty map space,
+          // enabling immediate re-selection of the same marker.
+          onClearProjectSelection={() => onSelectProject?.(undefined)}
           enablePopup={false}
         />
       )}

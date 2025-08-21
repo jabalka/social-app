@@ -20,7 +20,8 @@ export interface Props {
   projects: Project[];
   refreshProjects: () => void;
   selectedProjectId?: string;
-  onSelectProject?: (id: string) => void;
+  onSelectProject?: (id?: string) => void; // allow clearing via undefined
+  onClearProjectSelection?: () => void; // optional explicit clearer
   selectable?: boolean;
   enablePopup?: boolean; // default true
 }
@@ -30,11 +31,15 @@ type ProjectMarker = L.Marker & { __projectStatus?: ProjectStatus };
 
 const getProjectIconUrl = (status: ProjectStatus): string => {
   switch (status) {
-    case "IN_PROGRESS": return "/images/project-in-progress.png";
-    case "COMPLETED": return "/images/project-completed.png";
-    case "REJECTED": return "/images/marker-icon.png";
+    case "IN_PROGRESS":
+      return "/images/project-in-progress.png";
+    case "COMPLETED":
+      return "/images/project-completed.png";
+    case "REJECTED":
+      return "/images/marker-icon.png";
     case "PROPOSED":
-    default: return "/images/project-proposed.png";
+    default:
+      return "/images/project-proposed.png";
   }
 };
 
@@ -64,6 +69,7 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
     statusCount.set(s, (statusCount.get(s) || 0) + 1);
   });
 
+  // pick most frequent status for ring color
   let ring = "#6B7280";
   let best: { status: ProjectStatus | null; count: number } = { status: null, count: 0 };
   statusCount.forEach((c, s) => {
@@ -109,12 +115,14 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
 
   const distinct = statuses.slice(0, 4);
   const tiles = distinct
-    .map((s) => `<div style="
+    .map(
+      (s) => `<div style="
         display:flex;align-items:center;justify-content:center;
         background:#fff;border-radius:6px;border:2px solid ${ring};
       ">
         <img src="${getProjectIconUrl(s)}" alt="${s}" style="width:20px;height:20px;object-fit:contain;" />
-      </div>`)
+      </div>`,
+    )
     .join("");
 
   const grid = `
@@ -145,12 +153,16 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
   });
 };
 
+// Dim non-selected markers but keep visible
+const NON_SELECTED_OPACITY = 0.6;
+
 const ProjectMapViewer: React.FC<Props> = ({
   user,
   projects,
   refreshProjects,
   selectedProjectId,
   onSelectProject,
+  onClearProjectSelection,
   selectable = true,
   enablePopup = true,
 }) => {
@@ -163,10 +175,30 @@ const ProjectMapViewer: React.FC<Props> = ({
   const popupRootRef = useRef<Root | null>(null);
   const { theme } = useSafeThemeContext();
 
+  // Refs with latest values to avoid stale closures in event handlers
+  const selectedIdRef = useRef<string | undefined>(selectedProjectId);
+  useEffect(() => {
+    selectedIdRef.current = selectedProjectId;
+  }, [selectedProjectId]);
+
+  const onSelectProjectRef = useRef<Props["onSelectProject"]>(onSelectProject);
+  useEffect(() => {
+    onSelectProjectRef.current = onSelectProject;
+  }, [onSelectProject]);
+
+  const clearSelectionRef = useRef<Props["onClearProjectSelection"]>(onClearProjectSelection);
+  useEffect(() => {
+    clearSelectionRef.current = onClearProjectSelection;
+  }, [onClearProjectSelection]);
+
   const closePopup = () => {
-    try { popupRootRef.current?.unmount(); } catch {}
+    try {
+      popupRootRef.current?.unmount();
+    } catch {}
     popupRootRef.current = null;
-    try { mapRef.current?.closePopup(); } catch {}
+    try {
+      mapRef.current?.closePopup();
+    } catch {}
   };
 
   const openPopupAt = (project: Project, marker: L.Marker) => {
@@ -199,7 +231,9 @@ const ProjectMapViewer: React.FC<Props> = ({
     });
 
     marker.on("popupclose", () => {
-      try { root.unmount(); } catch {}
+      try {
+        root.unmount();
+      } catch {}
       if (popupRootRef.current === root) popupRootRef.current = null;
     });
 
@@ -234,34 +268,76 @@ const ProjectMapViewer: React.FC<Props> = ({
     clusterGroup.addTo(map);
     clusterGroupRef.current = clusterGroup;
 
+    // Clicking empty map area clears selection in parent (so list also clears)
+    const handleMapClick = () => {
+      if (!selectedIdRef.current) return;
+
+      if (clearSelectionRef.current) {
+        clearSelectionRef.current();
+      } else if (onSelectProjectRef.current) {
+        onSelectProjectRef.current(undefined); // fallback: clear via onSelect(undefined)
+      }
+
+      // Local visual cleanup (safe even if parent also clears)
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+        highlightRef.current = null;
+      }
+    };
+    map.on("click", handleMapClick);
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
     return () => {
-      try { ro.disconnect(); } catch {}
+      try {
+        ro.disconnect();
+      } catch {}
+      map.off("click", handleMapClick);
 
       markerMapRef.current.forEach(({ marker }) => {
-        try { clusterGroupRef.current?.removeLayer(marker); } catch {}
+        try {
+          clusterGroupRef.current?.removeLayer(marker);
+        } catch {}
       });
       markerMapRef.current.clear();
 
       if (highlightRef.current) {
-        try { highlightRef.current.remove(); } catch {}
+        try {
+          highlightRef.current.remove();
+        } catch {}
       }
       highlightRef.current = null;
 
-      // restore any marker opacity (safety)
-      markerMapRef.current.forEach(({ marker }) => { try { marker.setOpacity(1); } catch {} });
+      // restore any marker opacity/z-index (safety)
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
 
       closePopup();
 
       if (clusterGroupRef.current && mapRef.current) {
-        try { clusterGroupRef.current.removeFrom(mapRef.current); } catch {}
+        try {
+          clusterGroupRef.current.removeFrom(mapRef.current);
+        } catch {}
       }
       clusterGroupRef.current = null;
 
       if (mapRef.current) {
-        try { mapRef.current.remove(); } catch {}
+        try {
+          mapRef.current.remove();
+        } catch {}
       }
       mapRef.current = null;
     };
@@ -280,12 +356,14 @@ const ProjectMapViewer: React.FC<Props> = ({
     // Remove markers that no longer exist
     for (const [id, entry] of markerMap.entries()) {
       if (!nextIds.has(id)) {
-        try { clusterGroup.removeLayer(entry.marker); } catch {}
+        try {
+          clusterGroup.removeLayer(entry.marker);
+        } catch {}
         markerMap.delete(id);
       }
     }
 
-    const hasSelectionHandler = typeof onSelectProject === "function";
+    const hasSelectionHandler = typeof onSelectProjectRef.current === "function";
 
     // Add/update markers
     projects
@@ -294,18 +372,29 @@ const ProjectMapViewer: React.FC<Props> = ({
         const existing = markerMap.get(project.id);
         const icon = getMarkerIcon(project.status);
 
+        // Click handler uses refs to avoid stale values
         const handleClick = () => {
           if (!selectable || !hasSelectionHandler) {
             if (enablePopup) openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
             return;
           }
-          if (selectedProjectId !== project.id) onSelectProject?.(project.id);
-          else if (enablePopup) openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
+
+          if (selectedIdRef.current !== project.id) {
+            onSelectProjectRef.current?.(project.id);
+          } else {
+            // If already selected, allow opening popup or re-affirm selection
+            if (enablePopup) {
+              openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
+            } else {
+              onSelectProjectRef.current?.(project.id);
+            }
+          }
         };
 
         if (!existing) {
           const marker = L.marker([project.latitude as number, project.longitude as number], { icon }) as ProjectMarker;
           marker.__projectStatus = project.status;
+
           marker.on("click", handleClick);
 
           clusterGroup.addLayer(marker);
@@ -322,7 +411,8 @@ const ProjectMapViewer: React.FC<Props> = ({
           existing.marker.on("click", handleClick);
         }
       });
-  }, [projects, selectable, selectedProjectId, onSelectProject, enablePopup]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects, selectable, enablePopup]);
 
   // Selection pan/highlight and zoom to show selected marker even if clustered
   useEffect(() => {
@@ -332,13 +422,18 @@ const ProjectMapViewer: React.FC<Props> = ({
 
     // Clear old highlight
     if (highlightRef.current) {
-      try { highlightRef.current.remove(); } catch {}
+      try {
+        highlightRef.current.remove();
+      } catch {}
       highlightRef.current = null;
     }
 
-    // Reset all marker opacities by default
+    // Reset all marker opacities and z-index by default
     markerMapRef.current.forEach(({ marker }) => {
-      try { marker.setOpacity(1); } catch {}
+      try {
+        marker.setOpacity(1);
+        marker.setZIndexOffset(0);
+      } catch {}
     });
 
     if (!selectedProjectId) return;
@@ -351,11 +446,15 @@ const ProjectMapViewer: React.FC<Props> = ({
 
       // Bring selection into view and emphasize it
       map.panTo(latlng, { animate: true });
-      try { entry.marker.setZIndexOffset(1000); } catch {}
+      try {
+        entry.marker.setZIndexOffset(1000);
+      } catch {}
 
-      // Dim non-selected markers
+      // Dim non-selected markers (lighter dimming for visibility)
       markerMapRef.current.forEach((e, id) => {
-        try { e.marker.setOpacity(id === selectedProjectId ? 1 : 0.35); } catch {}
+        try {
+          e.marker.setOpacity(id === selectedProjectId ? 1 : NON_SELECTED_OPACITY);
+        } catch {}
       });
 
       // Add highlight ring

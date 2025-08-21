@@ -18,7 +18,7 @@ const ProfileListsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"projects" | "ideas" | "issues">("projects");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
-  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null); // <-- add this
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
   const listPanelRef = useRef<HTMLDivElement | null>(null);
   const mapPanelInnerRef = useRef<HTMLDivElement | null>(null);
@@ -96,7 +96,9 @@ const ProfileListsPage: React.FC = () => {
             <ProjectListOverview
               showOwnedOnly
               selectedId={selectedProjectId ?? undefined}
-              onSelect={(id) => setSelectedProjectId((prev) => (prev === id ? null : id))}
+              onSelect={(id?: string) =>
+                setSelectedProjectId((prev) => (id ? (prev === id ? null : id) : null))
+              }
               minBodyHeightClass="min-h-[520px]"
             />
           )}
@@ -104,7 +106,9 @@ const ProfileListsPage: React.FC = () => {
             <IdeaListOverview
               showOwnedOnly
               selectedId={selectedIdeaId ?? undefined}
-              onSelect={(id) => setSelectedIdeaId((prev) => (prev === id ? null : id))}
+              onSelect={(id?: string) =>
+                setSelectedIdeaId((prev) => (id ? (prev === id ? null : id) : null))
+              }
               minBodyHeightClass="min-h-[520px]"
             />
           )}
@@ -112,7 +116,9 @@ const ProfileListsPage: React.FC = () => {
             <ReportIssueListOverview
               showOwnedOnly
               selectedId={selectedIssueId ?? undefined}
-              onSelect={(id) => setSelectedIssueId((prev) => (prev === id ? null : id))}
+              onSelect={(id?: string) =>
+                setSelectedIssueId((prev) => (id ? (prev === id ? null : id) : null))
+              }
               minBodyHeightClass="min-h-[520px]"
             />
           )}
@@ -127,9 +133,15 @@ const ProfileListsPage: React.FC = () => {
               selectedProjectId={selectedProjectId ?? undefined}
               selectedIdeaId={selectedIdeaId ?? undefined}
               selectedIssueId={selectedIssueId ?? undefined}
-              onSelectProject={(id) => setSelectedProjectId((prev) => (prev === id ? null : id))}
-              onSelectIdea={(id) => setSelectedIdeaId((prev) => (prev === id ? null : id))}
-              onSelectIssue={(id) => setSelectedIssueId((prev) => (prev === id ? null : id))} // pass to ProfileMap
+              onSelectProject={(id?: string) =>
+                setSelectedProjectId((prev) => (id ? (prev === id ? null : id) : null))
+              }
+              onSelectIdea={(id?: string) =>
+                setSelectedIdeaId((prev) => (id ? (prev === id ? null : id) : null))
+              }
+              onSelectIssue={(id?: string) =>
+                setSelectedIssueId((prev) => (id ? (prev === id ? null : id) : null))
+              }
             />
           </div>
         </div>
