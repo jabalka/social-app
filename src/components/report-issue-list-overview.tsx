@@ -1,47 +1,54 @@
 "use client";
 import { useModalContext } from "@/context/modal-context";
-import { useProjectContext } from "@/context/project-context";
+import { useReportIssueContext } from "@/context/report-issue-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
 import { cn } from "@/utils/cn.utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import CreateProjectModal from "./create-project-modal";
 import Pagination from "./pagination";
-import ProjectList from "./project-list";
+import ReportIssueList from "./report-issue-list";
 import SearchFilterDropdown, { GeoSearchFiltersApplyPayload } from "./search-filter-dropdown";
 import GlowingGreenButton from "./shared/glowing-green-button";
 
-type ProjectSort = "newest" | "oldest" | "likes" | "comments";
+type IssueSort = "newest" | "oldest" | "priority" | "status";
 
-interface Props {
+interface ReportIssueListOverviewProps {
   showOwnedOnly?: boolean;
-  userId?: string;
-
   selectedId?: string;
-  onSelect?: (id?: string) => void; // allow clearing
+  onSelect?: (id: string) => void;
   minBodyHeightClass?: string;
 }
 
-const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedId, onSelect, minBodyHeightClass }) => {
+const ReportIssueListOverview: React.FC<ReportIssueListOverviewProps> = ({
+  showOwnedOnly = false,
+  selectedId,
+  onSelect,
+  minBodyHeightClass,
+}) => {
   const { theme } = useSafeThemeContext();
-  const { projects, refreshProjects, currentPage, setCurrentPage, totalProjects, pageSize } = useProjectContext();
   const { user } = useSafeUser();
+  const {
+    reportIssues: issues,
+    refreshReportIssues: refreshIssues,
+    currentPage,
+    setCurrentPage,
+    totalReportIssues,
+    pageSize,
+  } = useReportIssueContext();
   const { isInModal } = useModalContext();
 
-  const [sortBy, setSortBy] = useState<ProjectSort>("newest");
+  const [sortBy, setSortBy] = useState<IssueSort>("newest");
   const [radius, setRadius] = useState<number>(0);
   const [lastSearchCoords, setLastSearchCoords] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [commentModalProjectId, setCommentModalProjectId] = useState<string | null>(null);
 
-  // Scrolling container
+  // Container that scrolls the list area
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const resolvingPageRef = useRef(false);
 
   const fetchParams = useMemo(
     () => ({
-      type: showOwnedOnly ? ("user" as const) : ("all" as const),
+      type: showOwnedOnly ? "user" as const : "all" as const,
       ownerId: showOwnedOnly && user?.id ? user.id : undefined,
       sort: sortBy,
       lat: lastSearchCoords?.[0],
@@ -49,12 +56,12 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
       radius: lastSearchCoords ? radius : undefined,
       limit: pageSize,
     }),
-    [showOwnedOnly, user?.id, sortBy, lastSearchCoords, radius, pageSize],
+    [showOwnedOnly, user?.id, sortBy, lastSearchCoords, radius, pageSize]
   );
 
   useEffect(() => {
     setLoading(true);
-    refreshProjects({
+    refreshIssues({
       page: currentPage,
       ...fetchParams,
     }).finally(() => setLoading(false));
@@ -62,19 +69,25 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
   }, [sortBy, currentPage, showOwnedOnly, pageSize, lastSearchCoords, radius]);
 
   const handleApplyFilters = (values: GeoSearchFiltersApplyPayload) => {
-    if (values.sort && values.sort !== sortBy) setSortBy(values.sort as ProjectSort);
+    if (values.sort && values.sort !== sortBy) setSortBy(values.sort as IssueSort);
     setRadius(values.radius);
     setLastSearchCoords(values.coords);
     if (currentPage !== 1) setCurrentPage(1);
   };
 
+  const handleCreate = () => {
+    // open your "Report Issue" flow/modal here
+    // e.g. router.push("/issues/new") or open modal
+  };
+
+  // Helper: try to find the selected item element and ensure fully visible
   const scrollSelectedIntoView = () => {
     if (!selectedId) return;
     const container = listScrollRef.current || document;
     const trySelectors = [
       `[data-item-id="${selectedId}"]`,
       `[data-id="${selectedId}"]`,
-      `#project-item-${selectedId}`,
+      `#issue-item-${selectedId}`,
       `#item-${selectedId}`,
       `#list-item-${selectedId}`,
       `[aria-selected="true"]`,
@@ -86,10 +99,12 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
     }
     if (!el) return;
 
+    // If container is scrollable, adjust its scrollTop; else fallback to native scrollIntoView
     const scroller = listScrollRef.current;
     if (scroller && scroller.scrollHeight > scroller.clientHeight) {
       const cRect = scroller.getBoundingClientRect();
       const eRect = el.getBoundingClientRect();
+
       if (eRect.top < cRect.top + 4) {
         const delta = cRect.top - eRect.top + 8;
         scroller.scrollTo({ top: scroller.scrollTop - delta, behavior: "smooth" });
@@ -102,19 +117,23 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
     }
   };
 
+  // When selectedId changes or issues change, ensure the item is on screen
   useEffect(() => {
-    if (!selectedId || !projects) return;
+    if (!selectedId || !issues) return;
 
-    const onThisPage = projects.some((p) => p.id === selectedId);
+    // If item is on current page, just scroll to it
+    const onThisPage = issues.some((i) => i.id === selectedId);
     if (onThisPage) {
+      // Wait for DOM to render list rows
       requestAnimationFrame(() => scrollSelectedIntoView());
       return;
     }
 
+    // Otherwise, try to navigate to the page that contains it
     if (resolvingPageRef.current) return;
     resolvingPageRef.current = true;
 
-    const maxPage = Math.max(1, Math.ceil((totalProjects || 0) / (pageSize || 1)));
+    const maxPage = Math.max(1, Math.ceil((totalReportIssues || 0) / (pageSize || 1)));
 
     const probe = async () => {
       for (let p = 1; p <= maxPage; p++) {
@@ -122,14 +141,23 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
         if (p === currentPage) continue;
 
         setLoading(true);
-        await refreshProjects({ page: p, ...fetchParams }).catch(() => undefined);
+        await refreshIssues({ page: p, ...fetchParams }).catch(() => undefined);
         setLoading(false);
-        setCurrentPage(p);
-        await new Promise((r) => requestAnimationFrame(() => r(null)));
 
+        // We rely on context to update 'issues' after refresh; check synchronously on next frame
+        // Using a small delay to allow state propagation
+        // eslint-disable-next-line no-loop-func
+        await new Promise((r) => setTimeout(r, 0));
+        const now = (document.activeElement, p); // no-op to avoid TS unused complaint
+        // After context update, read latest issues via closure
+        // We can't access fresh value here directly; instead, set the page so UI re-renders to that page.
+        setCurrentPage(p);
+
+        // Give a frame for the list to render, then attempt to find the element and exit
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
         const container = listScrollRef.current || document;
         const el = (container as HTMLElement).querySelector?.(
-          `[data-item-id="${selectedId}"],[data-id="${selectedId}"],#project-item-${selectedId},#item-${selectedId},#list-item-${selectedId},[aria-selected="true"]`,
+          `[data-item-id="${selectedId}"],[data-id="${selectedId}"],#issue-item-${selectedId},#item-${selectedId},#list-item-${selectedId},[aria-selected="true"]`
         ) as HTMLElement | null;
 
         if (el) {
@@ -144,7 +172,7 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
       resolvingPageRef.current = false;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, projects, totalProjects, pageSize, currentPage]);
+  }, [selectedId, issues, totalReportIssues, pageSize, currentPage]);
 
   return (
     <div className={cn("flex w-full flex-col", { "h-full": isInModal })}>
@@ -157,17 +185,18 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
           },
         )}
       >
+        {/* Top controls row */}
         <div className="mb-4 grid shrink-0 grid-cols-3 items-center">
           <div className="flex min-w-[220px] flex-col items-start pt-2">
-            <GlowingGreenButton onClick={() => setShowCreateModal(true)} className="h-8 p-2">
-              + Create New
+            <GlowingGreenButton onClick={handleCreate} className="h-8 p-2">
+              + Report Issue
             </GlowingGreenButton>
           </div>
 
           <div className="flex justify-center">
             <Pagination
               currentPage={currentPage}
-              totalCount={totalProjects}
+              totalCount={totalReportIssues}
               pageSize={pageSize}
               onPageChange={setCurrentPage}
               theme={theme}
@@ -181,8 +210,8 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
             sortOptions={[
               { value: "newest", label: "Newest" },
               { value: "oldest", label: "Oldest" },
-              { value: "likes", label: "Most Liked" },
-              { value: "comments", label: "Most Commented" },
+              { value: "priority", label: "Priority" },
+              { value: "status", label: "Status" },
             ]}
             radiusValue={radius}
             coords={lastSearchCoords}
@@ -190,37 +219,19 @@ const ProjectListOverview: React.FC<Props> = ({ showOwnedOnly = false, selectedI
           />
         </div>
 
+        {/* Issue list (stabilize layout with min height). We attach a scroll ref here. */}
         <div ref={listScrollRef} className={cn("flex-1 overflow-auto", minBodyHeightClass)}>
-          <ProjectList
-            projects={projects || []}
+          <ReportIssueList
+            issues={issues || []}
             theme={theme}
             loading={loading}
-            commentModalProjectId={commentModalProjectId}
-            setCommentModalProjectId={setCommentModalProjectId}
-            refreshProjects={refreshProjects}
             selectedId={selectedId}
-            onSelect={(id) => onSelect?.(id)} // still fine with string or undefined
+            onSelect={onSelect}
           />
         </div>
-
-        {showCreateModal && (
-          <CreateProjectModal
-            open={showCreateModal}
-            onClose={() => setShowCreateModal(false)}
-            onProjectCreated={() =>
-              refreshProjects({
-                page: currentPage,
-                limit: pageSize,
-                type: "user",
-                ownerId: user?.id,
-                sort: sortBy,
-              })
-            }
-          />
-        )}
       </div>
     </div>
   );
 };
 
-export default ProjectListOverview;
+export default ReportIssueListOverview;

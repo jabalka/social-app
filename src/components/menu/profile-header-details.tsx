@@ -1,6 +1,7 @@
 "use client";
 
 import { useSafeUser } from "@/context/user-context";
+import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { Theme } from "@/types/theme.enum";
 import { cn } from "@/utils/cn.utils";
 import { Home, List, LogOut, User } from "lucide-react";
@@ -20,7 +21,7 @@ interface Props {
 const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDropdown, variant }) => {
   const isDark = theme === Theme.DARK;
   const { user } = useSafeUser();
-
+  const { confirm } = useConfirmation();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -59,9 +60,19 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
     };
   }, [forceClickDropdown]);
 
-  const handleLogout = () => {
-    setDropdownOpen(false);
-    signOut();
+  const handleLogout = async () => {
+    const result = await confirm({
+      title: "Sign Out",
+      description: "Are you sure you want to sign out?",
+      confirmText: "Yes, sign out!",
+      cancelText: "Cancel",
+    });
+    if (result) {
+      setDropdownOpen(false);
+      signOut();
+    } else {
+      setDropdownOpen(false);
+    }
   };
 
   const displayName = user?.name?.trim() || user?.username?.trim() || user?.email;
@@ -121,7 +132,7 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
               }
                */}
           <span
-            className={cn("pointer-events-none absolute inset-0 rounded-full",     {
+            className={cn("pointer-events-none absolute inset-0 rounded-full", {
               "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
               "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
               "animate-snakeBorderHoverLight": forceClickDropdown && dropdownOpen && theme === Theme.LIGHT,
@@ -141,34 +152,33 @@ const ProfileHeaderDetails: React.FC<Props> = ({ theme, className, forceClickDro
             >
               {variant === "desktop" ? (
                 <>
-              <DropdownItem
-                href="/profile/dashboard"
-                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
-              >
-                <User className="h-5 w-5" />
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">PROFILE</span>
-              </DropdownItem>
+                  <DropdownItem
+                    href="/profile/dashboard"
+                    className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+                  >
+                    <User className="h-5 w-5" />
+                    <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">PROFILE</span>
+                  </DropdownItem>
 
-              <DropdownItem
-                href="/profile/lists"
-                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
-              >
-                <List className="h-5 w-5" />
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">YOUR LISTS</span>
-              </DropdownItem>
+                  <DropdownItem
+                    href="/profile/lists"
+                    className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+                  >
+                    <List className="h-5 w-5" />
+                    <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">YOUR LISTS</span>
+                  </DropdownItem>
                 </>
               ) : (
                 <>
-              <DropdownItem
-                href="/dashboard"
-                className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
-              >
-                <Home className="h-5 w-5" />
-                <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">BACK HOME</span>
-              </DropdownItem>
+                  <DropdownItem
+                    href="/dashboard"
+                    className="flex items-center justify-between border-l border-r border-gray-400/30 px-4 py-2 transition-colors duration-200 first:rounded-tl-md first:rounded-tr-md first:border-t last:rounded-bl-md last:rounded-br-md last:border-b hover:bg-[#FF5C00]/10 hover:text-[#FF5C00]"
+                  >
+                    <Home className="h-5 w-5" />
+                    <span className="sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg">BACK HOME</span>
+                  </DropdownItem>
                 </>
               )}
-
 
               <button
                 onClick={() => {

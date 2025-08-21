@@ -13,23 +13,29 @@ export const UserContext = createContext<Props | undefined>(undefined);
 export const UserProvider: React.FC<{
   initialUser: AuthUser | null;
   children: React.ReactNode;
-}> = ({ initialUser: initialUser, children }) => {
+}> = ({ initialUser, children }) => {
   const [user, setUser] = useState<AuthUser | null>(initialUser);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.user) {
-          setUser(data.user);
+    let cancelled = false;
+
+    fetch("/api/user/session-user")
+     .then((res) => (res.ok ? res.json() : null))
+     .then((data: AuthUser | null) => {
+      if (cancelled) return;
+      if (data) {
+        setUser(data);
         } else {
-          setUser(null);
+          // setUser(null);
         }
       })
       .catch(err => {
         console.error("Failed to fetch user session:", err);
-        setUser(null);
+        // setUser(null);
       });
+      return () => {
+        cancelled = true;
+      };
   }, []);
 
 

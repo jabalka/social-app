@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 // import { SafeUser } from "../layouts/layout-client";
+import { useConfirmation } from "@/hooks/use-confirmation.hook";
+import { AuthUser } from "@/models/auth.types";
+import LoaderModal from "../common/loader-modal";
 import SidebarLogoBlack from "../site-logo-black";
 import SidebarLogoWhite from "../site-logo-white";
 import GithubLogo from "../svg/github-logo";
@@ -13,8 +16,6 @@ import TelegramLogo from "../svg/telegram-logo";
 import XTwitterLogo from "../svg/x-twitter-logo";
 import YoutubeLogo from "../svg/youtube-logo";
 import MenuItem, { MobileMenuItem } from "./mobile-menu-item";
-import { AuthUser } from "@/models/auth.types";
-import LoaderModal from "../common/loader-modal";
 
 const menuItems: MobileMenuItem[] = [
   {
@@ -73,6 +74,7 @@ interface MobileMenuProps {
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu, theme }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { confirm } = useConfirmation();
 
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -97,12 +99,22 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu, theme }) =>
     };
   }, [isOpen, toggleMenu]);
 
-  const handleNavigateClick = async () => {
-    setIsLoggingOut(true);
-    await logout();
+  const handleSignOut = async () => {
+    const result = await confirm({
+      title: "Sign Out",
+      description: "Are you sure you want to sign out?",
+      confirmText: "Yes, sign out!",
+      cancelText: "Cancel",
+    });
+    if (result) {
+      setIsLoggingOut(true);
+      await logout();
+      router.push("/");
+    } else {
+      setIsLoggingOut(false);
+    }
     setIsLoggingOut(false);
     toggleMenu();
-    router.push("/");
   };
 
   return (
@@ -149,7 +161,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu, theme }) =>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto nf-scrollbar">
+            <div className="nf-scrollbar flex-1 overflow-y-auto">
               <div className="px-4">
                 {menuItems.map((item, index) => (
                   <MenuItem
@@ -166,7 +178,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, toggleMenu, theme }) =>
               <div className="mt-auto pt-12">
                 <div className="flex items-center justify-center p-4">
                   <button
-                    onClick={handleNavigateClick}
+                    onClick={handleSignOut}
                     className="flex items-center justify-center text-[#FF5C00] transition-colors hover:text-[#ffffff]"
                   >
                     <LogOut className="mr-2 h-5 w-5" />

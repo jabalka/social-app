@@ -2,27 +2,28 @@
 
 // import { Post, Comment, Like } from "@prisma/client";
 import { UserProvider } from "@/context/user-context";
+import { useScrollbarReveal } from "@/hooks/use-scrollbar-reveal";
+import { IssueStatus } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import React, { PropsWithChildren } from "react";
 import MenuLayout from "./menu-layout";
 import SidebarLayoutClient from "./sidebar-layout-client";
 import WelcomeLayout from "./welcome-layout";
-import { useScrollbarReveal } from "@/hooks/use-scrollbar-reveal";
 
 // import { AuthUser } from "@/models/auth";
 
 const PATHS_WITH_MENU_LAYOUT = [
   "/dashboard",
-  "/create-project", 
+  "/create-project",
   "/share-idea",
   "/report",
   "/browse/ideas-list",
   "/browse/issues-list",
-  "/browse/projects-list", 
+  "/browse/projects-list",
   "send-test",
   "/about/what-is-it",
   "/about/faq",
-  "/about/contact"
+  "/about/contact",
 ];
 
 const PATHS_WITH_SIDEBAR_LAYOUT = ["/profile/dashboard", "/profile/lists", "/profile/messages"];
@@ -40,6 +41,7 @@ export type SafeUser = {
   ideas: { id: string; title: string; createdAt: Date }[];
   projects: { id: string; title: string; createdAt: Date }[];
   role: { id: string; name: string } | null;
+  issueReports: { id: string; title: string; status: IssueStatus; description: string; createdAt: Date }[];
 };
 interface Props {
   user: SafeUser | null;

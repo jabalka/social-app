@@ -1,83 +1,102 @@
 "use client";
 
-import { useSafeThemeContext } from "@/context/safe-theme-context";
+import { ISSUE_TYPES, IssueTypeValue } from "@/lib/report-issue";
 import { AuthUser } from "@/models/auth.types";
-import { Project } from "@/models/project.types";
-import { ProjectStatus } from "@prisma/client";
+import { ReportIssueReport } from "@/models/report-issue.types";
+import { IssueStatus } from "@prisma/client";
 import L from "leaflet";
 import { useEffect, useId, useRef } from "react";
 import { createRoot, Root } from "react-dom/client";
-import ProjectMapLegend from "./map-legend";
-import ProjectPopupContent from "./map-viewer-project-pop-up";
 
-// Leaflet.markercluster plugin + CSS
+// Typed plugin + CSS (requires npm i leaflet.markercluster @types/leaflet.markercluster)
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
+import ReportIssuePopupContent from "./map-viewer-report-issue-pop-up";
+import ReportIssueMapLegend from "./report-issue-map-legend";
+
+// value -> emoji map from ISSUE_TYPES (single source of truth)
+export const ISSUE_TYPE_EMOJI: Record<IssueTypeValue, string> = Object.fromEntries(
+  ISSUE_TYPES.map(({ value, icon }) => [value, icon]),
+) as Record<IssueTypeValue, string>;
+
+const STATUS_COLOR: Record<IssueStatus | "UNDER_REVIEW", string> = {
+  REPORTED: "#6B7280",
+  IN_PROGRESS: "#F59E0B",
+  RESOLVED: "#10B981",
+  REJECTED: "#EF4444",
+  UNDER_REVIEW: "#3B82F6",
+};
+
 export interface Props {
-  user: AuthUser;
-  projects: Project[];
-  refreshProjects: () => void;
-  selectedProjectId?: string;
-  onSelectProject?: (id?: string) => void; // allow clearing via undefined
-  onClearProjectSelection?: () => void; // optional explicit clearer
+  user?: AuthUser;
+  reportIssues: ReportIssueReport[];
+  refreshReportIssues?: () => void;
+  selectedIssueId?: string;
+  // Allow clearing via undefined and provide explicit clearer
+  onSelectIssue?: (id?: string) => void;
+  onClearIssueSelection?: () => void;
   selectable?: boolean;
-  enablePopup?: boolean; // default true
+  enablePopup?: boolean; // false on profile/lists
 }
 
-type MarkerEntry = { marker: L.Marker; status: ProjectStatus };
-type ProjectMarker = L.Marker & { __projectStatus?: ProjectStatus };
-
-const getProjectIconUrl = (status: ProjectStatus): string => {
-  switch (status) {
-    case "IN_PROGRESS":
-      return "/images/project-in-progress.png";
-    case "COMPLETED":
-      return "/images/project-completed.png";
-    case "REJECTED":
-      return "/images/marker-icon.png";
-    case "PROPOSED":
-    default:
-      return "/images/project-proposed.png";
-  }
+type MarkerEntry = { marker: L.Marker; status: IssueStatus };
+type ReportIssueMarker = L.Marker & {
+  __reportIssueType?: IssueTypeValue;
+  __reportIssueStatus?: IssueStatus;
 };
 
-const getMarkerIcon = (status: ProjectStatus): L.Icon =>
-  L.icon({
-    iconUrl: getProjectIconUrl(status),
-    iconSize: [60, 60],
-    iconAnchor: [30, 60],
-    popupAnchor: [0, -40],
+const NON_SELECTED_OPACITY = 0.6;
+
+const getIssueEmoji = (issueType?: string | null): string =>
+  (issueType && ISSUE_TYPE_EMOJI[issueType as IssueTypeValue]) || "❓";
+
+const buildDivIcon = (issueType: string | null | undefined, status: IssueStatus): L.DivIcon => {
+  const emoji = getIssueEmoji(issueType);
+  const ring = STATUS_COLOR[status] || "#6B7280";
+  const html = `
+    <div style="
+      display:flex;align-items:center;justify-content:center;
+      width:44px;height:44px;border-radius:50%;
+      background:#fff;border:3px solid ${ring};
+      box-shadow:0 2px 6px rgba(0,0,0,0.25);
+      font-size:22px;line-height:1;
+    ">${emoji}</div>
+  `;
+  return L.divIcon({
+    className: "report-issue-emoji-icon",
+    html,
+    iconSize: [44, 44],
+    iconAnchor: [22, 42],
+    popupAnchor: [0, -36],
   });
-
-const STATUS_RING: Record<ProjectStatus, string> = {
-  PROPOSED: "#6366F1",
-  IN_PROGRESS: "#F59E0B",
-  COMPLETED: "#10B981",
-  REJECTED: "#EF4444",
 };
 
-const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
+const buildClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
   const markers = cluster.getAllChildMarkers();
-  const statusCount = new Map<ProjectStatus, number>();
-  const total = markers.length;
+  const typesCount = new Map<IssueTypeValue, number>();
+  const statusesCount = new Map<IssueStatus, number>();
 
   markers.forEach((m) => {
-    const mm = m as ProjectMarker;
-    const s = mm.__projectStatus || "PROPOSED";
-    statusCount.set(s, (statusCount.get(s) || 0) + 1);
+    const mm = m as ReportIssueMarker;
+    const t = mm.__reportIssueType;
+    const s = mm.__reportIssueStatus;
+    if (t) typesCount.set(t, (typesCount.get(t) || 0) + 1);
+    if (s) statusesCount.set(s, (statusesCount.get(s) || 0) + 1);
   });
 
-  // pick most frequent status for ring color
+  const total = markers.length;
+  const types = Array.from(typesCount.keys());
+
   let ring = "#6B7280";
-  let best: { status: ProjectStatus | null; count: number } = { status: null, count: 0 };
-  statusCount.forEach((c, s) => {
-    if (c > best.count) best = { status: s, count: c };
-  });
-  if (best.status) ring = STATUS_RING[best.status] || ring;
-
-  const statuses = Array.from(statusCount.keys());
+  if (statusesCount.size > 0) {
+    let best: { status: IssueStatus | null; count: number } = { status: null, count: 0 };
+    statusesCount.forEach((c, s) => {
+      if (c > best.count) best = { status: s, count: c };
+    });
+    if (best.status) ring = STATUS_COLOR[best.status] || ring;
+  }
 
   const countBadge = `
     <div style="
@@ -90,53 +109,50 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
     ">${total}</div>
   `;
 
-  if (statuses.length <= 1) {
-    const url = getProjectIconUrl(statuses[0] || "PROPOSED");
+  if (types.length <= 1) {
+    const emoji = getIssueEmoji(types[0]);
     const html = `
       <div style="
         position:relative;
         display:flex;align-items:center;justify-content:center;
-        width:56px;height:56px;border-radius:50%;
+        width:48px;height:48px;border-radius:50%;
         background:#fff;border:3px solid ${ring};
         box-shadow:0 2px 8px rgba(0,0,0,0.25);
-      ">
-        <img src="${url}" alt="project" style="width:36px;height:36px;object-fit:contain;" />
-        ${countBadge}
-      </div>
+        font-size:24px;line-height:1;
+      ">${emoji}${countBadge}</div>
     `;
     return L.divIcon({
-      className: "project-cluster-icon",
+      className: "report-issue-cluster-icon",
       html,
-      iconSize: [56, 56],
-      iconAnchor: [28, 54],
+      iconSize: [48, 48],
+      iconAnchor: [24, 46],
       popupAnchor: [0, -40],
     });
   }
 
-  const distinct = statuses.slice(0, 4);
-  const tiles = distinct
-    .map(
-      (s) => `<div style="
-        display:flex;align-items:center;justify-content:center;
-        background:#fff;border-radius:6px;border:2px solid ${ring};
-      ">
-        <img src="${getProjectIconUrl(s)}" alt="${s}" style="width:20px;height:20px;object-fit:contain;" />
-      </div>`,
-    )
-    .join("");
-
+  const distinct = types.slice(0, 4);
+  const emojis = distinct.map(getIssueEmoji);
   const grid = `
     <div style="
       display:grid;grid-template-columns:repeat(2, 1fr);
-      gap:2px;width:50px;height:50px;padding:2px;
+      gap:2px;width:44px;height:44px;padding:2px;
     ">
-      ${tiles}
+      ${emojis
+        .map(
+          (e) => `
+        <div style="
+          display:flex;align-items:center;justify-content:center;
+          background:#fff;border-radius:6px;border:2px solid ${ring};
+          font-size:16px;
+        ">${e}</div>`,
+        )
+        .join("")}
     </div>
   `;
   const html = `
     <div style="
       position:relative;display:flex;align-items:center;justify-content:center;
-      width:56px;height:56px;border-radius:12px;
+      width:48px;height:48px;border-radius:12px;
       background:transparent;box-shadow:0 2px 8px rgba(0,0,0,0.25);
       border:0;
     ">
@@ -145,51 +161,46 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
     </div>
   `;
   return L.divIcon({
-    className: "project-cluster-icon",
+    className: "report-issue-cluster-icon",
     html,
-    iconSize: [56, 56],
-    iconAnchor: [28, 54],
+    iconSize: [48, 48],
+    iconAnchor: [24, 46],
     popupAnchor: [0, -40],
   });
 };
 
-// Dim non-selected markers but keep visible
-const NON_SELECTED_OPACITY = 0.6;
-
-const ProjectMapViewer: React.FC<Props> = ({
-  user,
-  projects,
-  refreshProjects,
-  selectedProjectId,
-  onSelectProject,
-  onClearProjectSelection,
+const ReportIssueMapViewer: React.FC<Props> = ({
+  //   user,
+  reportIssues,
+  //   refreshReportIssues,
+  selectedIssueId,
+  onSelectIssue,
+  onClearIssueSelection,
   selectable = true,
   enablePopup = true,
 }) => {
   const containerId = useId();
   const mapRef = useRef<L.Map | null>(null);
   const markerMapRef = useRef<Map<string, MarkerEntry>>(new Map());
-  const highlightRef = useRef<L.CircleMarker | null>(null);
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
-
+  const highlightRef = useRef<L.CircleMarker | null>(null);
   const popupRootRef = useRef<Root | null>(null);
-  const { theme } = useSafeThemeContext();
 
-  // Refs with latest values to avoid stale closures in event handlers
-  const selectedIdRef = useRef<string | undefined>(selectedProjectId);
+  // Refs to avoid stale closures
+  const selectedIdRef = useRef<string | undefined>(selectedIssueId);
   useEffect(() => {
-    selectedIdRef.current = selectedProjectId;
-  }, [selectedProjectId]);
+    selectedIdRef.current = selectedIssueId;
+  }, [selectedIssueId]);
 
-  const onSelectProjectRef = useRef<Props["onSelectProject"]>(onSelectProject);
+  const onSelectRef = useRef<Props["onSelectIssue"]>(onSelectIssue);
   useEffect(() => {
-    onSelectProjectRef.current = onSelectProject;
-  }, [onSelectProject]);
+    onSelectRef.current = onSelectIssue;
+  }, [onSelectIssue]);
 
-  const clearSelectionRef = useRef<Props["onClearProjectSelection"]>(onClearProjectSelection);
+  const onClearRef = useRef<Props["onClearIssueSelection"]>(onClearIssueSelection);
   useEffect(() => {
-    clearSelectionRef.current = onClearProjectSelection;
-  }, [onClearProjectSelection]);
+    onClearRef.current = onClearIssueSelection;
+  }, [onClearIssueSelection]);
 
   const closePopup = () => {
     try {
@@ -201,24 +212,15 @@ const ProjectMapViewer: React.FC<Props> = ({
     } catch {}
   };
 
-  const openPopupAt = (project: Project, marker: L.Marker) => {
+  const openPopupAt = (reportIssue: ReportIssueReport, marker: L.Marker) => {
     if (!enablePopup) return;
     const map = mapRef.current;
     if (!map || !map.getPane("markerPane")) return;
 
     closePopup();
-
     const container = document.createElement("div");
     const root = createRoot(container);
-    root.render(
-      <ProjectPopupContent
-        user={user}
-        project={project}
-        refreshProjects={refreshProjects}
-        theme={theme}
-        onClose={closePopup}
-      />,
-    );
+    root.render(<ReportIssuePopupContent issue={reportIssue} />);
     popupRootRef.current = root;
 
     marker.bindPopup(container, {
@@ -240,7 +242,7 @@ const ProjectMapViewer: React.FC<Props> = ({
     marker.openPopup();
   };
 
-  // Initialize map ONCE
+  // Init map once
   useEffect(() => {
     const container = document.getElementById(containerId);
     if (!container || mapRef.current) return;
@@ -250,12 +252,11 @@ const ProjectMapViewer: React.FC<Props> = ({
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
 
-    // Clustering
     const clusterGroup = L.markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 60,
       spiderfyOnMaxZoom: true,
-      iconCreateFunction: (cluster) => buildProjectClusterIcon(cluster),
+      iconCreateFunction: (cluster) => buildClusterIcon(cluster),
     });
     clusterGroup.on("clusterclick", (e) => {
       const bounds = e.layer.getBounds();
@@ -268,17 +269,17 @@ const ProjectMapViewer: React.FC<Props> = ({
     clusterGroup.addTo(map);
     clusterGroupRef.current = clusterGroup;
 
-    // Clicking empty map area clears selection in parent (so list also clears)
+    // Click empty map => clear selection (so list also clears)
     const handleMapClick = () => {
       if (!selectedIdRef.current) return;
 
-      if (clearSelectionRef.current) {
-        clearSelectionRef.current();
-      } else if (onSelectProjectRef.current) {
-        onSelectProjectRef.current(undefined); // fallback: clear via onSelect(undefined)
+      if (onClearRef.current) {
+        onClearRef.current();
+      } else if (onSelectRef.current) {
+        onSelectRef.current(undefined); // fallback: clear via onSelect(undefined)
       }
 
-      // Local visual cleanup (safe even if parent also clears)
+      // Local visual cleanup
       markerMapRef.current.forEach(({ marker }) => {
         try {
           marker.setOpacity(1);
@@ -317,7 +318,7 @@ const ProjectMapViewer: React.FC<Props> = ({
       }
       highlightRef.current = null;
 
-      // restore any marker opacity/z-index (safety)
+      // restore marker visuals
       markerMapRef.current.forEach(({ marker }) => {
         try {
           marker.setOpacity(1);
@@ -344,16 +345,15 @@ const ProjectMapViewer: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId]);
 
-  // Sync markers without recreating the map
+  // Sync markers
   useEffect(() => {
     const map = mapRef.current;
     const clusterGroup = clusterGroupRef.current;
     if (!map || !map.getPane("markerPane") || !clusterGroup) return;
 
     const markerMap = markerMapRef.current;
-    const nextIds = new Set(projects.map((p) => p.id));
+    const nextIds = new Set(reportIssues.map((p) => p.id));
 
-    // Remove markers that no longer exist
     for (const [id, entry] of markerMap.entries()) {
       if (!nextIds.has(id)) {
         try {
@@ -363,64 +363,56 @@ const ProjectMapViewer: React.FC<Props> = ({
       }
     }
 
-    const hasSelectionHandler = typeof onSelectProjectRef.current === "function";
+    const hasSelectionHandler = typeof onSelectRef.current === "function";
 
-    // Add/update markers
-    projects
+    reportIssues
       .filter((p) => typeof p.latitude === "number" && typeof p.longitude === "number")
-      .forEach((project) => {
-        const existing = markerMap.get(project.id);
-        const icon = getMarkerIcon(project.status);
+      .forEach((ri) => {
+        const existing = markerMap.get(ri.id);
+        const icon = buildDivIcon(ri.issueType, ri.status);
 
-        // Click handler uses refs to avoid stale values
         const handleClick = () => {
           if (!selectable || !hasSelectionHandler) {
-            if (enablePopup) openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
+            if (enablePopup) openPopupAt(ri, (markerMap.get(ri.id) as MarkerEntry).marker);
             return;
           }
-
-          if (selectedIdRef.current !== project.id) {
-            onSelectProjectRef.current?.(project.id);
+          if (selectedIdRef.current !== ri.id) {
+            onSelectRef.current?.(ri.id);
+          } else if (enablePopup) {
+            openPopupAt(ri, (markerMap.get(ri.id) as MarkerEntry).marker);
           } else {
-            // If already selected, allow opening popup or re-affirm selection
-            if (enablePopup) {
-              openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
-            } else {
-              onSelectProjectRef.current?.(project.id);
-            }
+            onSelectRef.current?.(ri.id);
           }
         };
 
         if (!existing) {
-          const marker = L.marker([project.latitude as number, project.longitude as number], { icon }) as ProjectMarker;
-          marker.__projectStatus = project.status;
-
+          const marker = L.marker([ri.latitude as number, ri.longitude as number], { icon }) as ReportIssueMarker;
+          marker.__reportIssueType = ri.issueType as IssueTypeValue | undefined;
+          marker.__reportIssueStatus = ri.status;
           marker.on("click", handleClick);
 
           clusterGroup.addLayer(marker);
-          markerMap.set(project.id, { marker, status: project.status });
+          markerMap.set(ri.id, { marker, status: ri.status });
         } else {
-          const marker = existing.marker as ProjectMarker;
-          marker.__projectStatus = project.status;
+          const marker = existing.marker as ReportIssueMarker;
+          marker.__reportIssueType = ri.issueType as IssueTypeValue | undefined;
+          marker.__reportIssueStatus = ri.status;
 
-          if (existing.status !== project.status) {
-            existing.marker.setIcon(icon);
-            existing.status = project.status;
-          }
+          existing.marker.setIcon(icon);
+          existing.status = ri.status;
           existing.marker.off("click");
           existing.marker.on("click", handleClick);
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, selectable, enablePopup]);
+  }, [reportIssues, selectable, enablePopup]);
 
-  // Selection pan/highlight and zoom to show selected marker even if clustered
+  // Selection pan/highlight + zoomToShowLayer + dim others
   useEffect(() => {
     const map = mapRef.current;
     const clusterGroup = clusterGroupRef.current;
     if (!map || !map.getPane("markerPane")) return;
 
-    // Clear old highlight
     if (highlightRef.current) {
       try {
         highlightRef.current.remove();
@@ -428,7 +420,7 @@ const ProjectMapViewer: React.FC<Props> = ({
       highlightRef.current = null;
     }
 
-    // Reset all marker opacities and z-index by default
+    // reset visuals
     markerMapRef.current.forEach(({ marker }) => {
       try {
         marker.setOpacity(1);
@@ -436,28 +428,23 @@ const ProjectMapViewer: React.FC<Props> = ({
       } catch {}
     });
 
-    if (!selectedProjectId) return;
-
-    const entry = markerMapRef.current.get(selectedProjectId);
+    if (!selectedIssueId) return;
+    const entry = markerMapRef.current.get(selectedIssueId);
     if (!entry) return;
 
     const showSelected = () => {
       const latlng = entry.marker.getLatLng();
-
-      // Bring selection into view and emphasize it
       map.panTo(latlng, { animate: true });
       try {
         entry.marker.setZIndexOffset(1000);
       } catch {}
 
-      // Dim non-selected markers (lighter dimming for visibility)
       markerMapRef.current.forEach((e, id) => {
         try {
-          e.marker.setOpacity(id === selectedProjectId ? 1 : NON_SELECTED_OPACITY);
+          e.marker.setOpacity(id === selectedIssueId ? 1 : NON_SELECTED_OPACITY);
         } catch {}
       });
 
-      // Add highlight ring
       const circle = L.circleMarker(latlng, {
         radius: 14,
         color: "#7C3AED",
@@ -469,20 +456,19 @@ const ProjectMapViewer: React.FC<Props> = ({
       highlightRef.current = circle;
     };
 
-    // If clustered, zoom in until this marker is shown, then run showSelected
     if (clusterGroup) {
       clusterGroup.zoomToShowLayer(entry.marker, showSelected);
     } else {
       showSelected();
     }
-  }, [selectedProjectId]);
+  }, [selectedIssueId]);
 
   return (
     <div className="relative z-10 h-full w-full">
       <div id={containerId} className="h-full w-full" />
-      <ProjectMapLegend size="small" />
+      <ReportIssueMapLegend />
     </div>
   );
 };
 
-export default ProjectMapViewer;
+export default ReportIssueMapViewer;

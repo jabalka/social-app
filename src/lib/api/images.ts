@@ -4,7 +4,8 @@ import { v4 as uuid } from "uuid";
 import { canEditImages } from "../role-permissions";
 import { supabase } from "../supabase";
 
-const storageUrlBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/projects-images/`;
+const projectImagesStorageUrlBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/projects-images/`;
+const reportImagesStorageUrlBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/report-images/`;
 
 // Project Related
 export async function uploadProjectImage(formData: FormData, userId: string) {
@@ -27,7 +28,7 @@ export async function uploadProjectImage(formData: FormData, userId: string) {
     return { error: error.message, status: 500 };
   }
 
-  const imageUrl = `${storageUrlBase}${filePath}`;
+  const imageUrl = `${projectImagesStorageUrlBase}${filePath}`;
   return { data: { url: imageUrl }, status: 200 };
 }
 
@@ -66,11 +67,11 @@ export async function deleteProjectImage(
     return { success: false, error: "Image not found in project" };
   }
 
-  if (!imageUrl.startsWith(storageUrlBase)) {
+  if (!imageUrl.startsWith(projectImagesStorageUrlBase)) {
     return { success: false, error: "Invalid image URL format" };
   }
 
-  const storagePath = imageUrl.replace(storageUrlBase, "");
+  const storagePath = imageUrl.replace(projectImagesStorageUrlBase, "");
 
   const { error: storageError } = await supabase.storage.from("projects-images").remove([storagePath]);
 
@@ -147,12 +148,12 @@ export async function uploadIssueImage(formData: FormData, userId: string) {
   const fileName = `${Date.now()}.${fileExt}`;
   const filePath = `user-${userId}/issue-${issueId}/${fileName}`;
 
-  const { error } = await supabase.storage.from("issue-images").upload(filePath, file);
+  const { error } = await supabase.storage.from("report-images").upload(filePath, file);
   if (error) {
     return { error: error.message, status: 500 };
   }
 
-  const imageUrl = `${storageUrlBase}${filePath}`;
+  const imageUrl = `${reportImagesStorageUrlBase}${filePath}`;
   
   await prisma.issueImage.create({
     data: {
@@ -192,10 +193,10 @@ export async function uploadMultipleIssueImages(issueId: string, files: File[], 
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `user-${userId}/issue-${issueId}/${fileName}`;
 
-      const { error } = await supabase.storage.from("issue-images").upload(filePath, file);
+      const { error } = await supabase.storage.from("report-images").upload(filePath, file);
       if (error) throw new Error(error.message);
 
-      const imageUrl = `${storageUrlBase}${filePath}`;
+      const imageUrl = `${reportImagesStorageUrlBase}${filePath}`;
       return imageUrl;
     });
 
@@ -249,13 +250,13 @@ export async function deleteIssueImage(
     return { success: false, error: "Image not found in issue report" };
   }
 
-  if (!imageUrl.startsWith(storageUrlBase)) {
+  if (!imageUrl.startsWith(reportImagesStorageUrlBase)) {
     return { success: false, error: "Invalid image URL format" };
   }
 
-  const storagePath = imageUrl.replace(storageUrlBase, "");
+  const storagePath = imageUrl.replace(reportImagesStorageUrlBase, "");
 
-  const { error: storageError } = await supabase.storage.from("issue-images").remove([storagePath]);
+  const { error: storageError } = await supabase.storage.from("report-images").remove([storagePath]);
 
   if (storageError) {
     console.error("Failed to delete from storage:", storageError);

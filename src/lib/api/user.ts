@@ -5,9 +5,7 @@ import { Prisma } from "@prisma/client";
 
 export async function getUserById(id: string) {
   const session = await auth();
-  if (!session?.user) {
-    return { error: "Unauthorized", status: 401 };
-  }
+  if (!session?.user) return { error: "Unauthorized", status: 401 };
 
   try {
     const user = await prisma.user.findUnique({
@@ -22,16 +20,14 @@ export async function getUserById(id: string) {
         roleId: true,
         comments: true,
         likes: true,
-        ideas: true,
-        projects: true,
-        role: true,
+        ideas: { select: { id: true, title: true, createdAt: true } },
+        projects: { select: { id: true, title: true, createdAt: true } },
+        role: { select: { id: true, name: true } },
+        issueReports: { select: { id: true, title: true, status: true, createdAt: true } },
       },
     });
 
-    if (!user) {
-      return { error: "User not found", status: 404 };
-    }
-
+    if (!user) return { error: "User not found", status: 404 };
     return { data: user, status: 200 };
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -40,37 +36,35 @@ export async function getUserById(id: string) {
 }
 
 export async function updateUserProfile(req: Request) {
-    const session = await auth();
-  
-    if (!session?.user?.id) {
-      return { error: "Unauthorized", status: 401 };
-    }
-  
-    const { name, username, imageUrl } = await req.json();
-  
-    try {
-      const updatedUser = await prisma.user.update({
-        where: { id: session.user.id },
-        data: {
-          name: name ?? undefined,
-          username: username ?? undefined,
-          image: imageUrl ?? undefined,
-        },
-        include: {
-          comments: true,
-          likes: true,
-          ideas: true,
-          projects: true,
-          role: true,
-        },
-      });
-  
-      return { data: updatedUser, status: 200 };
-    } catch (error) {
-      console.error("[USER_UPDATE_ERROR]", error);
-      return { error: "Profile update failed", status: 500 };
-    }
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized", status: 401 };
+
+  const { name, username, imageUrl } = await req.json();
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        name: name ?? undefined,
+        username: username ?? undefined,
+        image: imageUrl ?? undefined,
+      },
+      include: {
+        comments: true,
+        likes: true,
+        ideas: { select: { id: true, title: true, createdAt: true } },
+        projects: { select: { id: true, title: true, createdAt: true } },
+        role: { select: { id: true, name: true } },
+        issueReports: { select: { id: true, title: true, status: true, createdAt: true } },
+      },
+    });
+
+    return { data: updatedUser, status: 200 };
+  } catch (error) {
+    console.error("[USER_UPDATE_ERROR]", error);
+    return { error: "Profile update failed", status: 500 };
   }
+}
 
 export async function getUserCommentsAndLikes(request: Request) {
   const session = await auth();

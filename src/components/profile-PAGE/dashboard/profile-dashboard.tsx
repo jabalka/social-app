@@ -4,27 +4,17 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
 import { CommentWithLikes, Reply } from "@/models/comment.types";
 
+import LoaderModal from "@/components/common/loader-modal";
+import SectionBox from "@/components/common/section-box";
+import SurfacePanel from "@/components/common/surface-panel";
 import ActionButtons from "@/components/shared/action-buttons";
+import { cn } from "@/utils/cn.utils";
 import { showCustomToast } from "@/utils/show-custom-toast";
 import React, { useEffect, useRef, useState } from "react";
 import ProfileEditableField from "./profile-editable-field";
 import ProfileImage from "./profile-image";
 import ProfileRoleDisplay from "./profile-role-display";
 import ProfileStatistics from "./profile-statistics";
-
-// Safely derive a "report" count without using `any`
-function getReportCount(user: unknown): number {
-  if (!user || typeof user !== "object") return 0;
-
-  const record = user as Record<string, unknown>;
-  const reports = record["reports"];
-  if (Array.isArray(reports)) return reports.length;
-
-  const issues = record["issues"];
-  if (Array.isArray(issues)) return issues.length;
-
-  return 0;
-}
 
 const ProfileDashboard: React.FC = () => {
   const { theme } = useSafeThemeContext();
@@ -40,6 +30,8 @@ const ProfileDashboard: React.FC = () => {
 
   const [projectLikeCount, setProjectLikeCount] = useState<number>(0);
   const [commentLikeCount, setCommentLikeCount] = useState<number>(0);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchLikes = async () => {
@@ -92,6 +84,11 @@ const ProfileDashboard: React.FC = () => {
     setHasUnsavedChanges(nameChanged || usernameChanged || imageChanged);
   }, [nameInput, usernameInput, selectedImage, hasInitialized]);
 
+  const projectCount = user?.projects?.length ?? 0;
+  const ideaCount = user?.ideas?.length ?? 0;
+  const reportCount = user?.issueReports?.length ?? 0;
+  const commentCount = user?.comments?.length ?? 0;
+
   const validateName = (value: string) => {
     const cleaned = value.replace(/\s+/g, " ").trim();
     const wordCount = cleaned.split(" ").filter(Boolean).length;
@@ -110,21 +107,11 @@ const ProfileDashboard: React.FC = () => {
     const formData = new FormData();
     formData.append("image", file);
 
-    const res = await fetch("/api/user/upload-profile-image", {
-      method: "POST",
-      body: formData,
-    });
-
+    const res = await fetch("/api/user/upload-profile-image", { method: "POST", body: formData });
     if (!res.ok) {
-      showCustomToast(`Image Upload Unsuccessful`, {
-        action: {
-          label: "OK",
-          onClick: () => true,
-        },
-      });
+      showCustomToast(`Image Upload Unsuccessful`, { action: { label: "OK", onClick: () => true } });
       return null;
     }
-
     const { url } = await res.json();
     return url;
   };
@@ -132,17 +119,14 @@ const ProfileDashboard: React.FC = () => {
   const handleSave = async () => {
     const nameValidation = validateName(nameInput);
     const usernameValidation = validateUsername(usernameInput);
-
     if (nameValidation || usernameValidation) {
-      showCustomToast(`Please fix the validation errors`, {
-        action: { label: "OK", onClick: () => true },
-      });
+      showCustomToast(`Please fix the validation errors`, { action: { label: "OK", onClick: () => true } });
       return;
     }
 
+    setLoading(true);
     try {
       let imageUrl = user?.image;
-
       if (selectedImage) {
         const uploaded = await uploadImageAndGetUrl(selectedImage);
         if (uploaded) imageUrl = uploaded;
@@ -151,17 +135,11 @@ const ProfileDashboard: React.FC = () => {
       const res = await fetch("/api/user/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: nameInput,
-          username: usernameInput,
-          image: imageUrl,
-        }),
+        body: JSON.stringify({ name: nameInput, username: usernameInput, image: imageUrl }),
       });
 
       if (!res.ok) {
-        showCustomToast(`Update Failed`, {
-          action: { label: "OK", onClick: () => true },
-        });
+        showCustomToast(`Update Failed`, { action: { label: "OK", onClick: () => true } });
         return;
       }
 
@@ -172,13 +150,11 @@ const ProfileDashboard: React.FC = () => {
       setHasUnsavedChanges(false);
       setSelectedImage(null);
 
-      showCustomToast(`Changes Saved Successfully`, {
-        action: { label: "OK", onClick: () => true },
-      });
+      showCustomToast(`Changes Saved Successfully`, { action: { label: "OK", onClick: () => true } });
     } catch {
-      showCustomToast(`An error occurred`, {
-        action: { label: "OK", onClick: () => true },
-      });
+      showCustomToast(`An error occurred`, { action: { label: "OK", onClick: () => true } });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,50 +168,29 @@ const ProfileDashboard: React.FC = () => {
   };
 
   const handleImageDelete = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/user/upload-profile-image", {
-        method: "DELETE",
-      });
-
+      const res = await fetch("/api/user/upload-profile-image", { method: "DELETE" });
       if (!res.ok) {
-        showCustomToast(`Failed to delete profile image`, {
-          action: {
-            label: "OK",
-            onClick: () => true,
-          },
-        });
+        showCustomToast(`Failed to delete profile image`, { action: { label: "OK", onClick: () => true } });
         return;
       }
-
       await res.json();
 
       if (user) {
-        const updatedUser = {
-          ...user,
-          image: null,
-        };
-
+        const updatedUser = { ...user, image: null };
         setUser(updatedUser);
-
-        if (initialUserRef.current) {
-          initialUserRef.current = updatedUser;
-        }
+        if (initialUserRef.current) initialUserRef.current = updatedUser;
       }
 
-      showCustomToast(`Profile image deleted successfully`, {
-        action: {
-          label: "OK",
-          onClick: () => true,
-        },
-      });
+      showCustomToast(`Profile image deleted successfully`, { action: { label: "OK", onClick: () => true } });
     } catch (error) {
       console.error("Error deleting profile image:", error);
       showCustomToast(`An error occurred while deleting profile image`, {
-        action: {
-          label: "OK",
-          onClick: () => true,
-        },
+        action: { label: "OK", onClick: () => true },
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -243,60 +198,73 @@ const ProfileDashboard: React.FC = () => {
 
   return (
     <>
-      <div className="mx-auto mt-8 rounded-3xl border-2 border-zinc-400/10 bg-[#f0e3dd] px-24 pt-8 shadow-2xl backdrop-blur-md dark:border-zinc-700/40 dark:bg-[#f0e3dd]/10 md:max-w-2xl md:px-48 md:py-28 lg:max-w-4xl xl:max-w-5xl">
-        <div className="relative -mt-2 pb-4 text-center md:-mt-20 md:pb-16">
-          <h1 className="text-2xl font-bold">Profile Details</h1>
-        </div>
+      {loading && <LoaderModal />}
 
-        <div className="flex w-full flex-col items-center justify-between gap-8 md:flex-row md:items-start">
-          {/* Left Column */}
-          <ProfileImage
-            image={user?.image ?? null}
-            theme={theme}
-            onImageChange={setSelectedImage}
-            onImageDelete={handleImageDelete}
-          />
+      <SectionBox className="mt-1">
+        <h1 className="text-center text-2xl font-bold">Profile Details</h1>
 
-          {/* Right Column */}
-          <div className="flex w-full flex-col gap-4">
-            <ProfileEditableField
-              label="Name"
-              value={nameInput}
-              originalValue={initialUserRef.current?.name ?? ""}
-              theme={theme}
-              onSave={setNameInput}
-              onCancel={() => setNameInput(initialUserRef.current?.name ?? "")}
-              validate={validateName}
-              maxLength={MAX_NAME_LENGTH}
-            />
+        <SurfacePanel className="mb-6 mt-4">
+          <div className="mx-auto w-full ">
+            <div className="grid grid-cols-1 items-start justify-center gap-8 md:grid-cols-[auto,auto]">
 
-            <ProfileEditableField
-              label="Username"
-              value={usernameInput}
-              originalValue={initialUserRef.current?.username ?? ""}
-              theme={theme}
-              onSave={setUsernameInput}
-              onCancel={() => setUsernameInput(initialUserRef.current?.username ?? "")}
-              validate={validateUsername}
-              maxLength={MAX_USERNAME_LENGTH}
-            />
+              <div className="justify-self-center">
+                <ProfileImage
+                  image={user?.image ?? null}
+                  theme={theme}
+                  onImageChange={setSelectedImage}
+                  onImageDelete={handleImageDelete}
+                />
+              </div>
 
-            <ProfileRoleDisplay roleId={user?.role?.id ?? ""} theme={theme} />
+              <div className="flex w-full max-w-[560px] flex-col gap-4 justify-self-center">
+                <ProfileEditableField
+                  label="Name"
+                  value={nameInput}
+                  originalValue={initialUserRef.current?.name ?? ""}
+                  theme={theme}
+                  onSave={setNameInput}
+                  onCancel={() => setNameInput(initialUserRef.current?.name ?? "")}
+                  validate={validateName}
+                  maxLength={MAX_NAME_LENGTH}
+                />
 
-            <ProfileStatistics
-              theme={theme}
-              userId={user?.id}
-              projectCount={user?.projects.length ?? 0}
-              ideaCount={user?.ideas?.length ?? 0}
-              reportCount={getReportCount(user)}
-              commentCount={user?.comments.length ?? 0}
-              projectLikeCount={projectLikeCount}
-              commentLikeCount={commentLikeCount}
-            />
+                <ProfileEditableField
+                  label="Username"
+                  value={usernameInput}
+                  originalValue={initialUserRef.current?.username ?? ""}
+                  theme={theme}
+                  onSave={setUsernameInput}
+                  onCancel={() => setUsernameInput(initialUserRef.current?.username ?? "")}
+                  validate={validateUsername}
+                  maxLength={MAX_USERNAME_LENGTH}
+                />
+
+                <ProfileRoleDisplay roleId={user?.role?.id ?? ""} theme={theme} />
+              </div>
+
+              <div className="flex justify-center md:col-span-2">
+                <ProfileStatistics
+                  theme={theme}
+                  userId={user?.id}
+                  projectCount={projectCount}
+                  ideaCount={ideaCount}
+                  reportCount={reportCount}
+                  commentCount={commentCount}
+                  projectLikeCount={projectLikeCount}
+                  commentLikeCount={commentLikeCount}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-        {hasInitialized && hasUnsavedChanges && (
-          <div className="mt-8 flex justify-center">
+        </SurfacePanel>
+
+        <div className="mt-0 flex min-h-[48px] justify-center">
+          <div
+            className={cn(
+              "transition-all duration-200",
+              hasUnsavedChanges ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0",
+            )}
+          >
             <ActionButtons
               onSubmit={handleSave}
               onCancel={handleCancel}
@@ -306,8 +274,8 @@ const ProfileDashboard: React.FC = () => {
               position="center"
             />
           </div>
-        )}
-      </div>
+        </div>
+      </SectionBox>
     </>
   );
 };

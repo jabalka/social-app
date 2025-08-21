@@ -3,10 +3,10 @@ import { UseFormReturn } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useConfirmation } from "./use-confirmation.hook";
 import { clearDraft, loadDraft, saveDraft } from "@/utils/save-to-draft.utils";
-import { IssueFormFields } from "@/models/issue.types";
+import { ReportIssueFormFields } from "@/models/report-issue.types";
 
 
-export interface IssueDraft extends IssueFormFields {
+export interface IssueDraft extends ReportIssueFormFields {
   lat?: number | null;
   lng?: number | null;
   addressLines?: string[];
@@ -17,8 +17,8 @@ export interface IssueDraft extends IssueFormFields {
 
 interface UseIssueFormDraftParams {
   draftKey: string;
-  formMethods: UseFormReturn<IssueFormFields>;
-  isFormEmpty: (values: IssueFormFields, lat: number | null, lng: number | null, addressLines: string[], addressCoords: string, previewUrls: string[]) => boolean;
+  formMethods: UseFormReturn<ReportIssueFormFields>;
+  isFormEmpty: (values: ReportIssueFormFields, lat: number | null, lng: number | null, addressLines: string[], addressCoords: string, previewUrls: string[]) => boolean;
   locationData: {
     lat: number | null;
     lng: number | null;

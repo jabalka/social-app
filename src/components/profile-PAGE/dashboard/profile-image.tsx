@@ -59,8 +59,7 @@ const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange, onImageDel
       console.log("Need to implement Back-End logic to delete user image!")
 
       // try {
-      //   // Call your API to delete the image
-      //   const res = await fetch("/api/user/delete-profile-image", {
+       //   const res = await fetch("/api/user/delete-profile-image", {
       //     method: "POST",
       //   });
     
@@ -71,7 +70,7 @@ const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange, onImageDel
       //     return;
       //   }
     
-      //   // Update local state
+
       //   const updated = await res.json();
       //   setUser(updated);
       //   initialUserRef.current = updated;
@@ -92,10 +91,11 @@ const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange, onImageDel
 
   return (
     <div className="relative rounded-full p-[1px]">
-      <div className="group relative w-full overflow-hidden duration-300 hover:z-20 hover:scale-[1.8]">
+      <div className="group relative w-full overflow-hidden duration-300 hover:z-20 hover:scale-125">
         <div
           className={cn(
-            "relative h-48 w-32 overflow-hidden rounded-full outline-2 outline-offset-[2px] transition-transform",
+      
+            "relative h-40 w-40 md:h-48 md:w-48 overflow-hidden rounded-full outline-2 outline-offset-2 transition-transform",
             {
               "bg-[#bda69c66]": theme === Theme.LIGHT,
               "bg-[#6f6561c4]": theme === Theme.DARK,
@@ -112,14 +112,14 @@ const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange, onImageDel
           />
 
           <span
-            className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-full", {
+            className={cn("pointer-events-none absolute -inset-[0px] z-10 rounded-full ", {
               "group-hover:animate-snakeBorderHoverLight": theme === Theme.LIGHT,
               "group-hover:animate-snakeBorderHoverDark": theme === Theme.DARK,
             })}
           />
         </div>
       </div>
-      <div className="absolute -bottom-5 left-0">
+      <div className="absolute -bottom-5 left-0 z-30">
         <IconWithTooltip
           id="edit-image"
           icon={Pencil}
@@ -132,17 +132,17 @@ const ProfileImage: React.FC<Props> = ({ image, theme, onImageChange, onImageDel
       </div>
 
       {previewImageUrl ? (
-        <div className="absolute -bottom-6 right-0">
+        <div className="absolute -bottom-6 right-0 z-30">
           <button onClick={handleCancelImage}>
             <X className="h-6 w-6 cursor-pointer text-red-600 hover:text-red-700" />
           </button>
         </div>
       ) : hasCustomImage && (
-        <div className="absolute -bottom-6 right-0">
+        <div className="absolute -bottom-6 right-0 z-30">
           <IconWithTooltip
             id="delete-image"
             icon={Trash2}
-            content="Delete Profile Image"
+            content="Delete Image"
             theme={theme}
             iconClassName="text-red-500 h-5 w-5"
             tooltipPlacement="bottom"
