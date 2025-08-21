@@ -12,18 +12,18 @@ import { clearDraft } from "@/utils/save-to-draft.utils";
 
 import { useConfirmation } from "@/hooks/use-confirmation.hook";
 import { useIssueFormDraft } from "@/hooks/use-issue-form-draft";
-import { defaultValues, isFormEmpty, IssueFormFields } from "@/models/issue.types";
-import ActionButtons from "./shared/action-buttons";
+import { defaultValues, isFormEmpty, ReportIssueFormFields } from "@/models/report-issue.types";
 import LoaderModal from "./common/loader-modal";
+import IconWithTooltip from "./icon-with-tooltip";
 import ImagesUpload from "./images-upload";
 import LocationPostcodePickup from "./location-postode-pick-up";
 import IssueTypeSelect from "./report-issua-type-selector";
 import LandmarkInput from "./report-issue-landmark-input";
 import PriorityLevelSelect from "./report-issue-priority-select";
 import TitleInputWithAutofill from "./report-issue-title-input";
+import ActionButtons from "./shared/action-buttons";
 import DescriptionField from "./shared/description-field";
 import SafetyWarning from "./shared/safety-warning";
-import IconWithTooltip from "./icon-with-tooltip";
 
 const DRAFT_KEY = "ISSUE_REPORT_DRAFT";
 
@@ -38,7 +38,7 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
   const router = useRouter();
   const { confirm } = useConfirmation();
 
-  const methods = useForm<IssueFormFields>({ defaultValues, mode: "onChange" });
+  const methods = useForm<ReportIssueFormFields>({ defaultValues, mode: "onChange" });
   const { handleSubmit, setValue, getValues, watch, reset, formState, control } = methods;
   const {
     lat,
@@ -141,7 +141,6 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
 
   const resetLocation = () => {
     setValue("postcode", "");
-
     resetAddressState();
   };
 
@@ -158,7 +157,7 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
     [previewUrls, setValue],
   );
 
-  const onSubmit = async (data: IssueFormFields) => {
+  const onSubmit = async (data: ReportIssueFormFields) => {
     setLoading(true);
     try {
       const res = await fetch("/api/issues", {
@@ -183,19 +182,20 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
         return;
       }
 
-      const result = await res.json();
-      const issueId = result.data?.issueId;
+      const { issueId } = await res.json(); 
 
       if (issueId && data.images && data.images.length > 0) {
-        for (const file of data.images) {
+        const uploads = data.images.map(async (file) => {
           const formData = new FormData();
           formData.append("image", file);
           formData.append("issueId", issueId);
-          await fetch("/api/issues/images", {
-            method: "POST",
-            body: formData,
-          });
-        }
+          const uploadRes = await fetch("/api/issues/upload-image", { method: "POST", body: formData });
+          if (!uploadRes.ok) {
+            const err = await uploadRes.json().catch(() => ({}));
+            console.error("Issue image upload failed:", err);
+          }
+        });
+        await Promise.all(uploads);
       }
 
       reset();
@@ -210,21 +210,14 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
 
       if (onClose) {
         onClose();
-        setTimeout(() => {
-          setLoading(false);
-        }, 300);
+        setTimeout(() => setLoading(false), 300);
       } else {
-        setTimeout(() => {
-          router.push("/browse/issues-list");
-        }, 300);
-
-        setTimeout(() => {
-          setLoading(false);
-        }, 800);
-
+        setTimeout(() => router.push("/browse/issues-list"), 300);
+        setTimeout(() => setLoading(false), 800);
         return;
       }
-    } catch {
+    } catch (e) {
+      console.error("Issue create error:", e);
       sessionStorage.setItem("showIssueReportErrorToast", "An error occurred while creating your report.");
     } finally {
       setLoading(false);
@@ -299,11 +292,8 @@ const ReportIssueCreateForm: React.FC<ReportIssueCreateFormProps> = ({ open = tr
             />
 
             <LandmarkInput />
-
-            {/* Priority Level */}
             <PriorityLevelSelect />
 
-            {/* Images Section */}
             <div>
               <div className="mb-1 flex items-center justify-between"></div>
               <Controller

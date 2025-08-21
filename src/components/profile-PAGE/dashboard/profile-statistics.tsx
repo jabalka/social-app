@@ -57,13 +57,13 @@ const ProfileStatistics: React.FC<Props> = ({
         {/* Projects (opens Projects modal) */}
         <div className={linkBase} onClick={() => setOpenProjects(true)}>
           <span>Total Projects: {projectCount}</span>
-          <TooltipBubble theme={theme} placement="right" content="Click to view your projects" />
+          <TooltipBubble theme={theme} placement="right" content="View All" />
         </div>
 
         {/* Ideas (opens Ideas modal) */}
         <div className={linkBase} onClick={() => setOpenIdeas(true)}>
           <span>Total Ideas: {ideaCount}</span>
-          <TooltipBubble theme={theme} placement="right" content="Click to view your ideas" />
+          <TooltipBubble theme={theme} placement="right" content="View All" />
         </div>
 
         {/* Reports (opens Reports/Issues modal) */}
@@ -73,7 +73,7 @@ const ProfileStatistics: React.FC<Props> = ({
         //   }
           >
           <span>Total Reports: {reportCount}</span>
-          <TooltipBubble theme={theme} placement="right" content="Click to view your reported issues" />
+          <TooltipBubble theme={theme} placement="right" content="View All" />
         </div>
 
         {/* Keep existing non-linked stats */}

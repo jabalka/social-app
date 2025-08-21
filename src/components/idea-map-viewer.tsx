@@ -7,25 +7,67 @@ import { useEffect, useId, useRef } from "react";
 import IdeaPopupCard from "./idea-popup-card";
 import { createRoot, Root } from "react-dom/client";
 
+// Leaflet.markercluster plugin + CSS (ensure: npm i leaflet.markercluster @types/leaflet.markercluster)
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
 export interface IdeaMapViewerProps {
   ideas: Idea[];
   refreshIdeas: () => void;
   selectedIdeaId?: string;
   onSelectIdea?: (id: string) => void;
   selectable?: boolean;
-
-  // allow disabling popups (used by Profile > Lists map)
   enablePopup?: boolean; // default true
 }
 
 type MarkerEntry = { marker: L.Marker };
 
+const IDEA_ICON_URL = "/images/idea-bulb.png";
+
 const ideaIcon = L.icon({
-  iconUrl: "/images/idea-bulb.png",
+  iconUrl: IDEA_ICON_URL,
   iconSize: [48, 48],
   iconAnchor: [24, 48],
   popupAnchor: [0, -36],
 });
+
+// Cluster icon: shows the idea bulb + count badge, zooms in on click until markers spread, then spiderfies at max zoom
+const buildIdeaClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
+  const total = cluster.getAllChildMarkers().length;
+
+  const countBadge = `
+    <div style="
+      position:absolute;right:-4px;bottom:-4px;
+      min-width:22px;height:22px;padding:0 6px;
+      display:flex;align-items:center;justify-content:center;
+      background:#111827;color:#fff;border-radius:9999px;
+      font-size:12px;font-weight:700;border:2px solid #fff;
+      box-shadow:0 2px 5px rgba(0,0,0,0.3);
+    ">${total}</div>
+  `;
+
+  const html = `
+    <div style="
+      position:relative;
+      display:flex;align-items:center;justify-content:center;
+      width:52px;height:52px;border-radius:50%;
+      background:#fff;border:3px solid #0284C7; /* sky-600 */
+      box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    ">
+      <img src="${IDEA_ICON_URL}" alt="idea" style="width:32px;height:32px;object-fit:contain;" />
+      ${countBadge}
+    </div>
+  `;
+
+  return L.divIcon({
+    className: "idea-cluster-icon",
+    html,
+    iconSize: [52, 52],
+    iconAnchor: [26, 50],
+    popupAnchor: [0, -40],
+  });
+};
 
 const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
   ideas,
@@ -38,9 +80,8 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
   const containerId = useId();
   const mapRef = useRef<L.Map | null>(null);
   const markerMapRef = useRef<Map<string, MarkerEntry>>(new Map());
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const highlightRef = useRef<L.CircleMarker | null>(null);
-
-  // Popup management for React root
   const popupRootRef = useRef<Root | null>(null);
 
   const closePopup = () => {
@@ -54,7 +95,7 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
   };
 
   const openPopupAt = (idea: Idea, marker: L.Marker) => {
-    if (!enablePopup) return; // guard
+    if (!enablePopup) return;
     const map = mapRef.current;
     if (!map || !map.getPane("markerPane")) return;
 
@@ -94,6 +135,28 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
 
+    // Clustering: combine overlapping ideas; clicking cluster zooms in until spread; spiderfy at max zoom
+    const clusterGroup = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: false,       // we handle zoom-in manually
+      maxClusterRadius: 60,
+      spiderfyOnMaxZoom: true,
+      disableClusteringAtZoom: 18,      // fully separate at high zoom
+      iconCreateFunction: (cluster) => buildIdeaClusterIcon(cluster),
+    });
+
+    clusterGroup.on("clusterclick", (e) => {
+      const bounds = e.layer.getBounds();
+      if (map.getZoom() < map.getMaxZoom()) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      } else {
+        e.layer.spiderfy();
+      }
+    });
+
+    clusterGroup.addTo(map);
+    clusterGroupRef.current = clusterGroup;
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
@@ -102,9 +165,10 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
         ro.disconnect();
       } catch {}
 
+      // Remove markers from the cluster group
       markerMapRef.current.forEach(({ marker }) => {
         try {
-          marker.remove();
+          clusterGroupRef.current?.removeLayer(marker);
         } catch {}
       });
       markerMapRef.current.clear();
@@ -113,34 +177,44 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
         try {
           highlightRef.current.remove();
         } catch {}
-        highlightRef.current = null;
       }
+      highlightRef.current = null;
 
       closePopup();
 
+      // Remove cluster group from the map
+      if (clusterGroupRef.current && mapRef.current) {
+        try {
+          clusterGroupRef.current.removeFrom(mapRef.current);
+        } catch {}
+      }
+      clusterGroupRef.current = null;
+
+      // Remove the map
       if (mapRef.current) {
         try {
           mapRef.current.remove();
         } catch {}
-        mapRef.current = null;
       }
+      mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId]);
 
-  // Sync markers without recreating map
+  // Sync markers
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.getPane("markerPane")) return;
+    const clusterGroup = clusterGroupRef.current;
+    if (!map || !map.getPane("markerPane") || !clusterGroup) return;
 
     const markerMap = markerMapRef.current;
     const nextIds = new Set(ideas.map((i) => i.id));
 
-    // Remove destroyed markers
+    // Remove markers that no longer exist
     for (const [id, entry] of markerMap.entries()) {
       if (!nextIds.has(id)) {
         try {
-          entry.marker.remove();
+          clusterGroup.removeLayer(entry.marker);
         } catch {}
         markerMap.delete(id);
       }
@@ -155,32 +229,31 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
         const existing = markerMap.get(idea.id);
 
         const handleClick = () => {
-          // If no selection wiring OR selectable is false -> open popup immediately
+          // If not selectable or no selection handler, open popup (if enabled)
           if (!selectable || !hasSelectionHandler) {
             if (enablePopup) openPopupAt(idea, (markerMap.get(idea.id) as MarkerEntry).marker);
             return;
           }
-
-          // Select-first behavior when selection wiring exists
-          if (selectedIdeaId !== idea.id) {
-            onSelectIdea?.(idea.id);
-          } else {
-            if (enablePopup) openPopupAt(idea, (markerMap.get(idea.id) as MarkerEntry).marker);
-          }
+          // Select-first behavior
+          if (selectedIdeaId !== idea.id) onSelectIdea?.(idea.id);
+          else if (enablePopup) openPopupAt(idea, (markerMap.get(idea.id) as MarkerEntry).marker);
         };
 
         if (!existing) {
-          const marker = L.marker([idea.latitude as number, idea.longitude as number], { icon: ideaIcon }).addTo(map);
+          const marker = L.marker([idea.latitude as number, idea.longitude as number], { icon: ideaIcon });
           marker.on("click", handleClick);
+
+          clusterGroup.addLayer(marker);
           markerMap.set(idea.id, { marker });
         } else {
           existing.marker.off("click");
           existing.marker.on("click", handleClick);
         }
       });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ideas, selectable, selectedIdeaId, onSelectIdea, enablePopup]);
 
-  // Selection pan/highlight (no popup here)
+  // Selection pan/highlight
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.getPane("markerPane")) return;
@@ -189,8 +262,8 @@ const IdeaMapViewer: React.FC<IdeaMapViewerProps> = ({
       try {
         highlightRef.current.remove();
       } catch {}
-      highlightRef.current = null;
     }
+    highlightRef.current = null;
 
     if (!selectedIdeaId) return;
 

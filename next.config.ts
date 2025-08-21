@@ -1,5 +1,12 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.cache = { type: "memory" };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
@@ -19,6 +26,12 @@ const nextConfig = {
         hostname: "yypaxndddrycnlixcoey.supabase.co",
         port: "",
         pathname: "/storage/v1/object/public/profile-pictures/**",
+      },
+      {
+        protocol: "https",
+        hostname: "yypaxndddrycnlixcoey.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/report-images/**",
       },
     ],
   },

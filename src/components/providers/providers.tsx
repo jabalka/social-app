@@ -2,6 +2,8 @@ import { IdeaProvider } from "@/context/idea-context";
 import { NotificationsProvider } from "@/context/notifications-context";
 import { ProjectProvider } from "@/context/project-context";
 import { ProjectModalProvider } from "@/context/project-modal-context";
+import { ReportIssueProvider } from "@/context/report-issue-context";
+import { ReportIssueModalProvider } from "@/context/report-issue-modal-context";
 import { SocketProvider } from "@/context/socket-context";
 import { UserProvider } from "@/context/user-context";
 import { UserDialogProvider } from "@/context/user-dialog-context";
@@ -32,9 +34,13 @@ const Providers: React.FC<ProvidersProps> = ({ children }) => {
                       <ConfirmationProviders>
                         <ProjectProvider>
                           <IdeaProvider>
-                            <ProjectModalProvider>
-                              <SidebarProviders>{children}</SidebarProviders>
-                            </ProjectModalProvider>
+                            <ReportIssueProvider>
+                              <ReportIssueModalProvider>
+                                <ProjectModalProvider>
+                                  <SidebarProviders>{children}</SidebarProviders>
+                                </ProjectModalProvider>
+                              </ReportIssueModalProvider>
+                            </ReportIssueProvider>
                           </IdeaProvider>
                         </ProjectProvider>
                       </ConfirmationProviders>

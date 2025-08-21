@@ -1,3 +1,5 @@
+export type IssueTypeValue = typeof ISSUE_TYPES[number]["value"];
+
 export const ISSUE_TYPES = [
   {
     value: "POTHOLE",

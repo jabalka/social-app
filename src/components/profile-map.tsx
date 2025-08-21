@@ -2,12 +2,14 @@
 
 import { useIdeaContext } from "@/context/idea-context";
 import { useProjectContext } from "@/context/project-context";
+import { useReportIssueContext } from "@/context/report-issue-context";
 import { useSafeUser } from "@/context/user-context";
 import dynamic from "next/dynamic";
 import React, { useCallback, useEffect, useMemo } from "react";
 
 const ProjectMapViewer = dynamic(() => import("@/components/project-map-viewer"), { ssr: false });
 const IdeaMapViewer = dynamic(() => import("@/components/idea-map-viewer"), { ssr: false });
+const ReportIssueMapViewer = dynamic(() => import("@/components/report-issue-map-viewer"), { ssr: false });
 
 interface Props {
   activeTab: "projects" | "ideas" | "issues";
@@ -15,8 +17,10 @@ interface Props {
   ownerId?: string;
   selectedProjectId?: string;
   selectedIdeaId?: string;
+  selectedIssueId?: string;
   onSelectProject?: (id: string) => void;
   onSelectIdea?: (id: string) => void;
+  onSelectIssue?: (id: string) => void;
 }
 
 const ProfileMap: React.FC<Props> = ({
@@ -25,12 +29,15 @@ const ProfileMap: React.FC<Props> = ({
   ownerId,
   selectedProjectId,
   selectedIdeaId,
+  selectedIssueId,
   onSelectProject,
   onSelectIdea,
+  onSelectIssue,
 }) => {
   const { user } = useSafeUser();
   const { projects, refreshProjects } = useProjectContext();
   const { ideas, refreshIdeas } = useIdeaContext();
+  const { reportIssues, refreshReportIssues } = useReportIssueContext();
 
   const effectiveOwnerId = useMemo(() => {
     if (!showOwnedOnly) return undefined;
@@ -47,10 +54,16 @@ const ProfileMap: React.FC<Props> = ({
     return refreshIdeas({ page: 1, sort: "newest", type, ownerId: effectiveOwnerId });
   }, [refreshIdeas, showOwnedOnly, effectiveOwnerId]);
 
+  const refetchReportIssues = useCallback(() => {
+    const type = showOwnedOnly && effectiveOwnerId ? "user" : "all";
+    return refreshReportIssues({ page: 1, limit: 10, sort: "newest", type, ownerId: effectiveOwnerId });
+  }, [refreshReportIssues, showOwnedOnly, effectiveOwnerId]);
+
   useEffect(() => {
     if (activeTab === "projects") refetchProjects().catch(() => undefined);
     if (activeTab === "ideas") refetchIdeas().catch(() => undefined);
-  }, [activeTab, refetchProjects, refetchIdeas]);
+    if (activeTab === "issues") refetchReportIssues().catch(() => undefined);
+  }, [activeTab, refetchProjects, refetchIdeas, refetchReportIssues]);
 
   const projectsToShow = useMemo(() => {
     if (!showOwnedOnly || !effectiveOwnerId) return projects;
@@ -62,6 +75,11 @@ const ProfileMap: React.FC<Props> = ({
     return ideas.filter((i) => i.author?.id === effectiveOwnerId);
   }, [ideas, showOwnedOnly, effectiveOwnerId]);
 
+  const reportIssuesToShow = useMemo(() => {
+    if (!showOwnedOnly || !effectiveOwnerId) return reportIssues;
+    return reportIssues ? reportIssues.filter((i) => i.reporter?.id === effectiveOwnerId) : [];
+  }, [reportIssues, showOwnedOnly, effectiveOwnerId]);
+
   return (
     <div className="h-full w-full rounded">
       {activeTab === "projects" && user && (
@@ -69,24 +87,32 @@ const ProfileMap: React.FC<Props> = ({
           user={user}
           projects={projectsToShow}
           refreshProjects={refetchProjects}
-          selectable={true}
+          selectable
           selectedProjectId={selectedProjectId}
           onSelectProject={onSelectProject}
+          enablePopup={false}
         />
       )}
       {activeTab === "ideas" && (
         <IdeaMapViewer
           ideas={ideasToShow}
           refreshIdeas={refetchIdeas}
-          selectable={true}
+          selectable
           selectedIdeaId={selectedIdeaId}
           onSelectIdea={onSelectIdea}
+          enablePopup={false}
         />
       )}
-      {activeTab === "issues" && (
-        <div className="flex h-full items-center justify-center text-sm opacity-70">
-          Map for Reported Issues coming soon…
-        </div>
+      {activeTab === "issues" && user && reportIssues && (
+        <ReportIssueMapViewer
+          user={user}
+          reportIssues={reportIssuesToShow || []}
+          refreshReportIssues={refetchReportIssues}
+          selectedIssueId={selectedIssueId}
+          onSelectIssue={onSelectIssue}
+          selectable
+          enablePopup={false}
+        />
       )}
     </div>
   );
