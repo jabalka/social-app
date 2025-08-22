@@ -38,6 +38,5 @@ declare module "leaflet" {
   function markerClusterGroup(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
 }
 
-// Declare the side-effect module so TS accepts the import.
-// We don't model exports because the plugin augments `window.L` at runtime.
+// Side-effect module declarations so TS accepts imports.
 declare module "leaflet.markercluster" {}

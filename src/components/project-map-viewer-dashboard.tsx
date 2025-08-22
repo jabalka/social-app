@@ -1,20 +1,20 @@
 "use client";
 
 import { useSafeThemeContext } from "@/context/safe-theme-context";
-import { Project } from "@/models/project.types";
 import { ProjectStatus } from "@prisma/client";
 import { useEffect, useId, useRef, useState } from "react";
 import ProjectMapLegend from "./map-legend";
 import ProjectPopupContent from "./map-viewer-project-pop-up";
 import type { ProjectMapViewerProps } from "./map-wrapper-viewer";
+import { loadLeafletWithMarkerCluster, type LeafletModule } from "@/utils/leaflet-loader";
+import { isMarkerDisplayed, nearlySameView } from "@/utils/map-helpers";
+import { openReactPopup } from "@/utils/leaflet-react-popup";
 
-// CSS only
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import type * as L from "leaflet";
-import { LeafletModule, loadLeafletWithMarkerCluster } from "@/utils/leaflet-loade";
 
 type MarkerEntry = { marker: L.Marker; status: ProjectStatus };
 type ProjectMarker = L.Marker & { __projectStatus?: ProjectStatus };
@@ -30,6 +30,8 @@ const STATUS_RING: Record<ProjectStatus, string> = {
   REJECTED: "#EF4444",
 };
 
+const NON_SELECTED_OPACITY = 0.5;
+
 const getProjectIconUrl = (status: ProjectStatus): string => {
   switch (status) {
     case "IN_PROGRESS":
@@ -44,15 +46,13 @@ const getProjectIconUrl = (status: ProjectStatus): string => {
   }
 };
 
-const buildMarkerIcon = (Lmod: LeafletModule, status: ProjectStatus): L.Icon => {
-  const iconUrl = getProjectIconUrl(status);
-  return Lmod.icon({
-    iconUrl,
+const buildMarkerIcon = (Lmod: LeafletModule, status: ProjectStatus): L.Icon =>
+  Lmod.icon({
+    iconUrl: getProjectIconUrl(status),
     iconSize: [60, 60],
-    iconAnchor: [30, 60],
+    iconAnchor: [30, 60], // bottom center
     popupAnchor: [0, -40],
   });
-};
 
 const buildProjectClusterIcon = (Lmod: LeafletModule, cluster: L.MarkerCluster): L.DivIcon => {
   const markers = cluster.getAllChildMarkers();
@@ -147,13 +147,19 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const groupRef = useRef<L.MarkerClusterGroup | L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, MarkerEntry>>(new Map());
+  const highlightRef = useRef<L.CircleMarker | null>(null);
+
   const { theme } = useSafeThemeContext();
 
   const LRef = useRef<LeafletModule | null>(null);
   const [leafletReady, setLeafletReady] = useState(false);
   const [hasCluster, setHasCluster] = useState(false);
 
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const selectedIdRef = useRef<string | undefined>(selectedId);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   useEffect(() => {
     let mounted = true;
@@ -177,7 +183,14 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
     const container = document.getElementById(containerId);
     if (!container || mapRef.current) return;
 
-    const map = Lmod.map(container).setView([51.505, -0.09], 6);
+    const map = Lmod.map(container, {
+      zoomAnimation: true,
+      markerZoomAnimation: true,
+      fadeAnimation: true,
+      inertia: true,
+      wheelDebounceTime: 30,
+      wheelPxPerZoomLevel: 96,
+    }).setView([51.505, -0.09], 6);
     mapRef.current = map;
 
     Lmod.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
@@ -195,7 +208,7 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
       (group as L.MarkerClusterGroup).on("clusterclick", (e) => {
         const bounds = e.layer.getBounds();
         if (map.getZoom() < map.getMaxZoom()) {
-          map.fitBounds(bounds, { padding: [40, 40] });
+          map.flyToBounds(bounds, { padding: [40, 40], animate: true, duration: 0.45, easeLinearity: 0.25 });
         } else {
           e.layer.spiderfy();
         }
@@ -205,6 +218,28 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
     group.addTo(map);
     groupRef.current = group;
 
+    const handleMapClick = () => {
+      if (!selectedIdRef.current) return;
+      selectedIdRef.current = undefined;
+      setSelectedId(undefined);
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+        highlightRef.current = null;
+      }
+      try {
+        map.closePopup();
+      } catch {}
+    };
+    map.on("click", handleMapClick);
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
@@ -212,6 +247,7 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
       try {
         ro.disconnect();
       } catch {}
+      map.off("click", handleMapClick);
 
       markerMapRef.current.forEach(({ marker }) => {
         try {
@@ -219,6 +255,13 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
         } catch {}
       });
       markerMapRef.current.clear();
+
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+      }
+      highlightRef.current = null;
 
       if (groupRef.current && mapRef.current) {
         try {
@@ -245,7 +288,6 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
 
     const markerMap = markerMapRef.current;
     const nextIds = new Set(projects.map((p) => p.id));
-
     for (const [id, entry] of markerMap.entries()) {
       if (!nextIds.has(id)) {
         try {
@@ -262,11 +304,24 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
         const icon = buildMarkerIcon(Lmod, project.status);
 
         const handleClick = () => {
-          setSelectedProject(project);
-          try {
-            const m = (markerMap.get(project.id) as MarkerEntry).marker;
-            map.panTo(m.getLatLng(), { animate: true });
-          } catch {}
+          if (selectedIdRef.current !== project.id) {
+            selectedIdRef.current = project.id;
+            setSelectedId(project.id);
+            return;
+          }
+          const m = (markerMap.get(project.id) as MarkerEntry).marker;
+          openReactPopup(
+            Lmod,
+            m,
+            <ProjectPopupContent
+              user={user}
+              project={project}
+              refreshProjects={refreshProjects}
+              theme={theme}
+              onClose={() => m.closePopup()}
+            />,
+            { offset: [0, -40] },
+          );
         };
 
         if (!existing) {
@@ -286,24 +341,71 @@ const ProjectMapViewerDashboard: React.FC<ProjectMapViewerDashboardProps> = ({
           existing.marker.on("click", handleClick);
         }
       });
-  }, [projects, leafletReady, hasCluster]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects, leafletReady, hasCluster, user, theme, refreshProjects]);
+
+  useEffect(() => {
+    const Lmod = LRef.current;
+    const map = mapRef.current;
+    const group = groupRef.current;
+    if (!Lmod || !map || !map.getPane("markerPane")) return;
+
+    markerMapRef.current.forEach(({ marker }) => {
+      try {
+        marker.setOpacity(1);
+        marker.setZIndexOffset(0);
+      } catch {}
+    });
+    if (highlightRef.current) {
+      try {
+        highlightRef.current.remove();
+      } catch {}
+    }
+    highlightRef.current = null;
+
+    if (!selectedId) return;
+    const entry = markerMapRef.current.get(selectedId);
+    if (!entry) return;
+
+    const latlng = entry.marker.getLatLng();
+    const targetZoom = Math.max(map.getZoom(), 14);
+
+    const focus = () => {
+      if (!nearlySameView(map, latlng, targetZoom)) {
+        map.flyTo(latlng, targetZoom, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+      }
+      try {
+        entry.marker.setZIndexOffset(1000);
+      } catch {}
+      markerMapRef.current.forEach((e, id) => {
+        try {
+          e.marker.setOpacity(id === selectedId ? 1 : NON_SELECTED_OPACITY);
+        } catch {}
+      });
+
+      const circle = Lmod.circleMarker(latlng, {
+        radius: 14,
+        color: "#7C3AED",
+        weight: 3,
+        opacity: 0.9,
+        fillColor: "#C4B5FD",
+        fillOpacity: 0.3,
+        interactive: false, // do not intercept clicks
+      }).addTo(map);
+      highlightRef.current = circle;
+    };
+
+    if (group && "zoomToShowLayer" in group && !isMarkerDisplayed(entry.marker)) {
+      (group as L.MarkerClusterGroup).zoomToShowLayer(entry.marker, focus);
+    } else {
+      focus();
+    }
+  }, [selectedId]);
 
   return (
     <div className="relative z-10 h-full w-full">
       <div id={containerId} className="h-full w-full" />
-      {showLegend && <ProjectMapLegend />}
-
-      {selectedProject && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <ProjectPopupContent
-            user={user}
-            project={selectedProject}
-            refreshProjects={refreshProjects}
-            theme={theme}
-            onClose={() => setSelectedProject(null)}
-          />
-        </div>
-      )}
+      {showLegend && <ProjectMapLegend size="small" />}
     </div>
   );
 };

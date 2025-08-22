@@ -6,15 +6,15 @@ import type { AuthUser } from "@/models/auth.types";
 import type { ReportIssueReport } from "@/models/report-issue.types";
 import { IssueStatus } from "@prisma/client";
 import { useEffect, useId, useRef, useState } from "react";
-import { createRoot, Root } from "react-dom/client";
+import { loadLeafletWithMarkerCluster, type LeafletModule } from "@/utils/leaflet-loader";
+import { openReactPopup } from "@/utils/leaflet-react-popup";
+import { isMarkerDisplayed, nearlySameView } from "@/utils/map-helpers";
 import ReportIssuePopupContent from "./map-viewer-report-issue-pop-up";
 
-// CSS only
+import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import "leaflet/dist/leaflet.css";
 
-import { LeafletModule, loadLeafletWithMarkerCluster } from "@/utils/leaflet-loade";
 import type * as L from "leaflet";
 
 type MarkerEntry = { marker: L.Marker; status: IssueStatus };
@@ -34,6 +34,8 @@ const STATUS_COLOR: Record<IssueStatus | "UNDER_REVIEW", string> = {
   REJECTED: "#EF4444",
   UNDER_REVIEW: "#3B82F6",
 };
+
+const NON_SELECTED_OPACITY = 0.6;
 
 const getIssueEmoji = (issueType?: string | null): string =>
   (issueType && ISSUE_TYPE_EMOJI[issueType as IssueTypeValue]) || "❓";
@@ -164,7 +166,7 @@ const ReportIssueMapViewerDashboard: React.FC<{
   const mapRef = useRef<L.Map | null>(null);
   const groupRef = useRef<L.MarkerClusterGroup | L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, MarkerEntry>>(new Map());
-  const popupRootRef = useRef<Root | null>(null);
+  const highlightRef = useRef<L.CircleMarker | null>(null);
 
   const { theme } = useSafeThemeContext();
 
@@ -172,61 +174,12 @@ const ReportIssueMapViewerDashboard: React.FC<{
   const [leafletReady, setLeafletReady] = useState(false);
   const [hasCluster, setHasCluster] = useState(false);
 
-  const closePopup = () => {
-    try {
-      // Defer unmount to avoid "synchronously unmount while rendering"
-      const root = popupRootRef.current;
-      if (root) {
-        setTimeout(() => {
-          try {
-            root.unmount();
-          } catch {}
-        }, 0);
-      }
-    } catch {}
-    popupRootRef.current = null;
-    try {
-      mapRef.current?.closePopup();
-    } catch {}
-  };
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const selectedIdRef = useRef<string | undefined>(selectedId);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
-  const openPopupAt = (Lmod: LeafletModule, reportIssue: ReportIssueReport, marker: L.Marker) => {
-    const map = mapRef.current;
-    if (!map || !map.getPane("markerPane")) return;
-
-    closePopup();
-
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    // Important: pass theme as prop; ReportIssuePopupContent must accept `theme` and avoid using context.
-    root.render(<ReportIssuePopupContent issue={reportIssue} theme={theme} />);
-    popupRootRef.current = root;
-
-    marker.bindPopup(container, {
-      autoPan: true,
-      keepInView: true,
-      closeButton: false,
-      className: "react-leaflet-card-popup",
-      autoClose: true,
-      closeOnClick: true,
-    });
-
-    marker.on("popupclose", () => {
-      const current = popupRootRef.current;
-      if (current === root) {
-        setTimeout(() => {
-          try {
-            current?.unmount();
-          } catch {}
-          if (popupRootRef.current === current) popupRootRef.current = null;
-        }, 0);
-      }
-    });
-
-    marker.openPopup();
-  };
-
-  // Load Leaflet + plugin
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -242,7 +195,6 @@ const ReportIssueMapViewerDashboard: React.FC<{
     };
   }, []);
 
-  // Initialize map
   useEffect(() => {
     const Lmod = LRef.current;
     if (!leafletReady || !Lmod) return;
@@ -250,8 +202,16 @@ const ReportIssueMapViewerDashboard: React.FC<{
     const container = document.getElementById(containerId);
     if (!container || mapRef.current) return;
 
-    const map = Lmod.map(container).setView([51.505, -0.09], 6);
+    const map = Lmod.map(container, {
+      zoomAnimation: true,
+      markerZoomAnimation: true,
+      fadeAnimation: true,
+      inertia: true,
+      wheelDebounceTime: 30,
+      wheelPxPerZoomLevel: 96,
+    }).setView([51.505, -0.09], 6);
     mapRef.current = map;
+
     Lmod.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
 
     const group: L.MarkerClusterGroup | L.LayerGroup = hasCluster
@@ -267,7 +227,7 @@ const ReportIssueMapViewerDashboard: React.FC<{
       (group as L.MarkerClusterGroup).on("clusterclick", (e) => {
         const bounds = e.layer.getBounds();
         if (map.getZoom() < map.getMaxZoom()) {
-          map.fitBounds(bounds, { padding: [40, 40] });
+          map.flyToBounds(bounds, { padding: [40, 40], animate: true, duration: 0.45, easeLinearity: 0.25 });
         } else {
           e.layer.spiderfy();
         }
@@ -277,6 +237,28 @@ const ReportIssueMapViewerDashboard: React.FC<{
     group.addTo(map);
     groupRef.current = group;
 
+    const handleMapClick = () => {
+      if (!selectedIdRef.current) return;
+      selectedIdRef.current = undefined;
+      setSelectedId(undefined);
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+      }
+      highlightRef.current = null;
+      try {
+        map.closePopup();
+      } catch {}
+    };
+    map.on("click", handleMapClick);
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
@@ -284,6 +266,7 @@ const ReportIssueMapViewerDashboard: React.FC<{
       try {
         ro.disconnect();
       } catch {}
+      map.off("click", handleMapClick);
 
       markerMapRef.current.forEach(({ marker }) => {
         try {
@@ -291,6 +274,13 @@ const ReportIssueMapViewerDashboard: React.FC<{
         } catch {}
       });
       markerMapRef.current.clear();
+
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+      }
+      highlightRef.current = null;
 
       if (groupRef.current && mapRef.current) {
         try {
@@ -305,22 +295,10 @@ const ReportIssueMapViewerDashboard: React.FC<{
         } catch {}
       }
       mapRef.current = null;
-
-      // Defer popup root cleanup if still mounted
-      const root = popupRootRef.current;
-      if (root) {
-        setTimeout(() => {
-          try {
-            root.unmount();
-          } catch {}
-          if (popupRootRef.current === root) popupRootRef.current = null;
-        }, 0);
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId, leafletReady, hasCluster]);
 
-  // Sync markers
   useEffect(() => {
     const Lmod = LRef.current;
     const map = mapRef.current as L.Map | null;
@@ -346,8 +324,20 @@ const ReportIssueMapViewerDashboard: React.FC<{
         const icon = buildDivIcon(Lmod, ri.issueType, ri.status);
 
         const handleClick = () => {
+          if (selectedIdRef.current !== ri.id) {
+            selectedIdRef.current = ri.id;
+            setSelectedId(ri.id);
+            return;
+          }
           const m = markerMap.get(ri.id)?.marker;
-          if (m) openPopupAt(Lmod, ri, m);
+          if (m) {
+            openReactPopup(
+              Lmod,
+              m,
+              <ReportIssuePopupContent issue={ri} theme={theme} />,
+              { offset: [0, -36] },
+            );
+          }
         };
 
         if (!existing) {
@@ -368,7 +358,66 @@ const ReportIssueMapViewerDashboard: React.FC<{
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issues, leafletReady, hasCluster]);
+  }, [issues, leafletReady, hasCluster, theme]);
+
+  useEffect(() => {
+    const Lmod = LRef.current;
+    const map = mapRef.current;
+    const group = groupRef.current;
+    if (!Lmod || !map || !map.getPane("markerPane")) return;
+
+    markerMapRef.current.forEach(({ marker }) => {
+      try {
+        marker.setOpacity(1);
+        marker.setZIndexOffset(0);
+      } catch {}
+    });
+    if (highlightRef.current) {
+      try {
+        highlightRef.current.remove();
+      } catch {}
+    }
+    highlightRef.current = null;
+
+    if (!selectedId) return;
+    const entry = markerMapRef.current.get(selectedId);
+    if (!entry) return;
+
+    const latlng = entry.marker.getLatLng();
+    const targetZoom = Math.max(map.getZoom(), 14);
+
+    const focus = () => {
+      if (!nearlySameView(map, latlng, targetZoom)) {
+        map.flyTo(latlng, targetZoom, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+      }
+
+      try {
+        entry.marker.setZIndexOffset(1000);
+      } catch {}
+      markerMapRef.current.forEach((e, id) => {
+        try {
+          e.marker.setOpacity(id === selectedId ? 1 : NON_SELECTED_OPACITY);
+        } catch {}
+      });
+
+      const circle = Lmod.circleMarker(latlng, {
+        radius: 14,
+        color: "#7C3AED",
+        weight: 3,
+        opacity: 0.9,
+        fillColor: "#C4B5FD",
+        fillOpacity: 0.3,
+        interactive: false, // prevent click swallowing
+      }).addTo(map);
+      highlightRef.current = circle;
+    };
+
+    if (group && "zoomToShowLayer" in group && !isMarkerDisplayed(entry.marker)) {
+      (group as L.MarkerClusterGroup).zoomToShowLayer(entry.marker, focus);
+    } else {
+      focus();
+    }
+  }, [selectedId]);
 
   return <div id={containerId} className="relative z-10 h-full w-full" />;
 };

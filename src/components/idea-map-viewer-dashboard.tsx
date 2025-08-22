@@ -4,20 +4,23 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { Idea } from "@/models/idea.types";
 import { useEffect, useId, useRef, useState } from "react";
 import IdeaPopupCard from "./idea-popup-card";
+import { loadLeafletWithMarkerCluster, type LeafletModule } from "@/utils/leaflet-loader";
+import { isMarkerDisplayed, nearlySameView } from "@/utils/map-helpers";
+import { openReactPopup } from "@/utils/leaflet-react-popup";
 
-// CSS is safe at module level
+import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import "leaflet/dist/leaflet.css";
 
-import { LeafletModule, loadLeafletWithMarkerCluster } from "@/utils/leaflet-loade";
 import type * as L from "leaflet";
 
 type MarkerEntry = { marker: L.Marker };
 
+const NON_SELECTED_OPACITY = 0.5;
+
 const IDEA_ICON_URL = "/images/idea-bulb.png";
 
-const getIdeaIcon = (Lmod: LeafletModule): L.Icon =>
+const buildIdeaIcon = (Lmod: LeafletModule) =>
   Lmod.icon({
     iconUrl: IDEA_ICON_URL,
     iconSize: [48, 48],
@@ -27,7 +30,6 @@ const getIdeaIcon = (Lmod: LeafletModule): L.Icon =>
 
 const buildIdeaClusterIcon = (Lmod: LeafletModule, cluster: L.MarkerCluster): L.DivIcon => {
   const total = cluster.getAllChildMarkers().length;
-
   const countBadge = `
     <div style="
       position:absolute;right:-4px;bottom:-4px;
@@ -38,7 +40,6 @@ const buildIdeaClusterIcon = (Lmod: LeafletModule, cluster: L.MarkerCluster): L.
       box-shadow:0 2px 5px rgba(0,0,0,0.3);
     ">${total}</div>
   `;
-
   const html = `
     <div style="
       position:relative;
@@ -51,7 +52,6 @@ const buildIdeaClusterIcon = (Lmod: LeafletModule, cluster: L.MarkerCluster): L.
       ${countBadge}
     </div>
   `;
-
   return Lmod.divIcon({
     className: "idea-cluster-icon",
     html,
@@ -71,15 +71,20 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
   const mapRef = useRef<L.Map | null>(null);
   const groupRef = useRef<L.MarkerClusterGroup | L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, MarkerEntry>>(new Map());
-  const { theme } = useSafeThemeContext();
+  const highlightRef = useRef<L.CircleMarker | null>(null);
 
-  const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
+  const { theme } = useSafeThemeContext();
 
   const LRef = useRef<LeafletModule | null>(null);
   const [leafletReady, setLeafletReady] = useState(false);
   const [hasCluster, setHasCluster] = useState(false);
 
-  // Load Leaflet and plugin in browser only (shared loader, correct order)
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const selectedIdRef = useRef<string | undefined>(selectedId);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
+
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -102,7 +107,14 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
     const container = document.getElementById(containerId);
     if (!container || mapRef.current) return;
 
-    const map = Lmod.map(container).setView([51.505, -0.09], 6);
+    const map = Lmod.map(container, {
+      zoomAnimation: true,
+      markerZoomAnimation: true,
+      fadeAnimation: true,
+      inertia: true,
+      wheelDebounceTime: 30,
+      wheelPxPerZoomLevel: 96,
+    }).setView([51.505, -0.09], 6);
     mapRef.current = map;
 
     Lmod.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
@@ -122,7 +134,7 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
       (group as L.MarkerClusterGroup).on("clusterclick", (e) => {
         const bounds = e.layer.getBounds();
         if (map.getZoom() < map.getMaxZoom()) {
-          map.fitBounds(bounds, { padding: [40, 40] });
+          map.flyToBounds(bounds, { padding: [40, 40], animate: true, duration: 0.45, easeLinearity: 0.25 });
         } else {
           e.layer.spiderfy();
         }
@@ -132,29 +144,54 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
     group.addTo(map);
     groupRef.current = group;
 
+    const handleMapClick = () => {
+      if (!selectedIdRef.current) return;
+      selectedIdRef.current = undefined;
+      setSelectedId(undefined);
+      markerMapRef.current.forEach(({ marker }) => {
+        try {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(0);
+        } catch {}
+      });
+      if (highlightRef.current) {
+        try {
+          highlightRef.current.remove();
+        } catch {}
+        highlightRef.current = null;
+      }
+      try {
+        map.closePopup();
+      } catch {}
+    };
+    map.on("click", handleMapClick);
+
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
-
-    // snapshot
-    const localMarkerMap = markerMapRef.current;
-    const localGroup = groupRef.current;
-    const localMap = mapRef.current;
 
     return () => {
       try {
         ro.disconnect();
       } catch {}
+      map.off("click", handleMapClick);
 
-      localMarkerMap.forEach(({ marker }) => {
+      markerMapRef.current.forEach(({ marker }) => {
         try {
-          localGroup?.removeLayer(marker);
+          groupRef.current?.removeLayer(marker);
         } catch {}
       });
-      localMarkerMap.clear();
+      markerMapRef.current.clear();
 
-      if (localGroup && localMap) {
+      if (highlightRef.current) {
         try {
-          (localGroup as L.LayerGroup).removeFrom(localMap);
+          highlightRef.current.remove();
+        } catch {}
+      }
+      highlightRef.current = null;
+
+      if (groupRef.current && mapRef.current) {
+        try {
+          (groupRef.current as L.LayerGroup).removeFrom(mapRef.current);
         } catch {}
       }
       groupRef.current = null;
@@ -177,7 +214,6 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
 
     const markerMap = markerMapRef.current;
     const nextIds = new Set(ideas.map((i) => i.id));
-
     for (const [id, entry] of markerMap.entries()) {
       if (!nextIds.has(id)) {
         try {
@@ -187,23 +223,29 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
       }
     }
 
-    const ideaIcon = getIdeaIcon(Lmod);
-
+    const icon = buildIdeaIcon(Lmod);
     ideas
       .filter((i) => typeof i.latitude === "number" && typeof i.longitude === "number")
       .forEach((idea) => {
         const existing = markerMap.get(idea.id);
 
         const handleClick = () => {
-          setSelectedIdea(idea);
-          try {
-            const m = (markerMap.get(idea.id) as MarkerEntry).marker;
-            map.panTo(m.getLatLng(), { animate: true });
-          } catch {}
+          if (selectedIdRef.current !== idea.id) {
+            selectedIdRef.current = idea.id;
+            setSelectedId(idea.id);
+            return;
+          }
+          const m = (markerMap.get(idea.id) as MarkerEntry).marker;
+          openReactPopup(
+            Lmod,
+            m,
+            <IdeaPopupCard idea={idea} theme={theme} onClose={() => m.closePopup()} />,
+            { offset: [0, -36] },
+          );
         };
 
         if (!existing) {
-          const marker = Lmod.marker([idea.latitude as number, idea.longitude as number], { icon: ideaIcon });
+          const marker = Lmod.marker([idea.latitude as number, idea.longitude as number], { icon });
           marker.on("click", handleClick);
           (group as L.LayerGroup).addLayer(marker);
           markerMap.set(idea.id, { marker });
@@ -213,21 +255,69 @@ const IdeaMapViewerDashboard: React.FC<IdeaMapViewerDashboardProps> = ({ ideas }
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ideas, leafletReady, hasCluster]);
+  }, [ideas, leafletReady, hasCluster, theme]);
+
+  useEffect(() => {
+    const Lmod = LRef.current;
+    const map = mapRef.current;
+    const group = groupRef.current;
+    if (!Lmod || !map || !map.getPane("markerPane")) return;
+
+    markerMapRef.current.forEach(({ marker }) => {
+      try {
+        marker.setOpacity(1);
+        marker.setZIndexOffset(0);
+      } catch {}
+    });
+    if (highlightRef.current) {
+      try {
+        highlightRef.current.remove();
+      } catch {}
+    }
+    highlightRef.current = null;
+
+    if (!selectedId) return;
+    const entry = markerMapRef.current.get(selectedId);
+    if (!entry) return;
+
+    const latlng = entry.marker.getLatLng();
+    const targetZoom = Math.max(map.getZoom(), 14);
+
+    const focus = () => {
+      if (!nearlySameView(map, latlng, targetZoom)) {
+        map.flyTo(latlng, targetZoom, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+      }
+      try {
+        entry.marker.setZIndexOffset(1000);
+      } catch {}
+      markerMapRef.current.forEach((e, id) => {
+        try {
+          e.marker.setOpacity(id === selectedId ? 1 : NON_SELECTED_OPACITY);
+        } catch {}
+      });
+
+      const circle = Lmod.circleMarker(latlng, {
+        radius: 12,
+        color: "#0EA5E9",
+        weight: 3,
+        opacity: 0.9,
+        fillColor: "#93C5FD",
+        fillOpacity: 0.3,
+        interactive: false,
+      }).addTo(map);
+      highlightRef.current = circle;
+    };
+
+    if (group && "zoomToShowLayer" in group && !isMarkerDisplayed(entry.marker)) {
+      (group as L.MarkerClusterGroup).zoomToShowLayer(entry.marker, focus);
+    } else {
+      focus();
+    }
+  }, [selectedId]);
 
   return (
     <div className="relative z-10 h-full w-full">
       <div id={containerId} className="h-full w-full" />
-
-      {selectedIdea && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-lg px-4">
-            <div className="overflow-hidden rounded-xl shadow-2xl">
-              <IdeaPopupCard idea={selectedIdea} onClose={() => setSelectedIdea(null)} theme={theme} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
