@@ -15,6 +15,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import ReportIssuePopupContent from "./map-viewer-report-issue-pop-up";
 import ReportIssueMapLegend from "./report-issue-map-legend";
+import { useSafeThemeContext } from "@/context/safe-theme-context";
 
 // value -> emoji map from ISSUE_TYPES (single source of truth)
 export const ISSUE_TYPE_EMOJI: Record<IssueTypeValue, string> = Object.fromEntries(
@@ -186,6 +187,8 @@ const ReportIssueMapViewer: React.FC<Props> = ({
   const highlightRef = useRef<L.CircleMarker | null>(null);
   const popupRootRef = useRef<Root | null>(null);
 
+  const { theme } = useSafeThemeContext();
+
   // Refs to avoid stale closures
   const selectedIdRef = useRef<string | undefined>(selectedIssueId);
   useEffect(() => {
@@ -220,7 +223,7 @@ const ReportIssueMapViewer: React.FC<Props> = ({
     closePopup();
     const container = document.createElement("div");
     const root = createRoot(container);
-    root.render(<ReportIssuePopupContent issue={reportIssue} />);
+    root.render(<ReportIssuePopupContent issue={reportIssue} theme={theme}/>);
     popupRootRef.current = root;
 
     marker.bindPopup(container, {

@@ -46,7 +46,9 @@
     ".next/types/**/*.ts",
     "next.config.js",
     "prisma/seed.ts"
-, "tailwind.config.ts"  ],
+, "tailwind.config.ts",
+"src", 
+"src/types/**/*.d.ts"  ],
   "exclude": [
     "node_modules",
     ".next",
