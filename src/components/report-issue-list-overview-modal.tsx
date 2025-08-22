@@ -11,7 +11,7 @@ const IssueListOverviewModal: React.FC<{
   theme: string;
   showOwnedOnly?: boolean;
   userId?: string;
-}> = ({ open, onClose, theme, showOwnedOnly = false, userId }) => {
+}> = ({ open, onClose, theme, showOwnedOnly = false }) => {
   return (
     <ModalOverlay
       open={open}

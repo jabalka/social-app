@@ -1,6 +1,5 @@
 "use client";
 import { Theme } from "@/types/theme.enum";
-import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { cn } from "@/utils/cn.utils";
 import React from "react";
 import { ReportIssueReport } from "@/models/report-issue.types";
@@ -8,8 +7,9 @@ import { ReportIssueReport } from "@/models/report-issue.types";
 const ReportIssuePopupContent: React.FC<{
   issue: ReportIssueReport;
   onClose?: () => void;
-}> = ({ issue: reportIssue, onClose }) => {
-  const { theme } = useSafeThemeContext();
+  theme?: string;
+}> = ({ issue: reportIssue, onClose, theme }) => {
+
 
   return (
     <div

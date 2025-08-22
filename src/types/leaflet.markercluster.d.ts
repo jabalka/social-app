@@ -1,4 +1,5 @@
-import "leaflet";
+// Ensure tsconfig.json includes: "src/types/**/*.d.ts" in "include".
+import * as L from "leaflet";
 
 declare module "leaflet" {
   interface MarkerClusterGroupOptions extends L.LayerOptions {
@@ -8,6 +9,10 @@ declare module "leaflet" {
     disableClusteringAtZoom?: number;
     maxClusterRadius?: number | ((zoom: number) => number);
     iconCreateFunction?: (cluster: MarkerCluster) => L.DivIcon;
+  }
+
+  interface MarkerClusterEvent extends L.LeafletEvent {
+    layer: MarkerCluster;
   }
 
   class MarkerCluster extends L.Marker {
@@ -27,17 +32,12 @@ declare module "leaflet" {
     on(type: "clusterclick", fn: (event: MarkerClusterEvent) => void, context?: unknown): this;
     off(type: "clusterclick", fn?: (event: MarkerClusterEvent) => void, context?: unknown): this;
 
-    // Ensure this is available for zooming to a specific marker
     zoomToShowLayer(layer: L.Layer, callback?: () => void): this;
-  }
-
-  interface MarkerClusterEvent extends L.LeafletEvent {
-    layer: MarkerCluster;
   }
 
   function markerClusterGroup(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
 }
 
-declare module "leaflet.markercluster" {
-  // side-effect module; augments leaflet at runtime
-}
+// Declare the side-effect module so TS accepts the import.
+// We don't model exports because the plugin augments `window.L` at runtime.
+declare module "leaflet.markercluster" {}

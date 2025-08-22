@@ -4,7 +4,7 @@ import { useReportIssueContext } from "@/context/report-issue-context";
 import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { useSafeUser } from "@/context/user-context";
 import { cn } from "@/utils/cn.utils";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Pagination from "./pagination";
 import ReportIssueList from "./report-issue-list";
 import SearchFilterDropdown, { GeoSearchFiltersApplyPayload } from "./search-filter-dropdown";
@@ -42,28 +42,17 @@ const ReportIssueListOverview: React.FC<ReportIssueListOverviewProps> = ({
   const [lastSearchCoords, setLastSearchCoords] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Container that scrolls the list area
-  const listScrollRef = useRef<HTMLDivElement | null>(null);
-  const resolvingPageRef = useRef(false);
-
-  const fetchParams = useMemo(
-    () => ({
-      type: showOwnedOnly ? "user" as const : "all" as const,
-      ownerId: showOwnedOnly && user?.id ? user.id : undefined,
-      sort: sortBy,
-      lat: lastSearchCoords?.[0],
-      lng: lastSearchCoords?.[1],
-      radius: lastSearchCoords ? radius : undefined,
-      limit: pageSize,
-    }),
-    [showOwnedOnly, user?.id, sortBy, lastSearchCoords, radius, pageSize]
-  );
-
   useEffect(() => {
     setLoading(true);
     refreshIssues({
       page: currentPage,
-      ...fetchParams,
+      limit: pageSize,
+      type: showOwnedOnly ? "user" : "all",
+      ownerId: showOwnedOnly && user?.id ? user?.id : undefined,
+      sort: sortBy,
+      lat: lastSearchCoords?.[0],
+      lng: lastSearchCoords?.[1],
+      radius: lastSearchCoords ? radius : undefined,
     }).finally(() => setLoading(false));
     // eslint-disable-next-line
   }, [sortBy, currentPage, showOwnedOnly, pageSize, lastSearchCoords, radius]);
@@ -79,100 +68,6 @@ const ReportIssueListOverview: React.FC<ReportIssueListOverviewProps> = ({
     // open your "Report Issue" flow/modal here
     // e.g. router.push("/issues/new") or open modal
   };
-
-  // Helper: try to find the selected item element and ensure fully visible
-  const scrollSelectedIntoView = () => {
-    if (!selectedId) return;
-    const container = listScrollRef.current || document;
-    const trySelectors = [
-      `[data-item-id="${selectedId}"]`,
-      `[data-id="${selectedId}"]`,
-      `#issue-item-${selectedId}`,
-      `#item-${selectedId}`,
-      `#list-item-${selectedId}`,
-      `[aria-selected="true"]`,
-    ];
-    let el: HTMLElement | null = null;
-    for (const sel of trySelectors) {
-      el = (container as HTMLElement).querySelector?.(sel) as HTMLElement | null;
-      if (el) break;
-    }
-    if (!el) return;
-
-    // If container is scrollable, adjust its scrollTop; else fallback to native scrollIntoView
-    const scroller = listScrollRef.current;
-    if (scroller && scroller.scrollHeight > scroller.clientHeight) {
-      const cRect = scroller.getBoundingClientRect();
-      const eRect = el.getBoundingClientRect();
-
-      if (eRect.top < cRect.top + 4) {
-        const delta = cRect.top - eRect.top + 8;
-        scroller.scrollTo({ top: scroller.scrollTop - delta, behavior: "smooth" });
-      } else if (eRect.bottom > cRect.bottom - 4) {
-        const delta = eRect.bottom - cRect.bottom + 8;
-        scroller.scrollTo({ top: scroller.scrollTop + delta, behavior: "smooth" });
-      }
-    } else {
-      el.scrollIntoView({ block: "center", behavior: "smooth" });
-    }
-  };
-
-  // When selectedId changes or issues change, ensure the item is on screen
-  useEffect(() => {
-    if (!selectedId || !issues) return;
-
-    // If item is on current page, just scroll to it
-    const onThisPage = issues.some((i) => i.id === selectedId);
-    if (onThisPage) {
-      // Wait for DOM to render list rows
-      requestAnimationFrame(() => scrollSelectedIntoView());
-      return;
-    }
-
-    // Otherwise, try to navigate to the page that contains it
-    if (resolvingPageRef.current) return;
-    resolvingPageRef.current = true;
-
-    const maxPage = Math.max(1, Math.ceil((totalReportIssues || 0) / (pageSize || 1)));
-
-    const probe = async () => {
-      for (let p = 1; p <= maxPage; p++) {
-        if (!selectedId) break;
-        if (p === currentPage) continue;
-
-        setLoading(true);
-        await refreshIssues({ page: p, ...fetchParams }).catch(() => undefined);
-        setLoading(false);
-
-        // We rely on context to update 'issues' after refresh; check synchronously on next frame
-        // Using a small delay to allow state propagation
-        // eslint-disable-next-line no-loop-func
-        await new Promise((r) => setTimeout(r, 0));
-        const now = (document.activeElement, p); // no-op to avoid TS unused complaint
-        // After context update, read latest issues via closure
-        // We can't access fresh value here directly; instead, set the page so UI re-renders to that page.
-        setCurrentPage(p);
-
-        // Give a frame for the list to render, then attempt to find the element and exit
-        await new Promise((r) => requestAnimationFrame(() => r(null)));
-        const container = listScrollRef.current || document;
-        const el = (container as HTMLElement).querySelector?.(
-          `[data-item-id="${selectedId}"],[data-id="${selectedId}"],#issue-item-${selectedId},#item-${selectedId},#list-item-${selectedId},[aria-selected="true"]`
-        ) as HTMLElement | null;
-
-        if (el) {
-          scrollSelectedIntoView();
-          break;
-        }
-      }
-      resolvingPageRef.current = false;
-    };
-
-    probe().catch(() => {
-      resolvingPageRef.current = false;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, issues, totalReportIssues, pageSize, currentPage]);
 
   return (
     <div className={cn("flex w-full flex-col", { "h-full": isInModal })}>
@@ -219,8 +114,8 @@ const ReportIssueListOverview: React.FC<ReportIssueListOverviewProps> = ({
           />
         </div>
 
-        {/* Issue list (stabilize layout with min height). We attach a scroll ref here. */}
-        <div ref={listScrollRef} className={cn("flex-1 overflow-auto", minBodyHeightClass)}>
+        {/* Issue list (stabilize layout with min height) */}
+        <div className={cn("flex-1", minBodyHeightClass)}>
           <ReportIssueList
             issues={issues || []}
             theme={theme}

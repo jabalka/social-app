@@ -20,8 +20,8 @@ interface Props {
   selectedIssueId?: string;
   // Allow clearing by passing undefined
   onSelectProject?: (id?: string) => void;
-  onSelectIdea?: (id: string) => void;
-  onSelectIssue?: (id: string) => void;
+  onSelectIdea?: (id?: string) => void;
+  onSelectIssue?: (id?: string) => void;
 }
 
 const ProfileMap: React.FC<Props> = ({

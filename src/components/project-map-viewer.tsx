@@ -4,30 +4,62 @@ import { useSafeThemeContext } from "@/context/safe-theme-context";
 import { AuthUser } from "@/models/auth.types";
 import { Project } from "@/models/project.types";
 import { ProjectStatus } from "@prisma/client";
-import L from "leaflet";
-import { useEffect, useId, useRef } from "react";
+// import L from "leaflet";
+import { useEffect, useId, useRef, useState } from "react";
 import { createRoot, Root } from "react-dom/client";
 import ProjectMapLegend from "./map-legend";
 import ProjectPopupContent from "./map-viewer-project-pop-up";
 
-// Leaflet.markercluster plugin + CSS
-import "leaflet.markercluster";
+// Only CSS at module-level
+import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
+import type * as LeafletNS from "leaflet";
+
+type LeafletModule = typeof import("leaflet");
 
 export interface Props {
   user: AuthUser;
   projects: Project[];
   refreshProjects: () => void;
   selectedProjectId?: string;
-  onSelectProject?: (id?: string) => void; // allow clearing via undefined
-  onClearProjectSelection?: () => void; // optional explicit clearer
+  onSelectProject?: (id?: string) => void;
+  onClearProjectSelection?: () => void;
   selectable?: boolean;
-  enablePopup?: boolean; // default true
+  enablePopup?: boolean;
 }
 
-type MarkerEntry = { marker: L.Marker; status: ProjectStatus };
-type ProjectMarker = L.Marker & { __projectStatus?: ProjectStatus };
+type MarkerEntry = { marker: LeafletNS.Marker; status: ProjectStatus };
+
+type ProjectMarker = LeafletNS.Marker & { __projectStatus?: ProjectStatus };
+
+// Minimal markercluster types
+interface MarkerCluster extends LeafletNS.Marker {
+  getAllChildMarkers(): LeafletNS.Marker[];
+  getBounds(): LeafletNS.LatLngBounds;
+  spiderfy(): void;
+}
+
+type MarkerClusterGroup = LeafletNS.LayerGroup & {
+  addLayer(layer: LeafletNS.Layer): MarkerClusterGroup;
+  removeLayer(layer: LeafletNS.Layer): MarkerClusterGroup;
+  on(type: "clusterclick", fn: (e: { layer: MarkerCluster }) => void): MarkerClusterGroup;
+  addTo(map: LeafletNS.Map): MarkerClusterGroup;
+  removeFrom(map: LeafletNS.Map): MarkerClusterGroup;
+  zoomToShowLayer(layer: LeafletNS.Layer, cb?: () => void): void;
+};
+
+interface MarkerClusterGroupOptions {
+  showCoverageOnHover?: boolean;
+  maxClusterRadius?: number;
+  spiderfyOnMaxZoom?: boolean;
+  iconCreateFunction?: (cluster: MarkerCluster) => LeafletNS.DivIcon;
+}
+
+type LWithMarkerCluster = LeafletModule & {
+  markerClusterGroup: (opts: MarkerClusterGroupOptions) => MarkerClusterGroup;
+};
 
 const getProjectIconUrl = (status: ProjectStatus): string => {
   switch (status) {
@@ -43,7 +75,7 @@ const getProjectIconUrl = (status: ProjectStatus): string => {
   }
 };
 
-const getMarkerIcon = (status: ProjectStatus): L.Icon =>
+const getMarkerIcon = (L: LeafletModule, status: ProjectStatus): LeafletNS.Icon =>
   L.icon({
     iconUrl: getProjectIconUrl(status),
     iconSize: [60, 60],
@@ -58,7 +90,7 @@ const STATUS_RING: Record<ProjectStatus, string> = {
   REJECTED: "#EF4444",
 };
 
-const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
+const buildProjectClusterIcon = (L: LeafletModule, cluster: MarkerCluster): LeafletNS.DivIcon => {
   const markers = cluster.getAllChildMarkers();
   const statusCount = new Map<ProjectStatus, number>();
   const total = markers.length;
@@ -69,7 +101,6 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
     statusCount.set(s, (statusCount.get(s) || 0) + 1);
   });
 
-  // pick most frequent status for ring color
   let ring = "#6B7280";
   let best: { status: ProjectStatus | null; count: number } = { status: null, count: 0 };
   statusCount.forEach((c, s) => {
@@ -153,8 +184,7 @@ const buildProjectClusterIcon = (cluster: L.MarkerCluster): L.DivIcon => {
   });
 };
 
-// Dim non-selected markers but keep visible
-const NON_SELECTED_OPACITY = 0.6;
+const NON_SELECTED_OPACITY = 0.5;
 
 const ProjectMapViewer: React.FC<Props> = ({
   user,
@@ -167,13 +197,17 @@ const ProjectMapViewer: React.FC<Props> = ({
   enablePopup = true,
 }) => {
   const containerId = useId();
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<LeafletNS.Map | null>(null);
   const markerMapRef = useRef<Map<string, MarkerEntry>>(new Map());
-  const highlightRef = useRef<L.CircleMarker | null>(null);
-  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+  const highlightRef = useRef<LeafletNS.CircleMarker | null>(null);
+  const clusterGroupRef = useRef<MarkerClusterGroup | null>(null);
 
   const popupRootRef = useRef<Root | null>(null);
   const { theme } = useSafeThemeContext();
+
+  const LRef = useRef<LeafletModule | null>(null);
+  const [leafletReady, setLeafletReady] = useState(false);
+  const hasAutoFittedRef = useRef(false);
 
   // Refs with latest values to avoid stale closures in event handlers
   const selectedIdRef = useRef<string | undefined>(selectedProjectId);
@@ -201,7 +235,7 @@ const ProjectMapViewer: React.FC<Props> = ({
     } catch {}
   };
 
-  const openPopupAt = (project: Project, marker: L.Marker) => {
+  const openPopupAt = (project: Project, marker: LeafletNS.Marker) => {
     if (!enablePopup) return;
     const map = mapRef.current;
     if (!map || !map.getPane("markerPane")) return;
@@ -240,8 +274,33 @@ const ProjectMapViewer: React.FC<Props> = ({
     marker.openPopup();
   };
 
+  // Load Leaflet + plugin on client only
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (typeof window === "undefined") return;
+      try {
+        const Lmod = (await import("leaflet")) as unknown as LeafletModule;
+        (window as unknown as { L?: LeafletModule }).L = Lmod;
+        await import("leaflet.markercluster");
+        if (mounted) {
+          LRef.current = Lmod;
+          setLeafletReady(true);
+        }
+      } catch (e) {
+        console.error("Failed to load Leaflet/markercluster for Projects", e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Initialize map ONCE
   useEffect(() => {
+    const L = LRef.current as LWithMarkerCluster | null;
+    if (!leafletReady || !L) return;
+
     const container = document.getElementById(containerId);
     if (!container || mapRef.current) return;
 
@@ -251,11 +310,11 @@ const ProjectMapViewer: React.FC<Props> = ({
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { zIndex: 10 }).addTo(map);
 
     // Clustering
-    const clusterGroup = L.markerClusterGroup({
+    const clusterGroup = (L as LWithMarkerCluster).markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 60,
       spiderfyOnMaxZoom: true,
-      iconCreateFunction: (cluster) => buildProjectClusterIcon(cluster),
+      iconCreateFunction: (cluster) => buildProjectClusterIcon(L, cluster as MarkerCluster),
     });
     clusterGroup.on("clusterclick", (e) => {
       const bounds = e.layer.getBounds();
@@ -275,7 +334,7 @@ const ProjectMapViewer: React.FC<Props> = ({
       if (clearSelectionRef.current) {
         clearSelectionRef.current();
       } else if (onSelectProjectRef.current) {
-        onSelectProjectRef.current(undefined); // fallback: clear via onSelect(undefined)
+        onSelectProjectRef.current(undefined);
       }
 
       // Local visual cleanup (safe even if parent also clears)
@@ -297,18 +356,23 @@ const ProjectMapViewer: React.FC<Props> = ({
     const ro = new ResizeObserver(() => setTimeout(() => map.invalidateSize(), 0));
     ro.observe(container);
 
+    // Snapshot for cleanup
+    const localMarkerMap = markerMapRef.current;
+    const localClusterGroup = clusterGroupRef.current;
+    const localMap = mapRef.current;
+
     return () => {
       try {
         ro.disconnect();
       } catch {}
       map.off("click", handleMapClick);
 
-      markerMapRef.current.forEach(({ marker }) => {
+      localMarkerMap.forEach(({ marker }) => {
         try {
-          clusterGroupRef.current?.removeLayer(marker);
+          localClusterGroup?.removeLayer(marker);
         } catch {}
       });
-      markerMapRef.current.clear();
+      localMarkerMap.clear();
 
       if (highlightRef.current) {
         try {
@@ -318,7 +382,7 @@ const ProjectMapViewer: React.FC<Props> = ({
       highlightRef.current = null;
 
       // restore any marker opacity/z-index (safety)
-      markerMapRef.current.forEach(({ marker }) => {
+      localMarkerMap.forEach(({ marker }) => {
         try {
           marker.setOpacity(1);
           marker.setZIndexOffset(0);
@@ -327,9 +391,9 @@ const ProjectMapViewer: React.FC<Props> = ({
 
       closePopup();
 
-      if (clusterGroupRef.current && mapRef.current) {
+      if (localClusterGroup && localMap) {
         try {
-          clusterGroupRef.current.removeFrom(mapRef.current);
+          localClusterGroup.removeFrom(localMap);
         } catch {}
       }
       clusterGroupRef.current = null;
@@ -342,13 +406,14 @@ const ProjectMapViewer: React.FC<Props> = ({
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId]);
+  }, [containerId, leafletReady]);
 
   // Sync markers without recreating the map
   useEffect(() => {
+    const L = LRef.current as LeafletModule | null;
     const map = mapRef.current;
     const clusterGroup = clusterGroupRef.current;
-    if (!map || !map.getPane("markerPane") || !clusterGroup) return;
+    if (!leafletReady || !L || !map || !map.getPane("markerPane") || !clusterGroup) return;
 
     const markerMap = markerMapRef.current;
     const nextIds = new Set(projects.map((p) => p.id));
@@ -370,9 +435,8 @@ const ProjectMapViewer: React.FC<Props> = ({
       .filter((p) => typeof p.latitude === "number" && typeof p.longitude === "number")
       .forEach((project) => {
         const existing = markerMap.get(project.id);
-        const icon = getMarkerIcon(project.status);
+        const icon = getMarkerIcon(L, project.status);
 
-        // Click handler uses refs to avoid stale values
         const handleClick = () => {
           if (!selectable || !hasSelectionHandler) {
             if (enablePopup) openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
@@ -382,7 +446,6 @@ const ProjectMapViewer: React.FC<Props> = ({
           if (selectedIdRef.current !== project.id) {
             onSelectProjectRef.current?.(project.id);
           } else {
-            // If already selected, allow opening popup or re-affirm selection
             if (enablePopup) {
               openPopupAt(project, (markerMap.get(project.id) as MarkerEntry).marker);
             } else {
@@ -392,7 +455,9 @@ const ProjectMapViewer: React.FC<Props> = ({
         };
 
         if (!existing) {
-          const marker = L.marker([project.latitude as number, project.longitude as number], { icon }) as ProjectMarker;
+          const marker = (L as LeafletModule).marker([project.latitude as number, project.longitude as number], {
+            icon,
+          }) as ProjectMarker;
           marker.__projectStatus = project.status;
 
           marker.on("click", handleClick);
@@ -412,7 +477,35 @@ const ProjectMapViewer: React.FC<Props> = ({
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, selectable, enablePopup]);
+  }, [projects, selectable, enablePopup, leafletReady]);
+
+  // Auto-fit to markers when there is no selection
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getPane("markerPane")) return;
+    if (selectedProjectId) return; // selection effect handles view
+
+    const markers = Array.from(markerMapRef.current.values()).map((e) => e.marker);
+    if (markers.length === 0) return;
+
+    if (markers.length === 1) {
+      try {
+        const ll = markers[0].getLatLng();
+        map.setView(ll, Math.max(map.getZoom(), 13), { animate: true });
+        hasAutoFittedRef.current = true;
+      } catch {}
+      return;
+    }
+
+    // Only auto-fit once initially or when new markers appear after none.
+    if (hasAutoFittedRef.current && markers.length > 1) return;
+
+    try {
+      const bounds = markers.reduce((b, m) => b.extend(m.getLatLng()), markers[0].getLatLng().toBounds(100));
+      map.fitBounds(bounds as unknown as LeafletNS.LatLngBoundsExpression, { padding: [40, 40] });
+      hasAutoFittedRef.current = true;
+    } catch {}
+  }, [projects, selectedProjectId]);
 
   // Selection pan/highlight and zoom to show selected marker even if clustered
   useEffect(() => {
@@ -458,7 +551,7 @@ const ProjectMapViewer: React.FC<Props> = ({
       });
 
       // Add highlight ring
-      const circle = L.circleMarker(latlng, {
+      const circle = (LRef.current as LeafletModule).circleMarker(latlng, {
         radius: 14,
         color: "#7C3AED",
         weight: 3,
@@ -466,7 +559,7 @@ const ProjectMapViewer: React.FC<Props> = ({
         fillColor: "#C4B5FD",
         fillOpacity: 0.3,
       }).addTo(map);
-      highlightRef.current = circle;
+      highlightRef.current = circle as unknown as LeafletNS.CircleMarker;
     };
 
     // If clustered, zoom in until this marker is shown, then run showSelected
