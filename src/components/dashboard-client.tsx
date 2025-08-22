@@ -6,7 +6,7 @@ import { useProjectContext } from "@/context/project-context";
 import { useReportIssueContext } from "@/context/report-issue-context";
 import type { AuthUser } from "@/models/auth.types";
 import Link from "next/link";
-import React from "react";
+import React, { useCallback } from "react";
 import DashboardMapTabs from "./top-tabs-dashboard";
 import UserInteractionDialog from "./user-interaction-dialog";
 
@@ -19,12 +19,20 @@ const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
   const { ideas, refreshIdeas } = useIdeaContext();
   const { reportIssues, refreshReportIssues } = useReportIssueContext();
 
-  const refreshProjectsZeroArg = () => refreshProjects({ page: 1, sort: "newest", type: "all" }).catch(() => undefined);
+  const refreshProjectsZeroArg = useCallback(
+    () => refreshProjects({ page: 1, sort: "newest", type: "all" }).catch(() => undefined),
+    [refreshProjects],
+  );
 
-  const refreshIdeasZeroArg = () => refreshIdeas({ page: 1, sort: "newest", type: "all" }).catch(() => undefined);
+  const refreshIdeasZeroArg = useCallback(
+    () => refreshIdeas({ page: 1, sort: "newest", type: "all" }).catch(() => undefined),
+    [refreshIdeas],
+  );
 
-  const refreshIssuesZeroArg = () =>
-    refreshReportIssues({ page: 1, limit: 50, sort: "newest", type: "all" }).catch(() => undefined);
+  const refreshIssuesZeroArg = useCallback(
+    () => refreshReportIssues({ page: 1, limit: 50, sort: "newest", type: "all" }).catch(() => undefined),
+    [refreshReportIssues],
+  );
 
   return (
     <div className="text-center sm:w-96 md:w-[768px]">

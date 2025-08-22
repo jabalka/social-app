@@ -1,7 +1,7 @@
 "use client";
 
 import IdeaListOverview from "@/components/idea-list-overview";
-import TopTabs, { TopTabItem } from "@/components/profile-lists-top-tabs";
+import TopTabs, { TopTabItem } from "@/components/top-tabs";
 import ProfileMap from "@/components/profile-map";
 import ProjectListOverview from "@/components/project-list-overview";
 import ReportIssueListOverview from "@/components/report-issue-list-overview";
